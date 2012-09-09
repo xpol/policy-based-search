@@ -7,34 +7,73 @@
 
 namespace jsearch
 {
-	// Comparator class, passed to the priority_queue.
-	template <typename StepCost, typename Node, class Heuristic>
-	class AStarComparator : public std::binary_function<Node, Node, bool>, private Heuristic
+	template <typename State, typename PathCost>
+	class DefaultPathCost
 	{
-		using Heuristic::h;
-
-		bool operator()(Node const &A, Node const &B) const
+	protected:
+		PathCost g(State const &STATE)
 		{
-			return A.path_cost + h(A.state) < B.path_cost + h(B.state);
+			return STATE.path_cost;
+		}
+	};
+
+	// Comparator classes, passed to the priority_queue.
+	template <typename Traits,
+			template <typename StepCost, typename State> class HeuristicPolicy,
+			template <typename State, typename PathCost> class PathCostPolicy>
+	class AStarComparator : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
+							private HeuristicPolicy<typename Traits::stepcost, typename Traits::state>,
+							private PathCostPolicy<typename Traits::state, typename Traits::pathcost>
+	{
+		using PathCostPolicy<typename Traits::state, typename Traits::pathcost>::g;
+		using HeuristicPolicy<typename Traits::stepcost, typename Traits::state>::h;
+	protected:
+		bool operator()(typename Traits::node const *A, typename Traits::node const *B) const
+		{
+			return g(A) + h(A->state) < g(B) + h(B->state);
 		}
 	};
 
 
-
-
-	template <typename State, typename Action, typename PathCost>
-	struct DefaultNode
+	// AStarOperator
+	template < 	typename Traits,
+				template <typename StepCost, typename State> class HeuristicPolicy,
+				template <typename State, typename PathCost> class PathCostPolicy >
+	class AStarNodeOperator : 	private HeuristicPolicy<typename Traits::stepcost, typename Traits::state>,
+								private PathCostPolicy<typename Traits::state, typename Traits::pathcost>
 	{
-		DefaultNode(State const &STATE, DefaultNode<State, Action, PathCost> const *PARENT, Action const &ACTION, PathCost const &PATH_COST) : state(STATE), parent(PARENT),  action(ACTION), path_cost(PATH_COST) {}
-
-		State state;
-		DefaultNode<State, Action, PathCost> const *parent;
-		Action action;
-		PathCost path_cost;
+		using PathCostPolicy<typename Traits::state, typename Traits::pathcost>::g;
+		using HeuristicPolicy<typename Traits::stepcost, typename Traits::state>::h;
+	protected:
+		bool operator<(typename Traits::node const &OTHER) const
+		{
+			return g(*this) + h(this->state) < g(OTHER) + h(OTHER.state);
+		}
 	};
 
 
-	template <typename Node, typename State, typename Action, template <typename State, typename Action> class StepCostPolicy, template <typename State, typename Action> class ResultPolicy>
+	template <typename Traits>
+	struct DefaultNode
+	{
+		typedef typename Traits::node Node;
+		typedef typename Traits::state State;
+		typedef typename Traits::action Action;
+		typedef typename Traits::pathcost PathCost;
+
+		DefaultNode(State const &STATE, DefaultNode<Traits> const *PARENT, Action const &ACTION, PathCost const &PATH_COST) : state(STATE), parent(PARENT),  action(ACTION), path_cost(PATH_COST) {}
+
+		State state;
+		DefaultNode<Traits> const *parent;
+		Action action;
+		PathCost path_cost;
+
+		// bool operator<();
+	};
+
+
+	template <typename Node, typename State, typename Action,
+		template <typename State, typename Action> class StepCostPolicy,
+		template <typename State, typename Action> class ResultPolicy>
 	class DefaultChildPolicy
 	{
 	protected:
