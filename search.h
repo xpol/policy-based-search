@@ -11,8 +11,6 @@
 
 namespace jsearch
 {
-
-
 	template <typename Traits,
 			template <typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
@@ -21,20 +19,22 @@ namespace jsearch
 			template <typename Node, typename State, typename Action,
 				template <typename State, typename Action> class StepCostPolicy,
 				template <typename State, typename Action> class ResultPolicy >
-					class ChildPolicy = DefaultChildPolicy
-					// , template <typename Node, typename Heuristic> class Comparator = AStarComparator
-					>
+					class ChildPolicy = DefaultChildPolicy,
+			template <typename Traits, template <typename StepCost, typename State> class HeuristicPolicy,
+				template <typename State, typename PathCost> class PathCostPolicy> class Comparator = AStarComparator,
+			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost>
 	typename Traits::node *search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, bool const combinatorial)
 	{
 		typedef typename Traits::node Node;
-		typedef typename Traits::action Action;
 		typedef typename Traits::state State;
-		typedef typename Traits::heuristic Heuristic;
+		typedef typename Traits::action Action;
+		typedef typename Traits::pathcost PathCost;
+		typedef typename Traits::heuristicpolicy Heuristic;
 
 		Node *solution = nullptr;
 
-		// std::priority_queue<Node *, AStarComparator<Node, Heuristic>> open;
-		std::priority_queue<Node *> open;
+		std::priority_queue<Node *, std::vector<Node *>, AStarComparator<Traits, Heuristic<>, DefaultPathCost<>>> open;
+		// std::priority_queue<Node *> open;
 		std::set<State> closed;
 		open.push(new Node(PROBLEM.initial(), (nullptr), 0, 0));
 
@@ -81,4 +81,3 @@ namespace jsearch
 }
 
 #endif // SEARCH_H
-
