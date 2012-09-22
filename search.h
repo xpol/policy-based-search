@@ -3,6 +3,7 @@
 #define SEARCH_H
 
 #include "problem.h"
+#include "evaluation.h"
 
 #include <queue>
 #include <set>
@@ -13,63 +14,6 @@
 
 namespace jsearch
 {
-	template <typename StepCost, class State>
-	class ZeroHeuristic
-	{
-	protected:
-		StepCost h(State const &) const
-		{
-			return 0;
-		}
-	};
-
-
-		template <typename Node, typename PathCost>
-	class DefaultPathCost
-	{
-	protected:
-		PathCost g(Node const &NODE)
-		{
-			return NODE.path_cost;
-		}
-	};
-
-	// Comparator classes, passed to the priority_queue.  NOT a policy class, actually a host!
-	template <typename Traits,
-			template <typename State, typename PathCost> class PathCostPolicy,
-			template <typename StepCost, typename State> class HeuristicPolicy>
-	class AStarComparator : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
-							private HeuristicPolicy<typename Traits::stepcost, typename Traits::state>,
-							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
-	{
-		typedef typename Traits::node Node;
-		using PathCostPolicy<typename Traits::node, typename Traits::pathcost>::g;
-		using HeuristicPolicy<typename Traits::stepcost, typename Traits::state>::h;
-	public:
-		bool operator()(Node const *A, Node const *B) const
-		{
-			return g(A) + h(A->state) < g(B) + h(B->state);
-		}
-	};
-
-
-	// AStarOperator
-	template < 	typename Traits,
-				template <typename StepCost, typename State> class HeuristicPolicy,
-				template <typename State, typename PathCost> class PathCostPolicy >
-	class AStarNodeOperator : 	private HeuristicPolicy<typename Traits::stepcost, typename Traits::state>,
-								private PathCostPolicy<typename Traits::state, typename Traits::pathcost>
-	{
-		using PathCostPolicy<typename Traits::state, typename Traits::pathcost>::g;
-		using HeuristicPolicy<typename Traits::stepcost, typename Traits::state>::h;
-	protected:
-		bool operator<(typename Traits::node const &OTHER) const
-		{
-			return g(*this) + h(this->state) < g(OTHER) + h(OTHER.state);
-		}
-	};
-
-	
 	template <typename Traits,
 			template <typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
@@ -85,41 +29,39 @@ namespace jsearch
 			template <typename Traits,
 				template <typename State, typename PathCost> class PathCostPolicy,
 				template <typename StepCost, typename State> class HeuristicPolicy> class Comparator = AStarComparator>
-	typename Traits::node *search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, bool const combinatorial)
+	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, bool const combinatorial)
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
-		// typedef typename Traits::heuristicpolicy Heuristic;
 
-		Node *solution = nullptr;
 
-		std::priority_queue<Node *, std::vector<Node *>, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> open;
+		std::priority_queue<Node, std::vector<Node>, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> open;
 		// std::priority_queue<Node *> open;
 		std::set<State> closed;
-		open.push(new Node(PROBLEM.initial(), (nullptr), 0, 0));
+		open.push(Node(PROBLEM.initial(), (nullptr), 0, 0));
 
-		while(!solution && !open.empty())
+		while(!open.empty())
 		{
-			Node * const S = open.top();
+			Node S = open.top();
 			open.pop();
 
 			std::cerr << "open: " << open.size() << ", closed: " << closed.size() << "\n";
 
-			if(PROBLEM.goal_test(S->state))
+			if(PROBLEM.goal_test(S.state))
 			{
-				solution = S;
+				return S; // OK, I don't like non-local returns, but what else?
 			}
 			else
 			{
-				closed.insert(S->state);
-				std::set<Action> const actions(PROBLEM.actions(S->state));
-				typename std::set<Action>::const_iterator beginning = actions.begin();
-				typename std::set<Action>::const_iterator ending = actions.end();
+				closed.insert(S.state);
+				std::set<Action> const actions(PROBLEM.actions(S.state));
+				auto beginning = std::begin(actions);
+				auto ending = std::end(actions);
 				std::for_each(beginning, ending, [&](typename std::set<Action>::const_reference ACTION)
 				{
-					Node *child = new Node(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(ACTION));
+					Node child = Node(PROBLEM.result(S.state, ACTION), &S, ACTION, S.path_cost + PROBLEM.step_cost(ACTION));
 
 					if(!combinatorial)
 					{
@@ -137,8 +79,7 @@ namespace jsearch
 			}
 
 		}
-
-		return solution;
+		// return solution;
 	}
 }
 
