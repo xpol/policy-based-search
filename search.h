@@ -8,12 +8,18 @@
 #include <queue>
 #include <set>
 #include <algorithm>
+#include <stdexcept>
+
+#ifndef NDEBUG
 #include <iostream>
+#endif
 
 #define QCOMPARATOR
 
 namespace jsearch
 {
+	class GoalNotFound : public std::exception {};
+	
 	template <typename Traits,
 			template <typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
@@ -29,7 +35,7 @@ namespace jsearch
 			template <typename Traits,
 				template <typename State, typename PathCost> class PathCostPolicy,
 				template <typename StepCost, typename State> class HeuristicPolicy> class Comparator = AStarComparator>
-	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, bool const combinatorial)
+	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<PathCostPolicy, HeuristicPolicy, Comparator> const &, bool const combinatorial)
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
@@ -44,11 +50,13 @@ namespace jsearch
 
 		while(!open.empty())
 		{
-			Node S = open.top();
+			Node const &S = open.top();
 			open.pop();
 
-			std::cerr << "open: " << open.size() << ", closed: " << closed.size() << "\n";
-
+#ifndef NDEBUG
+			// std::cerr << "open: " << open.size() << ", closed: " << closed.size() << "\n";
+#endif
+			
 			if(PROBLEM.goal_test(S.state))
 			{
 				return S; // OK, I don't like non-local returns, but what else?
@@ -79,7 +87,7 @@ namespace jsearch
 			}
 
 		}
-		// return solution;
+		throw GoalNotFound();
 	}
 }
 

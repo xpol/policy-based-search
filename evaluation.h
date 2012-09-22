@@ -60,6 +60,18 @@ namespace jsearch
 			return g(*this) + h(this->state) < g(OTHER) + h(OTHER.state);
 		}
 	};
+
+
+	// Convenience class until I figure out a better way to do it.
+	template <template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
+		template <typename StepCost, typename State> class HeuristicPolicy = ZeroHeuristic,
+		template <typename Traits,
+			template <typename State, typename PathCost> class PathCostPolicy,
+			template <typename StepCost, typename State> class HeuristicPolicy> class Comparator = AStarComparator>
+	class Evaluation
+	{
+		// Absolutely nothing!
+	};
 }
 
 #endif
