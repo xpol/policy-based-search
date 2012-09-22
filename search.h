@@ -34,7 +34,7 @@ namespace jsearch
 			template <typename Traits,
 				template <typename State, typename PathCost> class PathCostPolicy,
 				template <typename StepCost, typename State> class HeuristicPolicy> class Comparator = AStarComparator>
-	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<PathCostPolicy, HeuristicPolicy, Comparator> const &, bool const combinatorial)
+	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<PathCostPolicy, HeuristicPolicy, Comparator> const &, bool const TREE)
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
@@ -43,9 +43,8 @@ namespace jsearch
 
 
 		std::priority_queue<Node, std::vector<Node>, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> open;
-		// std::priority_queue<Node *> open;
-		std::set<State> closed;
-		open.push(Node(PROBLEM.initial(), (nullptr), 0, 0));
+		std::set<State> closed; // TODO: Make the closed list optional for combinatorial search.
+		open.push(Node(PROBLEM.initial(), nullptr, 0, 0));
 
 		while(!open.empty())
 		{
@@ -63,14 +62,13 @@ namespace jsearch
 			else
 			{
 				closed.insert(S.state);
-				std::set<Action> const actions(PROBLEM.actions(S.state));
-				auto beginning = std::begin(actions);
-				auto ending = std::end(actions);
+				std::set<Action> const actions = PROBLEM.actions(S.state);
+				auto const beginning = std::begin(actions), ending = std::end(actions);
 				std::for_each(beginning, ending, [&](typename std::set<Action>::const_reference ACTION)
 				{
-					Node child = Node(PROBLEM.result(S.state, ACTION), &S, ACTION, S.path_cost + PROBLEM.step_cost(ACTION));
+					auto const child = Node(PROBLEM.result(S.state, ACTION), &S, ACTION, S.path_cost + PROBLEM.step_cost(ACTION));
 
-					if(!combinatorial)
+					if(!TREE)
 					{
 						// TODO: Check if it is in open or closed.
 
