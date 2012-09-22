@@ -7,28 +7,29 @@
 
 namespace jsearch
 {
-	template <typename State, typename PathCost>
+	template <typename Node, typename PathCost>
 	class DefaultPathCost
 	{
 	protected:
-		PathCost g(State const &STATE)
+		PathCost g(Node const &NODE)
 		{
-			return STATE.path_cost;
+			return NODE.path_cost;
 		}
 	};
 
-	// Comparator classes, passed to the priority_queue.
+	// Comparator classes, passed to the priority_queue.  NOT a policy class, actually a host!
 	template <typename Traits,
-			template <typename StepCost, typename State> class HeuristicPolicy,
-			template <typename State, typename PathCost> class PathCostPolicy>
+			template <typename State, typename PathCost> class PathCostPolicy,
+			template <typename StepCost, typename State> class HeuristicPolicy>
 	class AStarComparator : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
 							private HeuristicPolicy<typename Traits::stepcost, typename Traits::state>,
-							private PathCostPolicy<typename Traits::state, typename Traits::pathcost>
+							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
 	{
-		using PathCostPolicy<typename Traits::state, typename Traits::pathcost>::g;
+		typedef typename Traits::node Node;
+		using PathCostPolicy<typename Traits::node, typename Traits::pathcost>::g;
 		using HeuristicPolicy<typename Traits::stepcost, typename Traits::state>::h;
-	protected:
-		bool operator()(typename Traits::node const *A, typename Traits::node const *B) const
+	public:
+		bool operator()(Node const *A, Node const *B) const
 		{
 			return g(A) + h(A->state) < g(B) + h(B->state);
 		}

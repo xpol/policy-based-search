@@ -9,8 +9,21 @@
 #include <algorithm>
 #include <iostream>
 
+#define QCOMPARATOR
+
 namespace jsearch
 {
+	template <typename StepCost, class State>
+	class ZeroHeuristic
+	{
+	protected:
+		StepCost h(State const &) const
+		{
+			return 0;
+		}
+	};
+
+	
 	template <typename Traits,
 			template <typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
@@ -20,20 +33,23 @@ namespace jsearch
 				template <typename State, typename Action> class StepCostPolicy,
 				template <typename State, typename Action> class ResultPolicy >
 					class ChildPolicy = DefaultChildPolicy,
-			template <typename Traits, template <typename StepCost, typename State> class HeuristicPolicy,
-				template <typename State, typename PathCost> class PathCostPolicy> class Comparator = AStarComparator,
-			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost>
+
+			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
+			template <typename StepCost, typename State> class HeuristicPolicy = ZeroHeuristic,
+			template <typename Traits,
+				template <typename State, typename PathCost> class PathCostPolicy,
+				template <typename StepCost, typename State> class HeuristicPolicy> class Comparator = AStarComparator>
 	typename Traits::node *search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, bool const combinatorial)
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
-		typedef typename Traits::heuristicpolicy Heuristic;
+		// typedef typename Traits::heuristicpolicy Heuristic;
 
 		Node *solution = nullptr;
 
-		std::priority_queue<Node *, std::vector<Node *>, AStarComparator<Traits, Heuristic<>, DefaultPathCost<>>> open;
+		std::priority_queue<Node *, std::vector<Node *>, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> open;
 		// std::priority_queue<Node *> open;
 		std::set<State> closed;
 		open.push(new Node(PROBLEM.initial(), (nullptr), 0, 0));
