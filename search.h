@@ -30,10 +30,10 @@ namespace jsearch
 					class ChildPolicy = DefaultChildPolicy,
 
 			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
-			template <typename StepCost, typename State> class HeuristicPolicy = ZeroHeuristic,
+			template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
 			template <typename Traits,
 				template <typename State, typename PathCost> class PathCostPolicy,
-				template <typename StepCost, typename State> class HeuristicPolicy> class Comparator = AStarComparator>
+				template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarComparator>
 	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<PathCostPolicy, HeuristicPolicy, Comparator> const &, bool const TREE)
 	{
 		typedef typename Traits::node Node;

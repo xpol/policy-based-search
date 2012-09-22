@@ -5,11 +5,11 @@
 
 namespace jsearch
 {
-	template <typename StepCost, class State>
+	template <typename PathCost, class State>
 	class ZeroHeuristic
 	{
 	protected:
-		StepCost h(State const &) const
+		PathCost h(State const &) const
 		{
 			return 0;
 		}
@@ -29,14 +29,14 @@ namespace jsearch
 	// Comparator classes, passed to the priority_queue.  NOT a policy class, actually a host!
 	template <typename Traits,
 			template <typename State, typename PathCost> class PathCostPolicy,
-			template <typename StepCost, typename State> class HeuristicPolicy>
+			template <typename PathCost, typename State> class HeuristicPolicy>
 	class AStarComparator : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
-							private HeuristicPolicy<typename Traits::stepcost, typename Traits::state>,
+							private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
 							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
 	{
 		typedef typename Traits::node Node;
 		using PathCostPolicy<typename Traits::node, typename Traits::pathcost>::g;
-		using HeuristicPolicy<typename Traits::stepcost, typename Traits::state>::h;
+		using HeuristicPolicy<typename Traits::pathcost, typename Traits::state>::h;
 	public:
 		bool operator()(Node const &A, Node const &B) const
 		{
@@ -47,13 +47,13 @@ namespace jsearch
 
 	// AStarOperator
 	template < 	typename Traits,
-				template <typename StepCost, typename State> class HeuristicPolicy,
+				template <typename PathCost, typename State> class HeuristicPolicy,
 				template <typename State, typename PathCost> class PathCostPolicy >
-	class AStarNodeOperator : 	private HeuristicPolicy<typename Traits::stepcost, typename Traits::state>,
+	class AStarNodeOperator : 	private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
 								private PathCostPolicy<typename Traits::state, typename Traits::pathcost>
 	{
 		using PathCostPolicy<typename Traits::state, typename Traits::pathcost>::g;
-		using HeuristicPolicy<typename Traits::stepcost, typename Traits::state>::h;
+		using HeuristicPolicy<typename Traits::pathcost, typename Traits::state>::h;
 	protected:
 		bool operator<(typename Traits::node const &OTHER) const
 		{
@@ -64,10 +64,10 @@ namespace jsearch
 
 	// Convenience class until I figure out a better way to do it.
 	template <template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
-		template <typename StepCost, typename State> class HeuristicPolicy = ZeroHeuristic,
+		template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
 		template <typename Traits,
 			template <typename State, typename PathCost> class PathCostPolicy,
-			template <typename StepCost, typename State> class HeuristicPolicy> class Comparator = AStarComparator>
+			template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarComparator>
 	class Evaluation
 	{
 		// Absolutely nothing!
