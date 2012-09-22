@@ -58,15 +58,21 @@ namespace jsearch
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 
+		typedef std::set<Node, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> OpenList;
+		typedef std::set<State> ClosedList;
 
-		std::priority_queue<Node, std::vector<Node>, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> open;
-		std::set<State> closed; // TODO: Make the closed list optional for combinatorial search.
-		open.push(Node(PROBLEM.initial(), nullptr, Action(), 0));
+
+		// std::priority_queue<Node, std::vector<Node>, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> open;
+		OpenList open;
+		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
+		open.insert(Node(PROBLEM.initial(), nullptr, Action(), 0));
 
 		while(!open.empty())
 		{
-			Node const &S = open.top();
-			open.pop();
+			typename OpenList::const_iterator F = std::begin(open);
+			Node const &S = *F; // BUG: Lifetime??
+			open.erase(F);
+			// open.pop();
 			
 			if(PROBLEM.goal_test(S.state))
 			{
@@ -87,13 +93,13 @@ namespace jsearch
 					if(!TREE)
 					{
 						// TODO: Check if it is in open or closed.  Could someone else deal with this, please?  :)
-						
+						auto low = std::lower_bound(std::begin(open), std::end(open), child, Comparator<Traits, PathCostPolicy, HeuristicPolicy>());
 					}
 					else
 					{
 						/*	The combinatorial search spaces in mind are a tree with no repeating nodes,
 							so the algorithm is optimized to not worry about checking in open or closed.	*/
-						open.push(child);
+						open.insert(child);
 					}
 
 				});

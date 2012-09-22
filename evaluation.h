@@ -54,8 +54,11 @@ namespace jsearch
 							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
 	{
 		typedef typename Traits::node Node;
-		using PathCostPolicy<typename Traits::node, typename Traits::pathcost>::g;
-		using HeuristicPolicy<typename Traits::pathcost, typename Traits::state>::h;
+		typedef typename Traits::pathcost PathCost;
+		typedef typename Traits::state State;
+		
+		using PathCostPolicy<Node, PathCost>::g;
+		using HeuristicPolicy<PathCost, State>::h;
 	public:
 		bool operator()(Node const &A, Node const &B) const
 		{
