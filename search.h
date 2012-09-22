@@ -14,7 +14,6 @@
 #include <iostream>
 #endif
 
-#define QCOMPARATOR
 
 namespace jsearch
 {
