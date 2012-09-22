@@ -1,3 +1,20 @@
+/*
+    search.h: Best-first search algorithm, taken from Russell & Norvig's AIMA.
+    Copyright (C) 2012  Jeremy Murphy <jeremy.william.murphy@gmail.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #ifndef SEARCH_H
 #define SEARCH_H
@@ -50,13 +67,12 @@ namespace jsearch
 		{
 			Node const &S = open.top();
 			open.pop();
-
-#ifndef NDEBUG
-			// std::cerr << "open: " << open.size() << ", closed: " << closed.size() << "\n";
-#endif
 			
 			if(PROBLEM.goal_test(S.state))
 			{
+#ifndef NDEBUG
+				std::cerr << "open: " << open.size() << ", closed: " << closed.size() << "\n";
+#endif
 				return S; // OK, I don't like non-local returns, but what else?
 			}
 			else
@@ -70,8 +86,7 @@ namespace jsearch
 
 					if(!TREE)
 					{
-						// TODO: Check if it is in open or closed.
-
+						// TODO: Check if it is in open or closed.  Could someone else deal with this, please?  :)
 					}
 					else
 					{
