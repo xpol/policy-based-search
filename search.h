@@ -93,7 +93,18 @@ namespace jsearch
 					if(!TREE)
 					{
 						// TODO: Check if it is in open or closed.  Could someone else deal with this, please?  :)
-						auto low = std::lower_bound(std::begin(open), std::end(open), child, Comparator<Traits, PathCostPolicy, HeuristicPolicy>());
+						if(closed.find(child.state) == std::end(closed)) // If it is NOT in closed...
+						{
+							for(typename OpenList::iterator it = std::begin(open); it != std::end(open); ++it)
+							{
+								if(it->state == child.state && child.path_cost < it->path_cost)
+								{
+									open.erase(it);
+									break;
+								}
+							}
+							open.insert(child);
+						}
 					}
 					else
 					{

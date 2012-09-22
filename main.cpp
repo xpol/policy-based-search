@@ -1,8 +1,10 @@
 #include "examples/Romania.h"
 #include "search.h"
 
-using namespace jsearch;
+#include <iostream>
 
+using namespace jsearch;
+using namespace std;
 
 int main(int argc, char **argv)
 {
@@ -12,4 +14,6 @@ int main(int argc, char **argv)
 	Evaluation<EuclideanDistance> evaluation;
 
 	auto solution = jsearch::search(Bucharest, evaluation);
+
+	cerr << "SOLUTION >>> State: " << solution.state << ", Parent: " << solution.parent->state << endl;
 }
