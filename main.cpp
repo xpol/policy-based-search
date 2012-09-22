@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 	Romania::state const Arad { "Arad" }, Sibiu("Sibiu");
 
 	Problem<Romania, Distance, Neighbours, Visit, GoalTest> Bucharest(Sibiu);
-	Evaluation<DefaultPathCost, EuclideanDistance> evaluation;
+	Evaluation<EuclideanDistance> evaluation;
 
 	auto solution = jsearch::search(Bucharest, evaluation);
 }

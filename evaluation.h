@@ -49,7 +49,7 @@ namespace jsearch
 	template <typename Traits,
 			template <typename State, typename PathCost> class PathCostPolicy,
 			template <typename PathCost, typename State> class HeuristicPolicy>
-	class AStarComparator : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
+	class AStarNodeComparator : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
 							private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
 							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
 	{
@@ -82,11 +82,11 @@ namespace jsearch
 
 
 	// Convenience class until I figure out a better way to do it.
-	template <template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
-		template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
+	template <template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
+		template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
 		template <typename Traits,
 			template <typename State, typename PathCost> class PathCostPolicy,
-			template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarComparator>
+			template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarNodeComparator>
 	class Evaluation
 	{
 		// Absolutely nothing!
