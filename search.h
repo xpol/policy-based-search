@@ -3,16 +3,23 @@
 #define SEARCH_H
 
 #include "problem.h"
+#include "evaluation.h"
 
 #include <queue>
 #include <set>
 #include <algorithm>
+#include <stdexcept>
+
+#ifndef NDEBUG
 #include <iostream>
+#endif
+
+#define QCOMPARATOR
 
 namespace jsearch
 {
-
-
+	class GoalNotFound : public std::exception {};
+	
 	template <typename Traits,
 			template <typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
@@ -21,43 +28,48 @@ namespace jsearch
 			template <typename Node, typename State, typename Action,
 				template <typename State, typename Action> class StepCostPolicy,
 				template <typename State, typename Action> class ResultPolicy >
-					class ChildPolicy = DefaultChildPolicy
-					// , template <typename Node, typename Heuristic> class Comparator = AStarComparator
-					>
-	typename Traits::node *search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, bool const combinatorial)
+					class ChildPolicy = DefaultChildPolicy,
+
+			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
+			template <typename StepCost, typename State> class HeuristicPolicy = ZeroHeuristic,
+			template <typename Traits,
+				template <typename State, typename PathCost> class PathCostPolicy,
+				template <typename StepCost, typename State> class HeuristicPolicy> class Comparator = AStarComparator>
+	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<PathCostPolicy, HeuristicPolicy, Comparator> const &, bool const combinatorial)
 	{
 		typedef typename Traits::node Node;
-		typedef typename Traits::action Action;
 		typedef typename Traits::state State;
-		typedef typename Traits::heuristic Heuristic;
+		typedef typename Traits::action Action;
+		typedef typename Traits::pathcost PathCost;
 
-		Node *solution = nullptr;
 
-		// std::priority_queue<Node *, AStarComparator<Node, Heuristic>> open;
-		std::priority_queue<Node *> open;
+		std::priority_queue<Node, std::vector<Node>, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> open;
+		// std::priority_queue<Node *> open;
 		std::set<State> closed;
-		open.push(new Node(PROBLEM.initial(), (nullptr), 0, 0));
+		open.push(Node(PROBLEM.initial(), (nullptr), 0, 0));
 
-		while(!solution && !open.empty())
+		while(!open.empty())
 		{
-			Node * const S = open.top();
+			Node const &S = open.top();
 			open.pop();
 
-			std::cerr << "open: " << open.size() << ", closed: " << closed.size() << "\n";
-
-			if(PROBLEM.goal_test(S->state))
+#ifndef NDEBUG
+			// std::cerr << "open: " << open.size() << ", closed: " << closed.size() << "\n";
+#endif
+			
+			if(PROBLEM.goal_test(S.state))
 			{
-				solution = S;
+				return S; // OK, I don't like non-local returns, but what else?
 			}
 			else
 			{
-				closed.insert(S->state);
-				std::set<Action> const actions(PROBLEM.actions(S->state));
-				typename std::set<Action>::const_iterator beginning = actions.begin();
-				typename std::set<Action>::const_iterator ending = actions.end();
+				closed.insert(S.state);
+				std::set<Action> const actions(PROBLEM.actions(S.state));
+				auto beginning = std::begin(actions);
+				auto ending = std::end(actions);
 				std::for_each(beginning, ending, [&](typename std::set<Action>::const_reference ACTION)
 				{
-					Node *child = new Node(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(ACTION));
+					Node child = Node(PROBLEM.result(S.state, ACTION), &S, ACTION, S.path_cost + PROBLEM.step_cost(ACTION));
 
 					if(!combinatorial)
 					{
@@ -75,10 +87,8 @@ namespace jsearch
 			}
 
 		}
-
-		return solution;
+		throw GoalNotFound();
 	}
 }
 
 #endif // SEARCH_H
-
