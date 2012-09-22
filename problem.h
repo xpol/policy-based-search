@@ -72,22 +72,26 @@ namespace jsearch
 		private GoalTestPolicy<typename ProblemTraits::state>,
 		private ChildPolicy<ProblemTraits, StepCostPolicy, ResultPolicy>
 	{
+		typedef typename ProblemTraits::node Node;
+		typedef typename ProblemTraits::state State;
+		typedef typename ProblemTraits::action Action;
+		typedef typename ProblemTraits::pathcost PathCost;
 	public:
-		Problem(typename ProblemTraits::state const &INITIAL) : INITIAL(INITIAL) {}
+		Problem(State const &INITIAL) : INITIAL(INITIAL) {}
 
-		typename ProblemTraits::state initial() const
+		State initial() const
 		{
 			return INITIAL;
 		}
 
 		using ChildPolicy<ProblemTraits, StepCostPolicy, ResultPolicy>::child;
-		using StepCostPolicy<typename ProblemTraits::pathcost, typename ProblemTraits::state, typename ProblemTraits::action>::step_cost;
-		using ActionsPolicy<typename ProblemTraits::state, typename ProblemTraits::action>::actions;
-		using ResultPolicy<typename ProblemTraits::state, typename ProblemTraits::action>::result;
-		using GoalTestPolicy<typename ProblemTraits::state>::goal_test;
+		using StepCostPolicy<PathCost, State, Action>::step_cost;
+		using ActionsPolicy<State, Action>::actions;
+		using ResultPolicy<State, Action>::result;
+		using GoalTestPolicy<State>::goal_test;
 
 	private:
-		typename ProblemTraits::state const INITIAL;
+		State const INITIAL;
 	};
 }
 

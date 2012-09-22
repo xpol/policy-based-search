@@ -51,7 +51,7 @@ namespace jsearch
 			template <typename Traits,
 				template <typename State, typename PathCost> class PathCostPolicy,
 				template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarComparator>
-	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<PathCostPolicy, HeuristicPolicy, Comparator> const &, bool const TREE)
+	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<PathCostPolicy, HeuristicPolicy, Comparator> const &, bool const TREE = false)
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
@@ -61,7 +61,7 @@ namespace jsearch
 
 		std::priority_queue<Node, std::vector<Node>, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> open;
 		std::set<State> closed; // TODO: Make the closed list optional for combinatorial search.
-		open.push(Node(PROBLEM.initial(), nullptr, 0, 0));
+		open.push(Node(PROBLEM.initial(), nullptr, Action(), 0));
 
 		while(!open.empty())
 		{
@@ -82,11 +82,12 @@ namespace jsearch
 				auto const beginning = std::begin(actions), ending = std::end(actions);
 				std::for_each(beginning, ending, [&](typename std::set<Action>::const_reference ACTION)
 				{
-					auto const child = Node(PROBLEM.result(S.state, ACTION), &S, ACTION, S.path_cost + PROBLEM.step_cost(ACTION));
+					auto const child = Node(PROBLEM.result(S.state, ACTION), &S, ACTION, S.path_cost + PROBLEM.step_cost(S.state, ACTION));
 
 					if(!TREE)
 					{
 						// TODO: Check if it is in open or closed.  Could someone else deal with this, please?  :)
+						
 					}
 					else
 					{

@@ -6,7 +6,10 @@ using namespace jsearch;
 
 int main(int argc, char **argv)
 {
-	Romania::state const Arad { "Arad" };
+	Romania::state const Arad { "Arad" }, Sibiu("Sibiu");
 
-	// Problem<Romania, Distance> Bucharest(Arad);
+	Problem<Romania, Distance, Neighbours, Visit, GoalTest> Bucharest(Sibiu);
+	Evaluation<DefaultPathCost, EuclideanDistance> evaluation;
+
+	auto solution = jsearch::search(Bucharest, evaluation);
 }
