@@ -37,12 +37,12 @@ namespace jsearch
 	class GoalNotFound : public std::exception {};
 	
 	template <typename Traits,
-			template <typename State, typename Action> class StepCostPolicy,
+			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
 			template <typename State, typename Action> class ResultPolicy,
 			template <typename State> class GoalTestPolicy,
-			template <typename Node, typename State, typename Action,
-				template <typename State, typename Action> class StepCostPolicy,
+			template <typename Traits,
+				template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 				template <typename State, typename Action> class ResultPolicy >
 					class ChildPolicy = DefaultChildPolicy,
 
