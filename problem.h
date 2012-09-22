@@ -90,9 +90,9 @@ namespace jsearch
 			 template <typename State, typename Action> class ResultPolicy,
 			 template <typename State> class GoalTestPolicy,
 			 template < typename Node, typename State, typename Action,
-			 template <typename State, typename Action> class StepCostPolicy,
-			 template <typename State, typename Action> class ResultPolicy >
-			 class ChildPolicy = DefaultChildPolicy >
+				template <typename State, typename Action> class StepCostPolicy,
+				template <typename State, typename Action> class ResultPolicy >
+				class ChildPolicy = DefaultChildPolicy >
 	class Problem :
 		private StepCostPolicy<typename ProblemTraits::state, typename ProblemTraits::action>,
 		private ActionsPolicy<typename ProblemTraits::state, typename ProblemTraits::action>,
