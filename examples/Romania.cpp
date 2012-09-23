@@ -10,10 +10,10 @@ int main(int, char **)
 {
 	Romania::state const Sibiu("Sibiu");
 
-	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const Bucharest(Sibiu);
+	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const Bucharest(Sibiu); // Use Sibiu as initial state.
 	Evaluation<EuclideanDistance> const evaluation;
 
-	auto solution = jsearch::search(Bucharest, evaluation);
+	auto const solution = jsearch::search(Bucharest, evaluation);
 
 	cout << "SOLUTION >>> State: " << solution.state << ", Parent: " << solution.parent->state << ", path cost: " << solution.path_cost << endl;
 }
