@@ -7,4 +7,3 @@ set(CMAKE_C_FLAGS "-std=c99 -pipe -march=native -Wall -Wextra")
 include_directories(".")
 
 add_subdirectory(examples)
-add_executable(test main.cpp)
