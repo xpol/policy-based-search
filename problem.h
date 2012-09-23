@@ -19,6 +19,7 @@
 #ifndef PROBLEM_H
 #define PROBLEM_H
 
+#include <memory>
 
 namespace jsearch
 {
@@ -30,10 +31,12 @@ namespace jsearch
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 
-		DefaultNode(State const &STATE, DefaultNode<Traits> const *PARENT, Action const &ACTION, PathCost const &PATH_COST) : state(STATE), parent(PARENT),  action(ACTION), path_cost(PATH_COST) {}
+		typedef std::shared_ptr<DefaultNode<Traits>> ParentType;
+
+		DefaultNode(State const &STATE, ParentType const PARENT, Action const &ACTION, PathCost const &PATH_COST) : state(STATE), parent(PARENT),  action(ACTION), path_cost(PATH_COST) {}
 
 		State state;
-		DefaultNode<Traits> const *parent;
+		ParentType const parent;
 		Action action;
 		PathCost path_cost;
 	};

@@ -15,5 +15,5 @@ int main(int argc, char **argv)
 
 	auto solution = jsearch::search(Bucharest, evaluation);
 
-	cerr << "SOLUTION >>> State: " << solution.state << ", Parent: " << solution.parent->state << endl;
+	cout << "SOLUTION >>> State: " << solution.state << ", Parent: " << solution.parent->state << ", path cost: " << solution.path_cost << endl;
 }

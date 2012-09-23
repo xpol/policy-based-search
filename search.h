@@ -26,6 +26,7 @@
 #include <set>
 #include <algorithm>
 #include <stdexcept>
+#include <memory>
 
 #ifndef NDEBUG
 #include <iostream>
@@ -58,46 +59,50 @@ namespace jsearch
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 
-		typedef std::set<Node, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> OpenList;
+		typedef std::shared_ptr<Node> OpenListElement;
+		typedef std::set<OpenListElement, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> OpenList;
 		typedef std::set<State> ClosedList;
 
-
-		// std::priority_queue<Node, std::vector<Node>, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> open;
+/*	Problem is Node lifetime.  Need to use sharedptrs.
+ */
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
-		open.insert(Node(PROBLEM.initial(), nullptr, Action(), 0));
+		open.insert(std::make_shared<Node>(PROBLEM.initial(), nullptr, Action(), 0));
 
 		while(!open.empty())
 		{
-			typename OpenList::const_iterator F = std::begin(open);
-			Node const &S = *F; // BUG: Lifetime??
-			open.erase(F);
-			// open.pop();
-			
-			if(PROBLEM.goal_test(S.state))
+			typename OpenList::const_iterator IT = std::begin(open);
+			OpenListElement const S = *IT; // BUG: Lifetime??
+			open.erase(IT);
+
+#ifndef NDEBUG
+			std::cerr << S->state << std::endl;
+#endif
+
+			if(PROBLEM.goal_test(S->state))
 			{
 #ifndef NDEBUG
 				std::cerr << "open: " << open.size() << ", closed: " << closed.size() << "\n";
 #endif
-				return S; // OK, I don't like non-local returns, but what else?
+				return *S; // OK, I don't like non-local returns, but what else?
 			}
 			else
 			{
-				closed.insert(S.state);
-				std::set<Action> const actions = PROBLEM.actions(S.state);
+				closed.insert(S->state);
+				std::set<Action> const actions = PROBLEM.actions(S->state);
 				auto const beginning = std::begin(actions), ending = std::end(actions);
 				std::for_each(beginning, ending, [&](typename std::set<Action>::const_reference ACTION)
 				{
-					auto const child = Node(PROBLEM.result(S.state, ACTION), &S, ACTION, S.path_cost + PROBLEM.step_cost(S.state, ACTION));
+					OpenListElement const child = std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION));
 
 					if(!TREE)
 					{
-						// TODO: Check if it is in open or closed.  Could someone else deal with this, please?  :)
-						if(closed.find(child.state) == std::end(closed)) // If it is NOT in closed...
+						// TODO: Check if it is in open or closed.  Sadly linear: can it be improved?
+						if(closed.find(child->state) == std::end(closed)) // If it is NOT in closed...
 						{
 							for(typename OpenList::iterator it = std::begin(open); it != std::end(open); ++it)
 							{
-								if(it->state == child.state && child.path_cost < it->path_cost)
+								if(child->state == (*it)->state && child->path_cost < (*it)->path_cost)
 								{
 									open.erase(it);
 									break;

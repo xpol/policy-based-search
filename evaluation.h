@@ -60,9 +60,9 @@ namespace jsearch
 		using PathCostPolicy<Node, PathCost>::g;
 		using HeuristicPolicy<PathCost, State>::h;
 	public:
-		bool operator()(Node const &A, Node const &B) const
+		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
 		{
-			return g(A) + h(A.state) < g(B) + h(B.state);
+			return g(*A) + h(A->state) < g(*B) + h(B->state);
 		}
 	};
 
