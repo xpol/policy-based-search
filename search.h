@@ -63,8 +63,6 @@ namespace jsearch
 		typedef std::set<OpenListElement, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> OpenList;
 		typedef std::set<State> ClosedList;
 
-/*	Problem is Node lifetime.  Need to use sharedptrs.
- */
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
 		open.insert(std::make_shared<Node>(PROBLEM.initial(), nullptr, Action(), 0));
@@ -72,12 +70,8 @@ namespace jsearch
 		while(!open.empty())
 		{
 			typename OpenList::const_iterator IT = std::begin(open);
-			OpenListElement const S = *IT; // BUG: Lifetime??
+			OpenListElement const S = *IT;
 			open.erase(IT);
-
-#ifndef NDEBUG
-			std::cerr << S->state << std::endl;
-#endif
 
 			if(PROBLEM.goal_test(S->state))
 			{
