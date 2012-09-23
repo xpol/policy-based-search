@@ -59,7 +59,7 @@ namespace jsearch
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 
-		typedef std::shared_ptr<Node> OpenListElement;
+		typedef std::shared_ptr<Node> OpenListElement; 
 		typedef std::set<OpenListElement, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> OpenList;
 		typedef std::set<State> ClosedList;
 
@@ -87,7 +87,7 @@ namespace jsearch
 				auto const beginning = std::begin(actions), ending = std::end(actions);
 				std::for_each(beginning, ending, [&](typename std::set<Action>::const_reference ACTION)
 				{
-					OpenListElement const child = std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION));
+					OpenListElement const child(std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION)));
 
 					if(!TREE)
 					{
