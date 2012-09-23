@@ -19,6 +19,7 @@ public:
 
 typedef std::map<Romania::state, Romania::pathcost> StateCost;
 
+// Road costs from city to city as an adjacency list.
 std::map<Romania::state, StateCost> const COST {
 	// { "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80}, {"Arad", 140}, {"Oradea", 151} } },
 	{ "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80} } },
@@ -30,11 +31,13 @@ std::map<Romania::state, StateCost> const COST {
 	{ "Bucharest", { {"Pitesti", 101}, {"Fagaras", 211} } }
 };
 
+// Straight-line distance from city to Bucharest.
 std::map<Romania::state, Romania::pathcost> const SLD {
 	{"Sibiu", 253}, {"Bucharest", 0}, {"Rimnicu Vilcea", 193}, {"Pitesti", 100}, {"Fagaras", 176}
 };
 
 
+// Simple StepCostPolicy that returns the road cost from city(STATE) to city(ACTION).
 template <typename PathCost, typename State, typename Action>
 class Distance
 {
@@ -46,6 +49,7 @@ protected:
 };
 
 
+// ActionsPolicy returns neighbouring cities to STATE.
 template <typename State, typename Action>
 class Neighbours
 {

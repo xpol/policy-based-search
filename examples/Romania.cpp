@@ -2,18 +2,38 @@
 #include "search.h"
 
 #include <iostream>
+#include <algorithm>
 
 using namespace jsearch;
 using namespace std;
 
+typedef Romania::state State;
+typedef Romania::node Node;
+
+
+void print_path(Node const &NODE, std::ostream* out);
+
+
 int main(int, char **)
 {
-	Romania::state const Sibiu("Sibiu");
+	State const Sibiu("Sibiu");
 
 	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const Bucharest(Sibiu); // Use Sibiu as initial state.
 	Evaluation<EuclideanDistance> const evaluation;
 
 	auto const solution = jsearch::search(Bucharest, evaluation);
 
-	cout << "SOLUTION >>> State: " << solution.state << ", Parent: " << solution.parent->state << ", path cost: " << solution.path_cost << endl;
+	print_path(solution, &cout);
+}
+
+
+void print_path(Node const &NODE, std::ostream* out)
+{
+	if(NODE.parent)
+	{
+		print_path(*NODE.parent, out);
+		*out << " => ";
+	}
+	
+	*out << NODE.state;
 }
