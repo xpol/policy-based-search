@@ -64,11 +64,12 @@ public:
 	typedef jsearch::DefaultNode<TSP> node;
 };
 
-size_t const N(4);
+static size_t const N(4);
 
+template <typename PathCost>
 struct EdgeData
 {
-	TSP::pathcost cost;
+	PathCost cost;
 	std::pair<City, City> city;
 };
 
@@ -89,18 +90,24 @@ static matrix<index> minmal_problem()
 
 
 template <typename T>
-std::vector<EdgeData> transpose(matrix<T> const &PROBLEM)
+std::vector<EdgeData<T>> transpose(matrix<T> const &P)
 {
-	std::vector<EdgeData> result(PROBLEM.size());
-	for(unsigned i = 0; i < PROBLEM.size(); ++i)
+	if(P.size1() != P.size2())
+		throw std::runtime_error("Matrix not square.");
+	std::vector<EdgeData<T>> result(P.size1());
+
+	for(unsigned i = 0; i < P.size1() - 1; ++i)
 	{
-		
+		for(unsigned j = i + 1; j < P.size1(); ++j)
+			result.push_back({P(i, j), {i, j}});
 	}
 	
 	return result;
 }
 
-static boost::numeric::ublas::matrix<index> const P(minmal_problem());
+
+static boost::numeric::ublas::matrix<index> const PROBLEM(minmal_problem());
+auto const foo = transpose(PROBLEM);
 
 typedef std::vector<TSP::pathcost> cost;
 std::vector<TSP::action> const EDGES = {0, 1, 2, 3, 4, 5};
@@ -139,7 +146,7 @@ class HigherCostValidEdges
 protected:
 	std::set<Action> actions(State const &STATE) const
 	{
-		std::set<Action> candidates(std::begin(EDGES) + (STATE.empty() ? 0 : STATE.back() + 1), std::end(EDGES));
+		std::set<Action> const candidates(std::begin(EDGES) + (STATE.empty() ? 0 : STATE.back() + 1), std::end(EDGES));
 		// TODO: Now check them!
 
 
