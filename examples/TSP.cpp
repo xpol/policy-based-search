@@ -36,7 +36,7 @@ int main(int , char **)
 	TSP::node const solution = jsearch::search(mona_lisa, eval, true);
 
 	cout << "( ";
-	for_each(begin(solution.state), end(solution.state), [](vector<edge>::const_reference &E)
+	for_each(begin(solution.state), end(solution.state), [](vector<index>::const_reference &E)
 	{
 		cout << E << " ";
 	});

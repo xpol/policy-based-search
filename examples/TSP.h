@@ -25,27 +25,57 @@
 #include <set>
 #include <vector>
 #include <algorithm>
+#include <stdexcept>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
-typedef unsigned short edge;
+using boost::numeric::ublas::matrix;
+
+// typedef unsigned short index;
+typedef unsigned short index;
+typedef char City;
+typedef char Edge;
+
+
+inline index city_index(City const &C)
+{
+	if(C < 'A' || C > 'Z')
+		throw std::runtime_error("City out of range.");
+	return C - 'A';
+}
+
+
+inline index edge_index(Edge const &E)
+{
+	if(E < 'a' || E > 'z')
+		throw std::runtime_error("Edge out of range.");
+	return E - 'a';
+}
+
 
 class TSP;
 // Problem definition
 class TSP
 {
 public:
-	typedef std::vector<edge> state;
-	typedef edge action;
+	typedef std::vector<index> state;
+	typedef index action;
 	typedef unsigned int pathcost;
 	typedef jsearch::DefaultNode<TSP> node;
 };
 
 size_t const N(4);
 
-static boost::numeric::ublas::matrix<edge> minmal_problem()
+struct EdgeData
 {
-	boost::numeric::ublas::matrix<edge> matrix(N, N);
+	TSP::pathcost cost;
+	std::pair<City, City> city;
+};
+
+
+static matrix<index> minmal_problem()
+{
+	matrix<index> matrix(N, N);
 
 	matrix(1, 2) = matrix(2, 1) = 1;
 	matrix(1, 3) = matrix(3, 1) = 2;
@@ -57,7 +87,20 @@ static boost::numeric::ublas::matrix<edge> minmal_problem()
 	return matrix;
 }
 
-static boost::numeric::ublas::matrix<edge> const P(minmal_problem());
+
+template <typename T>
+std::vector<EdgeData> transpose(matrix<T> const &PROBLEM)
+{
+	std::vector<EdgeData> result(PROBLEM.size());
+	for(unsigned i = 0; i < PROBLEM.size(); ++i)
+	{
+		
+	}
+	
+	return result;
+}
+
+static boost::numeric::ublas::matrix<index> const P(minmal_problem());
 
 typedef std::vector<TSP::pathcost> cost;
 std::vector<TSP::action> const EDGES = {0, 1, 2, 3, 4, 5};
