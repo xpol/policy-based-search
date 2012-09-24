@@ -53,6 +53,19 @@ inline index edge_index(Edge const &E)
 }
 
 
+inline City city(index const &I)
+{
+	return I + 'A';
+}
+
+
+inline Edge edge(index const &I)
+{
+	return I + 'a';
+}
+
+
+
 class TSP;
 // Problem definition
 class TSP
@@ -64,13 +77,12 @@ public:
 	typedef jsearch::DefaultNode<TSP> node;
 };
 
-static size_t const N(4);
 
 template <typename PathCost>
 struct EdgeData
 {
 	PathCost cost;
-	std::pair<City, City> city;
+	std::pair<index, index> city;
 
 	bool operator<(EdgeData<PathCost> const &OTHER) const
 	{
@@ -97,15 +109,15 @@ static matrix<index> minmal_problem()
 
 /*	Transpose the matrix representation of the TSP into a */
 template <typename T>
-std::vector<EdgeData<T>> transpose(matrix<T> const &P)
+std::vector<EdgeData<T>> make_incidence_list(matrix<T> const &P)
 {
 	if(P.size1() != P.size2())
 		throw std::runtime_error("Matrix not square.");
 	std::vector<EdgeData<T>> result;
 	result.reserve(P.size1());
 
-	for(unsigned i = 0; i < P.size1() - 1; ++i)
-		for(unsigned j = i + 1; j < P.size1(); ++j)
+	for(index i = 0; i < P.size1() - 1; ++i)
+		for(index j = i + 1; j < P.size1(); ++j)
 			result.push_back({P(i, j), {i, j}});
 
 	std::sort(std::begin(result), std::end(result));
@@ -113,36 +125,28 @@ std::vector<EdgeData<T>> transpose(matrix<T> const &P)
 	return result;
 }
 
-
-static boost::numeric::ublas::matrix<TSP::pathcost> const PROBLEM(minmal_problem());
-auto const COST = transpose(PROBLEM);
-
-// typedef std::vector<TSP::pathcost> cost;
-// std::vector<TSP::action> const EDGES = {0, 1, 2, 3, 4, 5};
-std::vector<TSP::action> const EDGES = [](size_t const &N)
-{
-	std::vector<TSP::action> result(N);
-	std::generate(std::begin(result), std::end(result), [](){ static TSP::action S = 0; return S++; });
-	return result;
-}(COST.size());
-// cost const COST = {1, 2, 4, 7, 11, 16};	// Edges are implicitly numbered 0 to n-1.
+// NOTE: Could this data somehow be stored on and accessed from Problem?
+matrix<TSP::pathcost> DATA;
+std::vector<EdgeData<TSP::pathcost>> COST;
+std::vector<TSP::action> EDGES;
+size_t n; // I'm using a convention that n == number of cities, and N == number of edges.
+// So n is the size of the TSP, but N is the size of the search space for it.
 
 
 // TSP heuristic: shortest imaginable tour including these edges.
 template <typename PathCost, class State>
-class MinimalFeasibleTour
+class MinimalImaginableTour
 {
 protected:
 	PathCost h(State const &STATE) const
 	{
 		auto const start = std::begin(COST) + STATE.back();
-		return std::accumulate(start, start + PROBLEM.size1() - STATE.size(), 0, [](int A, EdgeData<PathCost> const &B)
+		return std::accumulate(start, start + n - STATE.size(), 0, [](int A, EdgeData<PathCost> const &B)
 		{
 			return A + B.cost;
 		});
 	}
 };
-
 
 
 template <typename PathCost, typename State, typename Action>
@@ -165,7 +169,10 @@ protected:
 	{
 		std::set<Action> const candidates(std::begin(EDGES) + (STATE.empty() ? 0 : STATE.back() + 1), std::end(EDGES));
 		// TODO: Now check them!
-
+		if(STATE.size() > 1)
+		{
+			std::map<index, unsigned short> checker;
+		}
 
 		return candidates;
 	}
@@ -186,17 +193,16 @@ protected:
 };
 
 
-// GoalTestPolicy
+// GoalTestPolicy: Is it a Hamiltonian cycle?
+// I think it is enough to have n edges that do not break any contraints.
+// If ActionsPolicy does its job, this will be called only once.
 template <typename State>
 class ValidTour
 {
 protected:
 	bool goal_test(State const &STATE) const
 	{
-		// Is it a Hamiltonian cycle?
-		// I think it is enough to have n edges that do not break any contraints.
-		// If ActionsPolicy does its job, this will be called only once.
-		return STATE.size() == N;
+		return STATE.size() == n;
 	}
 };
 

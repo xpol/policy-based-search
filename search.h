@@ -85,13 +85,18 @@ namespace jsearch
 				closed.insert(S->state);
 				std::set<Action> const actions = PROBLEM.actions(S->state);
 				auto const beginning = std::begin(actions), ending = std::end(actions);
+				/* TODO: If TREE == true, do lazy child generation.
+				 * This is an optimization whereby only the required children of a state are generated, 
+				 * instead of all of them as per regular A*.
+				 */
 				std::for_each(beginning, ending, [&](typename std::set<Action>::const_reference ACTION)
 				{
 					OpenListElement const child(std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION)));
 
 					if(!TREE)
 					{
-						// TODO: Check if it is in open or closed.  Sadly linear: can it be improved?
+						/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
+						 *	performance of this section of code.	*/
 						if(closed.find(child->state) == std::end(closed)) // If it is NOT in closed...
 						{
 							for(typename OpenList::iterator it = std::begin(open); it != std::end(open); ++it)

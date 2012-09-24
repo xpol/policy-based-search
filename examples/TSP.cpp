@@ -28,17 +28,28 @@ using namespace jsearch;
 
 int main(int , char **)
 {
+	// Define the required problem data.
+	DATA = minmal_problem();
+	COST = make_incidence_list(DATA);
+	n = DATA.size1();
+	EDGES = [](size_t const &N)
+	{
+		std::vector<TSP::action> result(N);
+		std::generate(std::begin(result), std::end(result), [](){ static TSP::action S = 0; return S++; });
+		return result;
+	}(COST.size());
+	
 	TSP::state const i;
 
-	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const mona_lisa(i);
-	Evaluation<MinimalFeasibleTour> const eval;
+	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const minimal(i);
+	Evaluation<MinimalImaginableTour> const eval;
 	
-	TSP::node const solution = jsearch::search(mona_lisa, eval, true);
+	TSP::node const solution = jsearch::search(minimal, eval, true);
 
 	cout << "( ";
 	for_each(begin(solution.state), end(solution.state), [](vector<index>::const_reference &E)
 	{
-		cout << E << " ";
+		cout << edge(E) << " ";
 	});
 	cout << ")" << endl;
 
