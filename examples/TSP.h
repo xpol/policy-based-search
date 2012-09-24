@@ -71,47 +71,61 @@ struct EdgeData
 {
 	PathCost cost;
 	std::pair<City, City> city;
+
+	bool operator<(EdgeData<PathCost> const &OTHER) const
+	{
+		return cost < OTHER.cost;
+	}
 };
 
-
+/*	Define the TSP.  This minimal problem is the smallest graph possible,
+ *	with four cities and six edges. */
 static matrix<index> minmal_problem()
 {
-	matrix<index> matrix(N, N);
+	matrix<index> matrix(4, 4);
 
-	matrix(1, 2) = matrix(2, 1) = 1;
-	matrix(1, 3) = matrix(3, 1) = 2;
-	matrix(1, 4) = matrix(4, 1) = 4;
-	matrix(2, 3) = matrix(3, 2) = 7;
-	matrix(2, 4) = matrix(4, 2) = 11;
-	matrix(3, 4) = matrix(4, 3) = 16;
+	matrix(0, 1) = matrix(1, 0) = 1;
+	matrix(0, 2) = matrix(2, 0) = 2;
+	matrix(0, 3) = matrix(3, 0) = 4;
+	matrix(1, 2) = matrix(2, 1) = 7;
+	matrix(1, 3) = matrix(3, 1) = 11;
+	matrix(2, 3) = matrix(3, 2) = 16;
 
 	return matrix;
 }
 
 
+/*	Transpose the matrix representation of the TSP into a */
 template <typename T>
 std::vector<EdgeData<T>> transpose(matrix<T> const &P)
 {
 	if(P.size1() != P.size2())
 		throw std::runtime_error("Matrix not square.");
-	std::vector<EdgeData<T>> result(P.size1());
+	std::vector<EdgeData<T>> result;
+	result.reserve(P.size1());
 
 	for(unsigned i = 0; i < P.size1() - 1; ++i)
-	{
 		for(unsigned j = i + 1; j < P.size1(); ++j)
 			result.push_back({P(i, j), {i, j}});
-	}
+
+	std::sort(std::begin(result), std::end(result));
 	
 	return result;
 }
 
 
-static boost::numeric::ublas::matrix<index> const PROBLEM(minmal_problem());
-auto const foo = transpose(PROBLEM);
+static boost::numeric::ublas::matrix<TSP::pathcost> const PROBLEM(minmal_problem());
+auto const COST = transpose(PROBLEM);
 
-typedef std::vector<TSP::pathcost> cost;
-std::vector<TSP::action> const EDGES = {0, 1, 2, 3, 4, 5};
-cost const COST = {1, 2, 4, 7, 11, 16};	// Edges are implicitly numbered 0 to n-1.
+// typedef std::vector<TSP::pathcost> cost;
+// std::vector<TSP::action> const EDGES = {0, 1, 2, 3, 4, 5};
+std::vector<TSP::action> const EDGES = [](size_t const &N)
+{
+	std::vector<TSP::action> result(N);
+	std::generate(std::begin(result), std::end(result), [](){ static TSP::action S = 0; return S++; });
+	return result;
+}(COST.size());
+// cost const COST = {1, 2, 4, 7, 11, 16};	// Edges are implicitly numbered 0 to n-1.
 
 
 // TSP heuristic: shortest imaginable tour including these edges.
@@ -122,7 +136,10 @@ protected:
 	PathCost h(State const &STATE) const
 	{
 		auto const start = std::begin(COST) + STATE.back();
-		return std::accumulate(start, start + N - STATE.size(), 0);
+		return std::accumulate(start, start + PROBLEM.size1() - STATE.size(), 0, [](int A, EdgeData<PathCost> const &B)
+		{
+			return A + B.cost;
+		});
 	}
 };
 
@@ -134,7 +151,7 @@ class EdgeCost
 protected:
 	PathCost step_cost(State const &, Action const &ACTION) const
 	{
-		return COST[ACTION];
+		return COST[ACTION].cost;
 	}
 };
 
