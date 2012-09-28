@@ -1,4 +1,4 @@
 [Project]
-Name=search
 Manager=KDevCMakeManager
+Name=policy-based-search
 VersionControl=kdevgit
