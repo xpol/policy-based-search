@@ -15,6 +15,7 @@ public:
 	typedef std::string action;
 	typedef unsigned int pathcost;
 	typedef jsearch::DefaultNode<Romania> node;
+	static bool const combinatorial = false;
 };
 
 typedef std::map<Romania::state, Romania::pathcost> StateCost;

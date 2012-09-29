@@ -52,7 +52,7 @@ namespace jsearch
 			template <typename Traits,
 				template <typename State, typename PathCost> class PathCostPolicy,
 				template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarNodeComparator>
-	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<HeuristicPolicy, PathCostPolicy, Comparator> const &, bool const TREE = false)
+	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<HeuristicPolicy, PathCostPolicy, Comparator> const &)
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
@@ -85,7 +85,7 @@ namespace jsearch
 				closed.insert(S->state);
 				std::set<Action> const actions = PROBLEM.actions(S->state);
 				auto const beginning = std::begin(actions), ending = std::end(actions);
-				/* TODO: If TREE == true, do lazy child generation.
+				/* TODO: If combinatorial == true, do lazy child generation.
 				 * This is an optimization whereby only the required children of a state are generated, 
 				 * instead of all of them as per regular A*.
 				 */
@@ -93,7 +93,7 @@ namespace jsearch
 				{
 					OpenListElement const child(std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION)));
 
-					if(!TREE)
+					if(!Traits::combinatorial) // TODO: Make this a compile-time conditional.
 					{
 						/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
 						 *	performance of this section of code.	*/

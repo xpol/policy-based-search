@@ -36,7 +36,7 @@ namespace jsearch
 		DefaultNode(State const &STATE, ParentType const PARENT, Action const &ACTION, PathCost const &PATH_COST) : state(STATE), parent(PARENT),  action(ACTION), path_cost(PATH_COST) {}
 
 		State state;
-		ParentType const parent;
+		ParentType parent;
 		Action action;
 		PathCost path_cost;
 	};

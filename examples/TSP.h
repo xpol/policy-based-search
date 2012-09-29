@@ -26,18 +26,18 @@
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
+#include <array>
 
-using boost::numeric::ublas::matrix;
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/edge_list.hpp>
+#include <boost/graph/adjacency_matrix.hpp>
+#include <boost/graph/depth_first_search.hpp>
 
-// typedef unsigned short index;
-typedef unsigned short index;
-typedef char City;
-typedef char Edge;
+using boost::adjacency_matrix;
 
 
-inline index city_index(City const &C)
+/*
+inline Index city_Index(City const &C)
 {
 	if(C < 'A' || C > 'Z')
 		throw std::runtime_error("City out of range.");
@@ -45,7 +45,7 @@ inline index city_index(City const &C)
 }
 
 
-inline index edge_index(Edge const &E)
+inline Index edge_Index(Edge const &E)
 {
 	if(E < 'a' || E > 'z')
 		throw std::runtime_error("Edge out of range.");
@@ -53,36 +53,82 @@ inline index edge_index(Edge const &E)
 }
 
 
-inline City city(index const &I)
+inline City city(Index const &I)
 {
 	return I + 'A';
 }
 
 
-inline Edge edge(index const &I)
+inline Edge edge(Index const &I)
 {
 	return I + 'a';
 }
+*/
 
 
+
+//Bundled properties.
+struct VertexProps
+{
+	VertexProps() {}
+	VertexProps(std::string const &NAME) : name(NAME) {}
+	
+	std::string name;
+};
+
+
+struct EdgeProps
+{
+	EdgeProps() {}
+	EdgeProps(char const &NAME, unsigned int const W) : name(NAME), weight(W) {}
+
+	char name;
+	unsigned int weight;
+};
+
+
+typedef adjacency_matrix<boost::undirectedS, VertexProps, EdgeProps> Graph;
+
+typedef std::pair<int, int> E;
+
+typedef typename boost::graph_traits<Graph>::vertex_iterator vertex_iter;
+typedef typename boost::graph_traits<Graph>::edge_iterator edge_iter;
+typedef typename boost::graph_traits<Graph>::vertices_size_type vertices_size_type;
+typedef typename boost::graph_traits<Graph>::edges_size_type edges_size_type;
+
+vertices_size_type n; // Size of the TSP instance (number of cities).
+edges_size_type N; // Size of the TSP instance (number of edges).
+
+Graph const *g = nullptr;
+std::pair<vertex_iter, vertex_iter> vertices;
+std::pair<edge_iter, edge_iter> edges;
+
+////////////////////////////////////////////////////////////////////////
+
+
+typedef unsigned short Index;
+typedef char City;
+typedef char Edge;
 
 class TSP;
 // Problem definition
 class TSP
 {
 public:
-	typedef std::vector<index> state;
-	typedef index action;
+	typedef std::vector<Index> state;
+	typedef Index action;
 	typedef unsigned int pathcost;
 	typedef jsearch::DefaultNode<TSP> node;
+	static bool const combinatorial = true;
 };
 
-
+#if (0)
+/*
 template <typename PathCost>
 struct EdgeData
 {
 	PathCost cost;
-	std::pair<index, index> city;
+	std::pair<Index, Index> city;
 
 	bool operator<(EdgeData<PathCost> const &OTHER) const
 	{
@@ -90,24 +136,8 @@ struct EdgeData
 	}
 };
 
-/*	Define the TSP.  This minimal problem is the smallest graph possible,
- *	with four cities and six edges. */
-static matrix<index> minmal_problem()
-{
-	matrix<index> matrix(4, 4);
 
-	matrix(0, 1) = matrix(1, 0) = 1;
-	matrix(0, 2) = matrix(2, 0) = 2;
-	matrix(0, 3) = matrix(3, 0) = 4;
-	matrix(1, 2) = matrix(2, 1) = 7;
-	matrix(1, 3) = matrix(3, 1) = 11;
-	matrix(2, 3) = matrix(3, 2) = 16;
-
-	return matrix;
-}
-
-
-/*	Transpose the matrix representation of the TSP into a */
+//	Transpose the matrix representation of the TSP into a
 template <typename T>
 std::vector<EdgeData<T>> make_incidence_list(matrix<T> const &P)
 {
@@ -116,22 +146,22 @@ std::vector<EdgeData<T>> make_incidence_list(matrix<T> const &P)
 	std::vector<EdgeData<T>> result;
 	result.reserve(P.size1());
 
-	for(index i = 0; i < P.size1() - 1; ++i)
-		for(index j = i + 1; j < P.size1(); ++j)
+	for(Index i = 0; i < P.size1() - 1; ++i)
+		for(Index j = i + 1; j < P.size1(); ++j)
 			result.push_back({P(i, j), {i, j}});
 
 	std::sort(std::begin(result), std::end(result));
 	
 	return result;
 }
+*/
 
 // NOTE: Could this data somehow be stored on and accessed from Problem?
-matrix<TSP::pathcost> DATA;
-std::vector<EdgeData<TSP::pathcost>> COST;
-std::vector<TSP::action> EDGES;
-size_t n; // I'm using a convention that n == number of cities, and N == number of edges.
-// So n is the size of the TSP, but N is the size of the search space for it.
-
+// std::vector<EdgeData<TSP::pathcost>> COST;
+// std::vector<TSP::action> EDGES;
+// size_t n; // I'm using a convention that n == number of cities, and N == number of edges.
+// So n is the size of the TSP in cities, but N is the size of the TSP in edges.
+// Curiously, I just realized that the real difficulty of a TSP is the difference between n and N: neither by themselves tells you enough.
 
 // TSP heuristic: shortest imaginable tour including these edges.
 template <typename PathCost, class State>
@@ -171,7 +201,7 @@ protected:
 		// TODO: Now check them!
 		if(STATE.size() > 1)
 		{
-			std::map<index, unsigned short> checker;
+			std::map<Index, unsigned short> checker;
 		}
 
 		return candidates;
@@ -195,7 +225,6 @@ protected:
 
 // GoalTestPolicy: Is it a Hamiltonian cycle?
 // I think it is enough to have n edges that do not break any contraints.
-// If ActionsPolicy does its job, this will be called only once.
 template <typename State>
 class ValidTour
 {
@@ -206,5 +235,6 @@ protected:
 	}
 };
 
+#endif // if (0)
 
 #endif // TSP_H
