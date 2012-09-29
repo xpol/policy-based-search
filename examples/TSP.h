@@ -80,30 +80,31 @@ struct VertexProps
 struct EdgeProps
 {
 	EdgeProps() {}
-	EdgeProps(char const &NAME, unsigned int const W) : name(NAME), weight(W) {}
+	EdgeProps(char const &NAME, unsigned int const &W) : name(NAME), cost(W) {}
 
 	char name;
-	unsigned int weight;
+	unsigned int cost;
+
+	bool operator<(EdgeProps const &OTHER) const
+	{
+		return cost < OTHER.cost;
+	}
 };
 
 
 typedef adjacency_matrix<boost::undirectedS, VertexProps, EdgeProps> Graph;
 
-typedef std::pair<int, int> E;
+// typedef std::pair<int, int> E;
 
 typedef typename boost::graph_traits<Graph>::vertex_iterator vertex_iter;
 typedef typename boost::graph_traits<Graph>::edge_iterator edge_iter;
 typedef typename boost::graph_traits<Graph>::vertices_size_type vertices_size_type;
 typedef typename boost::graph_traits<Graph>::edges_size_type edges_size_type;
+typedef typename boost::graph_traits<Graph>::vertex_descriptor vertex_desc;
+typedef typename boost::graph_traits<Graph>::edge_descriptor edge_desc;
 
 vertices_size_type n; // Size of the TSP instance (number of cities).
 edges_size_type N; // Size of the TSP instance (number of edges).
-
-Graph const *g = nullptr;
-std::pair<vertex_iter, vertex_iter> vertices;
-std::pair<edge_iter, edge_iter> edges;
-
-////////////////////////////////////////////////////////////////////////
 
 
 typedef unsigned short Index;
@@ -122,39 +123,12 @@ public:
 	static bool const combinatorial = true;
 };
 
-#if (0)
-/*
-template <typename PathCost>
-struct EdgeData
-{
-	PathCost cost;
-	std::pair<Index, Index> city;
+Graph const *g = nullptr;
+// Could these two be combined into a std::map<TSP::action, EdgeProps> without sacrificing complexity?
+std::vector<TSP::action> EDGES;
+std::vector<EdgeProps> COST;
+////////////////////////////////////////////////////////////////////////
 
-	bool operator<(EdgeData<PathCost> const &OTHER) const
-	{
-		return cost < OTHER.cost;
-	}
-};
-
-
-//	Transpose the matrix representation of the TSP into a
-template <typename T>
-std::vector<EdgeData<T>> make_incidence_list(matrix<T> const &P)
-{
-	if(P.size1() != P.size2())
-		throw std::runtime_error("Matrix not square.");
-	std::vector<EdgeData<T>> result;
-	result.reserve(P.size1());
-
-	for(Index i = 0; i < P.size1() - 1; ++i)
-		for(Index j = i + 1; j < P.size1(); ++j)
-			result.push_back({P(i, j), {i, j}});
-
-	std::sort(std::begin(result), std::end(result));
-	
-	return result;
-}
-*/
 
 // NOTE: Could this data somehow be stored on and accessed from Problem?
 // std::vector<EdgeData<TSP::pathcost>> COST;
@@ -170,8 +144,9 @@ class MinimalImaginableTour
 protected:
 	PathCost h(State const &STATE) const
 	{
-		auto const start = std::begin(COST) + STATE.back();
-		return std::accumulate(start, start + n - STATE.size(), 0, [](int A, EdgeData<PathCost> const &B)
+		// Expects edge costs to be ordered.
+		auto const START = std::begin(COST) + (STATE.empty() ? 0 : STATE.back() + 1); // NOTE: Test this.
+		return std::accumulate(START, START + n - STATE.size(), 0, [](int A, EdgeProps const &B)
 		{
 			return A + B.cost;
 		});
@@ -234,7 +209,5 @@ protected:
 		return STATE.size() == n;
 	}
 };
-
-#endif // if (0)
 
 #endif // TSP_H

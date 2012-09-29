@@ -60,6 +60,11 @@ int main(int , char **)
 	// Define the required problem data.
 	// Graph const G(Australia());
 	g = new Graph(procedural(4));
+
+	std::pair<edge_iter, edge_iter> const EP(boost::edges(*g));
+	
+	transform(EP.first, EP.second, std::back_inserter(COST), [&](edge_desc const &E){ return (*g)[E]; });
+	sort(begin(COST), end(COST));
 	
 	TSP::state const i;
 
@@ -84,8 +89,8 @@ int main(int , char **)
 Graph procedural(size_t const &n)
 {
 	// enum cities { A, B, C, D };
-	std::vector<char> const NAME { { 'A', 'B', 'C', 'D' } };
-	std::vector<unsigned int> const WEIGHT { { 1, 2, 4, 7, 11, 16 } };
+	std::vector<char> const NAME { { 'A', 'B', 'C', 'D' } }; // TODO: generator
+	std::vector<unsigned int> const WEIGHT { { 1, 2, 4, 7, 11, 16 } }; // TODO: generator
 	Graph g(n);
 
 	for(unsigned i = 0, k = 0; i < n - 1; ++i)
@@ -98,28 +103,7 @@ Graph procedural(size_t const &n)
 		}
 	}
 
-	/*
-	boost::add_edge(A, B, EdgeProps(NAME[0], WEIGHT[0]), g);
-	boost::add_edge(A, C, EdgeProps(NAME[1], WEIGHT[1]), g);
-	boost::add_edge(A, D, EdgeProps(NAME[2], WEIGHT[2]), g);
-	boost::add_edge(B, C, EdgeProps(NAME[3], WEIGHT[3]), g);
-	boost::add_edge(B, D, EdgeProps(NAME[4], WEIGHT[4]), g);
-	boost::add_edge(C, D, EdgeProps(NAME[5], WEIGHT[5]), g);
-	*/
-
-	/*
-	pair<edge_iter, edge_iter> const EP = boost::edges(g);
-	auto ei = EP.first;
-	auto wit = begin(WEIGHT);
-	cout << "edge descriptors: ";
-	for (; ei != EP.second; ++ei)
-	{
-		cout << *ei << " ";
-		g[*ei].weight = *wit++;
-	}
-	cout << "" << endl;
-	*/
-	
+	// Give names to the cities.
 	pair<vertex_iter, vertex_iter> const VP = boost::vertices(g);
 	auto vi = VP.first;
 	// wit = begin(WEIGHT);
@@ -131,11 +115,12 @@ Graph procedural(size_t const &n)
 	}
 	cout << "" << endl;
 	
-	
+
+	// Verify that it worked.
 	cout << "edges(g) = ";
 	edge_iter ei, ei_end;
 	for (tie(ei, ei_end) = boost::edges(g); ei != ei_end; ++ei)
-		cout << "(" << g[boost::source(*ei, g)].name << "," << g[boost::target(*ei, g)].name << ")[" << g[*ei].weight << "] ";
+		cout << "(" << g[boost::source(*ei, g)].name << "," << g[boost::target(*ei, g)].name << ")[" << g[*ei].cost << "] ";
 	cout << std::endl;
 	
 	return g;
@@ -199,7 +184,7 @@ Graph Australia()
 	pair<edge_iter, edge_iter> const ep = boost::edges(g);
 	for (edge_iter i = ep.first; i != ep.second; ++i)
 	{
-		// g[*i].weight = AUS_NAMES[i - ep.first];
+		// g[*i].cost = AUS_NAMES[i - ep.first];
 	}
 	
 	return g;
