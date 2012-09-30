@@ -24,6 +24,7 @@
 
 #include <queue>
 #include <set>
+#include <unordered_set>
 #include <algorithm>
 #include <stdexcept>
 #include <memory>
@@ -60,8 +61,9 @@ namespace jsearch
 		typedef typename Traits::pathcost PathCost;
 
 		typedef std::shared_ptr<Node> OpenListElement;
+		// TODO: Try using Boost's pairing heap and Fibonacci heap for the Open list.
 		typedef std::set<OpenListElement, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> OpenList;
-		typedef std::set<State> ClosedList;
+		typedef std::unordered_set<State> ClosedList;
 
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
