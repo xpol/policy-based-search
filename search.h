@@ -35,7 +35,7 @@
 
 namespace jsearch
 {
-	class GoalNotFound : public std::exception {};
+	class goal_not_found : public std::exception {};
 	
 	template <typename Traits,
 			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
@@ -116,7 +116,7 @@ namespace jsearch
 			}
 
 		}
-		throw GoalNotFound();
+		throw goal_not_found();
 	}
 }
 
