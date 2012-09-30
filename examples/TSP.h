@@ -146,10 +146,12 @@ protected:
 	{
 		// Expects edge costs to be ordered.
 		auto const START = std::begin(COST) + (STATE.empty() ? 0 : STATE.back() + 1); // NOTE: Test this.
-		return std::accumulate(START, START + n - STATE.size(), 0, [](int A, EdgeProps const &B)
+		PathCost const result = std::accumulate(START, START + n - STATE.size(), 0, [](PathCost A, EdgeProps const &B)
 		{
 			return A + B.cost;
 		});
+		
+		return result;
 	}
 };
 

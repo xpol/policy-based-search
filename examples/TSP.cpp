@@ -60,7 +60,8 @@ int main(int , char **)
 	// Define the required problem data.
 	// Graph const G(Australia());
 	g = new Graph(procedural(4));
-
+	n = g->null_vertex();
+	N = g->m_num_edges;
 	std::pair<edge_iter, edge_iter> const EP(boost::edges(*g));
 	
 	transform(EP.first, EP.second, std::back_inserter(COST), [&](edge_desc const &E){ return (*g)[E]; });
@@ -68,19 +69,17 @@ int main(int , char **)
 	
 	TSP::state const i;
 
-	// Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const minimal(i);
-	// Evaluation<MinimalImaginableTour> const eval;
+	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const minimal(i);
+	Evaluation<MinimalImaginableTour> const eval;
 	
-	// TSP::node const solution = jsearch::search(minimal, eval);
+	TSP::node const solution = jsearch::search(minimal, eval);
 
-	/*
 	cout << "( ";
-	for_each(begin(solution.state), end(solution.state), [](vector<index>::const_reference &E)
+	for_each(begin(solution.state), end(solution.state), [](vector<Index>::const_reference &E)
 	{
-		cout << edge(E) << " ";
+		cout << E << " ";
 	});
 	cout << ")" << endl;
-	*/
 	
 	return 0;
 }
@@ -90,6 +89,7 @@ Graph procedural(size_t const &n)
 {
 	// enum cities { A, B, C, D };
 	std::vector<char> const NAME { { 'A', 'B', 'C', 'D' } }; // TODO: generator
+	std::vector<char> const EDGE_NAME { { 'a', 'b', 'c', 'd', 'e', 'f' } }; // TODO: generator
 	std::vector<unsigned int> const WEIGHT { { 1, 2, 4, 7, 11, 16 } }; // TODO: generator
 	Graph g(n);
 
@@ -99,7 +99,7 @@ Graph procedural(size_t const &n)
 		{
 			// size_t const K = i * (n - 1) + (j - i) - (i + 1);
 			// cerr << "(" << i << ", " << j << ") k: " << k << endl;
-			boost::add_edge(i, j, EdgeProps(NAME[k], WEIGHT[k]), g);
+			boost::add_edge(i, j, EdgeProps(EDGE_NAME[k], WEIGHT[k]), g);
 		}
 	}
 

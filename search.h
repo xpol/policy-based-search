@@ -70,13 +70,17 @@ namespace jsearch
 		while(!open.empty())
 		{
 			typename OpenList::const_iterator IT = std::begin(open);
+			// I learnt something whilst writing this: S must be a value not a reference in this case!
 			OpenListElement const S = *IT;
 			open.erase(IT);
 
 			if(PROBLEM.goal_test(S->state))
 			{
 #ifndef NDEBUG
-				std::cerr << "open: " << open.size() << ", closed: " << closed.size() << "\n";
+				std::cerr << "open: " << open.size();
+				if(!Traits::combinatorial)
+					std::cerr << ", closed: " << closed.size();
+				std::cerr << "\n";
 #endif
 				return *S; // OK, I don't like non-local returns, but what else?
 			}
