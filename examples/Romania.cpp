@@ -1,4 +1,4 @@
-#include "examples/Romania.h"
+#include "Romania.h"
 #include "search.h"
 
 #include <iostream>
@@ -11,7 +11,8 @@ typedef Romania::state State;
 typedef Romania::node Node;
 
 
-void print_path(Node const &NODE, std::ostream* out);
+template <class charT, class traits>
+basic_ostream<charT, traits>& print(Node const &NODE, basic_ostream<charT, traits>& os);
 
 
 int main(int, char **)
@@ -23,17 +24,21 @@ int main(int, char **)
 
 	auto const solution = jsearch::search(Bucharest, evaluation);
 
-	print_path(solution, &cout);
+	print(solution, cout) << endl;
 }
 
 
-void print_path(Node const &NODE, std::ostream* out)
+template <class charT, class traits>
+basic_ostream<charT, traits>& print(Node const &NODE, basic_ostream<charT, traits>& os)
 {
+	
 	if(NODE.parent)
 	{
-		print_path(*NODE.parent, out);
-		*out << " => ";
+		print(*NODE.parent, os);
+		os << " => ";
 	}
 	
-	*out << NODE.state;
+	os << NODE.state;
+	
+	return os;
 }

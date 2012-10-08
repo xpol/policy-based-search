@@ -22,10 +22,12 @@ typedef std::map<Romania::state, Romania::pathcost> StateCost;
 // Road costs from city to city as an adjacency list.
 std::map<Romania::state, StateCost> const COST {
 	// { "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80}, {"Arad", 140}, {"Oradea", 151} } },
-	{ "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80} } },
-	{ "Fagaras", { {"Sibiu", 99}, {"Bucharest", 211} } },
 	// { "Arad", { {"Zerind", 75}, {"Sibiu", 140}, {"Timisoara", 118} } },
 	// { "Zerind", { {"Oradea", 71}, {"Arad", 75} } },
+	// { "Oradea", { { "Zerind", 71 }, { "Sibiu", 151 } } },
+	{ "Timisoara", { { "Arad", 118 }, { "Lugoj", 111 } } },
+	{ "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80} } },
+	{ "Fagaras", { {"Sibiu", 99}, {"Bucharest", 211} } },
 	{ "Rimnicu Vilcea", { {"Sibiu", 80}, {"Pitesti", 97} } },
 	{ "Pitesti", { {"Rimnicu Vilcea", 97}, {"Bucharest", 101} } },
 	{ "Bucharest", { {"Pitesti", 101}, {"Fagaras", 211} } }
