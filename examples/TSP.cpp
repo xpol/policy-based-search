@@ -59,12 +59,12 @@ int main(int , char **)
 {
 	// Define the required problem data.
 	// Graph const G(Australia());
-	g = new Graph(procedural(4));
-	n = boost::num_vertices(*g);
-	N = g->m_num_edges;
-	pair<edge_iter, edge_iter> const EP(boost::edges(*g));
+	problem = new Graph(procedural(4));
+	n = boost::num_vertices(*problem);
+	N = problem->m_num_edges;
+	pair<edge_iter, edge_iter> const EP(boost::edges(*problem));
 	
-	transform(EP.first, EP.second, back_inserter(COST), [&](edge_desc const &E){ return (*g)[E]; });
+	transform(EP.first, EP.second, back_inserter(COST), [&](edge_desc const &E){ return (*problem)[E]; });
 	sort(begin(COST), end(COST));
 
 	TSP::state const i;
@@ -89,18 +89,23 @@ Graph procedural(size_t const &n)
 {
 	// enum cities { A, B, C, D };
 	vector<char> const CITIES { { 'A', 'B', 'C', 'D' } }; // TODO: generator
-	vector<string> const EDGES = { "a", "b", "c", "d", "e", "f" }; // TODO: generator
+	vector<string> const EDGE_NAMES = { "a", "b", "c", "d", "e", "f" }; // TODO: generator
 	vector<unsigned int> const WEIGHT { { 1, 2, 4, 7, 11, 16 } }; // TODO: generator
 	Graph g(n);
 
+	EDGES.reserve(n * (n - 1) / 2);
 
-	for(unsigned i = 0, k = 0; i < n - 1; ++i)
+	for(vertex_desc i = 0, k = 0; i < n - 1; ++i)
 	{
-		for(unsigned j = i + 1; j < n; ++j, ++k)
+		for(vertex_desc j = i + 1; j < n; ++j, ++k)
 		{
 			// size_t const K = i * (n - 1) + (j - i) - (i + 1);
 			// cerr << "(" << i << ", " << j << ") k: " << k << endl;
-			boost::add_edge(i, j, EdgeProps(EDGES[k], WEIGHT[k]), g);
+			auto const E = boost::add_edge(i, j, EdgeProps(EDGE_NAMES[k], WEIGHT[k]), g);
+			if(!E.second)
+				cerr << "Failed to add edge " << E.first << "to the graph." << endl;
+			else
+				EDGES.push_back(E.first);
 		}
 	}
 
@@ -121,7 +126,9 @@ Graph procedural(size_t const &n)
 	cout << "edges(g) = ";
 	edge_iter ei, ei_end;
 	for (tie(ei, ei_end) = boost::edges(g); ei != ei_end; ++ei)
+	{
 		cout << "(" << g[boost::source(*ei, g)].name << "," << g[boost::target(*ei, g)].name << ")[" << g[*ei].cost << "] ";
+	}
 	cout << std::endl;
 	
 	return g;

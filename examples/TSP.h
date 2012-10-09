@@ -33,39 +33,9 @@
 #include <boost/graph/edge_list.hpp>
 #include <boost/graph/adjacency_matrix.hpp>
 #include <boost/graph/depth_first_search.hpp>
+#include <boost/graph/adjacency_list.hpp>
 
 using boost::adjacency_matrix;
-
-
-/*
-inline Index city_Index(City const &C)
-{
-	if(C < 'A' || C > 'Z')
-		throw std::runtime_error("City out of range.");
-	return C - 'A';
-}
-
-
-inline Index edge_Index(Edge const &E)
-{
-	if(E < 'a' || E > 'z')
-		throw std::runtime_error("Edge out of range.");
-	return E - 'a';
-}
-
-
-inline City city(Index const &I)
-{
-	return I + 'A';
-}
-
-
-inline Edge edge(Index const &I)
-{
-	return I + 'a';
-}
-*/
-
 
 
 //Bundled properties.
@@ -100,8 +70,6 @@ struct EdgeProps
 
 typedef adjacency_matrix<boost::undirectedS, VertexProps, EdgeProps> Graph;
 
-// typedef std::pair<int, int> E;
-
 typedef typename boost::graph_traits<Graph>::vertex_iterator vertex_iter;
 typedef typename boost::graph_traits<Graph>::edge_iterator edge_iter;
 typedef typename boost::graph_traits<Graph>::vertices_size_type vertices_size_type;
@@ -109,6 +77,8 @@ typedef typename boost::graph_traits<Graph>::edges_size_type edges_size_type;
 typedef typename boost::graph_traits<Graph>::vertex_descriptor vertex_desc;
 typedef typename boost::graph_traits<Graph>::edge_descriptor edge_desc;
 
+// subgraph is used for testing whether a given combination of edges form a valid subsection of a tour.
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> subgraph;
 vertices_size_type n; // Size of the TSP instance (number of cities).
 edges_size_type N; // Size of the TSP instance (number of edges).
 
@@ -126,21 +96,14 @@ public:
 	typedef Index action;
 	typedef unsigned int pathcost;
 	typedef jsearch::DefaultNode<TSP> node;
-	static bool const combinatorial = true;
+	static bool const combinatorial = true; // TODO: Hmmm... is this actually usable at compile time?
 };
 
-Graph const *g = nullptr;
+Graph const *problem = nullptr;
 // Could these two be combined into a std::map<TSP::action, EdgeProps> without sacrificing complexity?
 std::vector<EdgeProps> COST;
+std::vector<edge_desc> EDGES;
 ////////////////////////////////////////////////////////////////////////
-
-
-// NOTE: Could this data somehow be stored on and accessed from Problem?
-// std::vector<EdgeData<TSP::pathcost>> COST;
-// std::vector<TSP::action> EDGES;
-// size_t n; // I'm using a convention that n == number of cities, and N == number of edges.
-// So n is the size of the TSP in cities, but N is the size of the TSP in edges.
-// Curiously, I just realized that the real difficulty of a TSP is the difference between n and N: neither by themselves tells you enough.
 
 // TSP heuristic: shortest imaginable tour including these edges.
 template <typename PathCost, class State>
@@ -194,10 +157,23 @@ protected:
 		
 		if(STATE.size() > 1)
 		{
+			// Create a graph containing all the edges in STATE.
+			subgraph subproblem;
+			
+			std::for_each(std::begin(STATE), std::end(STATE), [&](typename State::const_reference &E)
+			{
+				// boost::add_edge(*problem[boost::source(E, *problem)].name, *problem[boost::target(E, *problem)].name, subproblem);
+				auto const SOURCE = boost::source(EDGES[E], *problem),
+						   TARGET = boost::target(EDGES[E], *problem);
+				boost::add_edge(SOURCE, TARGET, subproblem);
+			});
+			
+			
 			for(Action a = START; a < END; ++a)
 			{
 				// Check each theoretical action for validity.
 				// Add valid actions to result.
+				
 				result.push_back(a);
 			}
 		}

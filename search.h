@@ -19,8 +19,8 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
-#include "problem.h"
 #include "evaluation.h"
+#include "problem.h"
 
 #include <queue>
 #include <set>
