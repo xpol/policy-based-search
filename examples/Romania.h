@@ -1,10 +1,10 @@
 
 #include "problem.h"
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <algorithm>
-#include <set>
+#include <vector>
 
 class Romania;
 
@@ -18,10 +18,10 @@ public:
 	static bool const combinatorial = false;
 };
 
-typedef std::map<Romania::state, Romania::pathcost> StateCost;
+typedef std::unordered_map<Romania::state, Romania::pathcost> StateCost;
 
 // Road costs from city to city as an adjacency list.
-std::map<Romania::state, StateCost> const COST {
+std::unordered_map<Romania::state, StateCost> const COST {
 	// { "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80}, {"Arad", 140}, {"Oradea", 151} } },
 	{ "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80} } },
 	{ "Fagaras", { {"Sibiu", 99}, {"Bucharest", 211} } },
@@ -33,7 +33,7 @@ std::map<Romania::state, StateCost> const COST {
 };
 
 // Straight-line distance from city to Bucharest.
-std::map<Romania::state, Romania::pathcost> const SLD {
+std::unordered_map<Romania::state, Romania::pathcost> const SLD {
 	{"Sibiu", 253}, {"Bucharest", 0}, {"Rimnicu Vilcea", 193}, {"Pitesti", 100}, {"Fagaras", 176}
 };
 
@@ -45,7 +45,7 @@ class Distance
 protected:
 	PathCost step_cost(State const &STATE, Action const &ACTION) const
 	{
-		return COST.find(STATE)->second.find(ACTION)->second;
+		return COST.at(STATE).find(ACTION)->second;
 	}
 };
 
@@ -55,14 +55,24 @@ template <typename State, typename Action>
 class Neighbours
 {
 protected:
-	std::set<Action> actions(State const &STATE) const
+	std::vector<Action> actions(State const &STATE) const
 	{
-		std::set<Action> result;
+		std::vector<Action> result;
+		auto const NBRS = COST.at(STATE);
+		// Iterating over the inner cost map: slower for unordered_map?
+		// Probably not, because a pathfinding problem like this is not a complete graph, so the number of neighbours does
+		// not increase with n.
+		std::transform(std::begin(NBRS), std::end(NBRS), std::back_inserter(result), [&](typename StateCost::const_reference P)
+		{
+			return P.first;
+		});
 
+		/*
 		std::for_each(std::begin(COST.find(STATE)->second), std::end(COST.find(STATE)->second), [&](typename StateCost::const_reference P)
 		{
-			result.insert(P.first);
+			result.push_back(P.first);
 		});
+		*/
 		
 		return result;
 	}
@@ -97,7 +107,9 @@ class EuclideanDistance
 protected:
 	PathCost h(State const &STATE) const
 	{
-		std::map<Romania::state, Romania::pathcost>::const_iterator I(SLD.find(STATE));
-		return I->second;
+		// std::unordered_map<Romania::state, Romania::pathcost>::const_iterator I(SLD.find(STATE));
+		// return I->second;
+		auto const RESULT = SLD.at(STATE);
+		return RESULT;
 	}
 };

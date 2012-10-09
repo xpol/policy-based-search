@@ -86,8 +86,9 @@ namespace jsearch
 			}
 			else
 			{
-				closed.insert(S->state);
-				std::set<Action> const actions = PROBLEM.actions(S->state);
+				if(!Traits::combinatorial)
+					closed.insert(S->state);
+				std::vector<Action> const actions = PROBLEM.actions(S->state);
 				auto const beginning = std::begin(actions), ending = std::end(actions);
 				/* TODO: If combinatorial == true, do lazy child generation.
 				 * This is an optimization whereby only the required children of a state are generated, 

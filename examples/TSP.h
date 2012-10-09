@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <array>
+#include <string>
 
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/edge_list.hpp>
@@ -80,17 +81,22 @@ struct VertexProps
 struct EdgeProps
 {
 	EdgeProps() {}
-	EdgeProps(char const &NAME, unsigned int const &W) : name(NAME), cost(W) {}
+	EdgeProps(std::string const &NAME, unsigned int const &W) : name(NAME), cost(W) {}
 
-	char name;
+	std::string name;
 	unsigned int cost;
 
 	bool operator<(EdgeProps const &OTHER) const
 	{
 		return cost < OTHER.cost;
 	}
-};
 
+
+	bool operator==(EdgeProps const &OTHER) const
+	{
+		return cost == OTHER.cost;
+	}
+};
 
 typedef adjacency_matrix<boost::undirectedS, VertexProps, EdgeProps> Graph;
 
@@ -109,14 +115,14 @@ edges_size_type N; // Size of the TSP instance (number of edges).
 
 typedef unsigned short Index;
 typedef char City;
-typedef char Edge;
+// typedef char Edge;
 
 class TSP;
 // Problem definition
 class TSP
 {
 public:
-	typedef std::vector<Index> state;
+	typedef std::vector<Index> state; // Why vector again?  Remind me?  Why not set?  Do I really need back()?
 	typedef Index action;
 	typedef unsigned int pathcost;
 	typedef jsearch::DefaultNode<TSP> node;
@@ -125,7 +131,6 @@ public:
 
 Graph const *g = nullptr;
 // Could these two be combined into a std::map<TSP::action, EdgeProps> without sacrificing complexity?
-std::vector<TSP::action> EDGES;
 std::vector<EdgeProps> COST;
 ////////////////////////////////////////////////////////////////////////
 
@@ -145,13 +150,19 @@ protected:
 	PathCost h(State const &STATE) const
 	{
 		// Expects edge costs to be ordered.
-		auto const START = std::begin(COST) + (STATE.empty() ? 0 : STATE.back() + 1); // NOTE: Test this.
-		PathCost const result = std::accumulate(START, START + n - STATE.size(), 0, [](PathCost A, EdgeProps const &B)
+		auto START = std::begin(COST);
+		bool const EMPTY = STATE.empty();
+		auto const BACK = STATE.back();
+		auto const OFFSET = EMPTY ? 0 : BACK + 1;
+		START += OFFSET;
+		auto const END = START + n - STATE.size();
+
+		PathCost const RESULT = std::accumulate(START, END, 0, [](PathCost const &A, EdgeProps const &B)
 		{
 			return A + B.cost;
 		});
 		
-		return result;
+		return RESULT;
 	}
 };
 
@@ -162,7 +173,8 @@ class EdgeCost
 protected:
 	PathCost step_cost(State const &, Action const &ACTION) const
 	{
-		return COST[ACTION].cost;
+		PathCost const RESULT = COST[ACTION].cost;
+		return RESULT;
 	}
 };
 
@@ -172,16 +184,31 @@ template <typename State, typename Action>
 class HigherCostValidEdges
 {
 protected:
-	std::set<Action> actions(State const &STATE) const
+	// I thought about returning a pair of iterators for a while until I realized that, derr, I could be
+	// returning any arbitray subset of the available actions, not a contiguous one.
+	std::vector<Action> actions(State const &STATE) const
 	{
-		std::set<Action> const candidates(std::begin(EDGES) + (STATE.empty() ? 0 : STATE.back() + 1), std::end(EDGES));
-		// TODO: Now check them!
+		std::vector<Action> result;
+		Action const START = STATE.empty() ? 0 : STATE.back() + 1,
+					END = N - n + STATE.size() + 1;
+		
 		if(STATE.size() > 1)
 		{
-			std::map<Index, unsigned short> checker;
+			for(Action a = START; a < END; ++a)
+			{
+				// Check each theoretical action for validity.
+				// Add valid actions to result.
+				result.push_back(a);
+			}
+		}
+		else
+		{
+			// All actions are theoretically valid.
+			for(Action a = START; a < END; ++a)
+				result.push_back(a);
 		}
 
-		return candidates;
+		return result;
 	}
 };
 
