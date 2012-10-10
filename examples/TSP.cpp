@@ -64,11 +64,18 @@ private:
 
 int main(int argc, char **argv)
 {
-	// TODO: Use Program Options from Boost.
+	float weight = 1.0;
+	// TODO: Use Program Options from Boost to clean up this ugly mess.
 	if(argc > 1)
 	{
 		istringstream arg(argv[1]);
 		arg >> n;
+
+		if (argc > 2)
+		{
+			istringstream arg(argv[2]);
+			arg >> weight;
+		}
 	}
 	else
 	{
@@ -81,7 +88,7 @@ int main(int argc, char **argv)
 	problem.reset(new Graph(procedural(n)));
 #ifndef NDEBUG
 	ofstream dot("TSP.dot");
-	boost::write_graphviz(dot, *problem, boost::make_label_writer());
+	boost::write_graphviz(dot, *problem);
 #endif
 	// n = boost::num_vertices(*problem);
 	N = problem->m_num_edges;
@@ -93,7 +100,8 @@ int main(int argc, char **argv)
 	TSP::state const i;
 
 	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const minimal(i);
-	Evaluation<MinimalImaginableTour> const eval;
+
+	Evaluation<MinimalImaginableTour, DefaultPathCost, WAStar> const eval;
 	
 	try
 	{

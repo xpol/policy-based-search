@@ -67,6 +67,42 @@ namespace jsearch
 	};
 
 
+	// Weighted A* comparator functor.
+	template <typename Traits,
+		template <typename State, typename PathCost> class PathCostPolicy,
+		template <typename PathCost, typename State> class HeuristicPolicy,
+		size_t Weight = 10>
+	class WAStarNodeComparator : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
+							private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
+							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
+	{
+		typedef typename Traits::node Node;
+		typedef typename Traits::pathcost PathCost;
+		typedef typename Traits::state State;
+
+		using PathCostPolicy<Node, PathCost>::g;
+		using HeuristicPolicy<PathCost, State>::h;
+	public:
+		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
+		{
+			return g(*A) + (Weight / 10.0) * h(A->state) < g(*B) + (Weight / 10.0) * h(B->state);
+		}
+
+		/*
+		// Returns old weight.
+		float weight(float new_weight)
+		{
+			float const old_weight(weight_);
+			weight_ = new_weight;
+			return old_weight;
+		}
+
+	private:
+		float weight_;
+		*/
+	};
+
+	
 	// AStarOperator
 	template < 	typename Traits,
 				template <typename PathCost, typename State> class HeuristicPolicy,
@@ -92,7 +128,18 @@ namespace jsearch
 			template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarNodeComparator>
 	class Evaluation
 	{
-		// Absolutely nothing!
+		/*
+	public:
+		Evaluation(float const weight) : weight_(weight) { }
+
+		float weight() const
+		{
+			return weight_;
+		}
+		
+	private:
+		float const weight_;
+		*/
 	};
 }
 
