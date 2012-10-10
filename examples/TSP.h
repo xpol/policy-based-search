@@ -31,6 +31,7 @@
 #include <memory>
 #include <unordered_set>
 #include <stdexcept>
+#include <iostream>
 
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/edge_list.hpp>
@@ -158,11 +159,8 @@ protected:
 	};
 	
 	// Cycle-detector.
-	// TODO: Needs more logic to work on an undirected graph.
 	struct cycle_detector : public boost::dfs_visitor<>
 	{
-		// cycle_detector( )  { }
-		
 		template <class Edge, class Graph>
 		void back_edge(Edge const &E, Graph&)
 		{
@@ -178,6 +176,7 @@ protected:
 		}
 		
 	protected:
+		// TODO: Find a way to make this a hash/unordered set.
 		std::set<subgraph::edge_descriptor> predecessors;
 	};
 	
@@ -189,7 +188,9 @@ protected:
 		std::vector<Action> result;
 		Action const START = STATE.empty() ? 0 : STATE.back() + 1,
 					END = N - n + STATE.size() + 1;
+#ifndef NDEBUG
 		std::cerr << "Generating actions for " << to_string(STATE) << "\n";
+#endif
 		if(STATE.size() > 1)
 		{
 			// Create a graph containing all the edges in STATE.
@@ -197,7 +198,6 @@ protected:
 			
 			std::for_each(std::begin(STATE), std::end(STATE), [&](typename State::const_reference &E)
 			{
-				// boost::add_edge(*problem[boost::source(E, *problem)].name, *problem[boost::target(E, *problem)].name, subproblem);
 				auto const SOURCE = boost::source(EDGES[E], *problem),
 						   TARGET = boost::target(EDGES[E], *problem);
 				boost::add_edge(SOURCE, TARGET, subproblem); // Use the vertices from the main problem in the subproblem.
@@ -219,7 +219,9 @@ protected:
 				if(degree > 2)
 				{
 					valid = false;
+#ifndef NDEBUG
 					std::cout << "!invalid edge: " << a << " on " << SOURCE << "\n";
+#endif
 				}
 				else
 				{
@@ -228,7 +230,9 @@ protected:
 					if(degree > 2)
 					{
 						valid = false;
+#ifndef NDEBUG
 						std::cout << "!invalid edge: " << a << " on " << TARGET << "\n";
+#endif
 					}
 					else
 					{
@@ -243,7 +247,9 @@ protected:
 							catch (found_cycle &ex)
 							{
 								valid = false;
+#ifndef NDEBUG
 								std::cout << "!cycle found: " << ex.edge << "\n";
+#endif
 							}
 						}
 					}
@@ -252,7 +258,9 @@ protected:
 				// If valid, add action to result.
 				if(valid)
 				{
+#ifndef NDEBUG
 					std::cout << "GOOD edge: " << a << "\n";
+#endif
 					result.push_back(a);
 				}
 				// Remove action from subgraph.

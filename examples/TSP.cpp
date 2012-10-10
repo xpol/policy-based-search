@@ -22,6 +22,13 @@
 
 #include <iostream>
 #include <algorithm>
+#include <sstream>
+
+#ifndef NDEBUG
+#include <boost/graph/graphviz.hpp>
+#include <fstream>
+#endif
+
 
 using namespace std;
 using namespace jsearch;
@@ -55,12 +62,28 @@ private:
 */
 
 
-int main(int , char **)
+int main(int argc, char **argv)
 {
-	// Define the required problem data.
+	// TODO: Use Program Options from Boost.
+	if(argc > 1)
+	{
+		istringstream arg(argv[1]);
+		arg >> n;
+	}
+	else
+	{
+		cerr << "Missing required value for n as argument 1.\n";
+		exit(EXIT_FAILURE);
+	}
+
 	// Graph const G(Australia());
-	problem.reset(new Graph(procedural(4)));
-	n = boost::num_vertices(*problem);
+	
+	problem.reset(new Graph(procedural(n)));
+#ifndef NDEBUG
+	ofstream dot("TSP.dot");
+	boost::write_graphviz(dot, *problem, boost::make_label_writer());
+#endif
+	// n = boost::num_vertices(*problem);
 	N = problem->m_num_edges;
 	pair<edge_iter, edge_iter> const EP(boost::edges(*problem));
 	
@@ -71,16 +94,17 @@ int main(int , char **)
 
 	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const minimal(i);
 	Evaluation<MinimalImaginableTour> const eval;
+	
 	try
 	{
 		TSP::node const solution = jsearch::search(minimal, eval);
 
-		cout << "( ";
+		cout << "solution: { ";
 		for_each(begin(solution.state), end(solution.state), [](vector<Index>::const_reference &E)
 		{
 			cout << E << " ";
 		});
-		cout << ")" << endl;
+		cout << "}, " << solution.path_cost << endl;
 	}
 	catch (GoalNotFound &ex)
 	{
@@ -94,9 +118,9 @@ int main(int , char **)
 Graph procedural(size_t const &n)
 {
 	// enum cities { A, B, C, D };
-	vector<char> const CITIES { { 'A', 'B', 'C', 'D' } }; // TODO: generator
-	vector<string> const EDGE_NAMES = { "a", "b", "c", "d", "e", "f" }; // TODO: generator
-	vector<unsigned int> const WEIGHT { { 1, 2, 4, 7, 11, 16 } }; // TODO: generator
+	vector<char> const CITIES { { 'A', 'B', 'C', 'D', 'E' } }; // TODO: generator
+	vector<string> const EDGE_NAMES = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j" }; // TODO: generator
+	vector<unsigned int> const WEIGHT { { 1, 2, 4, 7, 11, 16, 22, 29, 37, 46 } }; // TODO: generator
 	Graph g(n);
 
 	EDGES.reserve(n * (n - 1) / 2);
@@ -117,23 +141,23 @@ Graph procedural(size_t const &n)
 
 	// Give names to the cities.
 	pair<vertex_iter, vertex_iter> const VP = boost::vertices(g);
-	auto vi = VP.first;
+	
 	// wit = begin(WEIGHT);
-	cout << "vertex descriptors: ";
-	for (; vi != VP.second; ++vi)
+	cout << "vertices: ";
+	for (auto vi = VP.first; vi != VP.second; ++vi)
 	{
-		cout << *vi << " ";
 		g[*vi].name = CITIES[vi - VP.first];
+		cout << g[*vi].name << " ";
 	}
 	cout << "" << endl;
 	
 
 	// Verify that it worked.
-	cout << "edges(g) = ";
+	cout << "edges: ";
 	edge_iter ei, ei_end;
 	for (tie(ei, ei_end) = boost::edges(g); ei != ei_end; ++ei)
 	{
-		cout << "(" << g[boost::source(*ei, g)].name << "," << g[boost::target(*ei, g)].name << ")[" << g[*ei].cost << "] ";
+		cout << "(" << g[boost::source(*ei, g)].name << "," << g[boost::target(*ei, g)].name << "):" << g[*ei].cost << " ";
 	}
 	cout << std::endl;
 	
@@ -143,10 +167,10 @@ Graph procedural(size_t const &n)
 
 Graph Australia()
 {
-	enum { Melbourne, Sydney, Perth, Adelaide, Darwin, Brisbane, Hobart, Canberra, N };
-	const std::array<std::string, N> AUS_NAMES { { "Melbourne", "Sydney", "Perth", "Adelaide", "Darwin", "Brisbane", "Hobart", "Canberra" } };
+	enum { Melbourne, Sydney, Perth, Adelaide, Darwin, Brisbane, Hobart, Canberra, n };
+	const std::array<std::string, n> AUS_NAMES { { "Melbourne", "Sydney", "Perth", "Adelaide", "Darwin", "Brisbane", "Hobart", "Canberra" } };
 	
-	Graph g(N);
+	Graph g(n);
 
 	// Add the vertices so I know what order they are in?
 	boost::add_vertex(Melbourne, g);
