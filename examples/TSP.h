@@ -28,6 +28,9 @@
 #include <stdexcept>
 #include <array>
 #include <string>
+#include <memory>
+#include <unordered_set>
+#include <stdexcept>
 
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/edge_list.hpp>
@@ -99,7 +102,7 @@ public:
 	static bool const combinatorial = true; // TODO: Hmmm... is this actually usable at compile time?
 };
 
-Graph const *problem = nullptr;
+std::unique_ptr<Graph> problem;
 // Could these two be combined into a std::map<TSP::action, EdgeProps> without sacrificing complexity?
 std::vector<EdgeProps> COST;
 std::vector<edge_desc> EDGES;
@@ -147,6 +150,38 @@ template <typename State, typename Action>
 class HigherCostValidEdges
 {
 protected:
+	class found_cycle : public std::exception
+	{
+	public:
+		found_cycle(subgraph::edge_descriptor const &EDGE) : edge(EDGE) {};
+		subgraph::edge_descriptor const edge;
+	};
+	
+	// Cycle-detector.
+	// TODO: Needs more logic to work on an undirected graph.
+	struct cycle_detector : public boost::dfs_visitor<>
+	{
+		// cycle_detector( )  { }
+		
+		template <class Edge, class Graph>
+		void back_edge(Edge const &E, Graph&)
+		{
+			// Throw an exception so that the algorithm stops searching.
+			if(predecessors.find(E) == std::end(predecessors))
+				throw found_cycle(E);
+		}
+
+		template <class Edge, class Graph>
+		void tree_edge(Edge const &E, Graph &)
+		{
+			predecessors.insert(E);
+		}
+		
+	protected:
+		std::set<subgraph::edge_descriptor> predecessors;
+	};
+	
+	
 	// I thought about returning a pair of iterators for a while until I realized that, derr, I could be
 	// returning any arbitray subset of the available actions, not a contiguous one.
 	std::vector<Action> actions(State const &STATE) const
@@ -154,7 +189,7 @@ protected:
 		std::vector<Action> result;
 		Action const START = STATE.empty() ? 0 : STATE.back() + 1,
 					END = N - n + STATE.size() + 1;
-		
+		std::cerr << "Generating actions for " << to_string(STATE) << "\n";
 		if(STATE.size() > 1)
 		{
 			// Create a graph containing all the edges in STATE.
@@ -165,16 +200,63 @@ protected:
 				// boost::add_edge(*problem[boost::source(E, *problem)].name, *problem[boost::target(E, *problem)].name, subproblem);
 				auto const SOURCE = boost::source(EDGES[E], *problem),
 						   TARGET = boost::target(EDGES[E], *problem);
-				boost::add_edge(SOURCE, TARGET, subproblem);
+				boost::add_edge(SOURCE, TARGET, subproblem); // Use the vertices from the main problem in the subproblem.
 			});
 			
 			
 			for(Action a = START; a < END; ++a)
 			{
-				// Check each theoretical action for validity.
-				// Add valid actions to result.
-				
-				result.push_back(a);
+				// Add candidate action to the subgraph.
+				auto const SOURCE = boost::source(EDGES[a], *problem),
+							TARGET = boost::target(EDGES[a], *problem);
+				auto const add_edge_result = boost::add_edge(SOURCE, TARGET, subproblem);
+				if(!add_edge_result.second)
+					std::cout << "ERROR: Failed to add edge " << add_edge_result.first << " to subgraph.\n";
+				// Check the graph for validity.
+				bool valid = true;
+
+				auto degree = boost::out_degree(SOURCE, subproblem);
+				if(degree > 2)
+				{
+					valid = false;
+					std::cout << "!invalid edge: " << a << " on " << SOURCE << "\n";
+				}
+				else
+				{
+					degree = boost::out_degree(TARGET, subproblem);
+
+					if(degree > 2)
+					{
+						valid = false;
+						std::cout << "!invalid edge: " << a << " on " << TARGET << "\n";
+					}
+					else
+					{
+						if(STATE.size() != n - 1)
+						{
+							cycle_detector vis;
+
+							try
+							{
+								boost::depth_first_search(subproblem, boost::visitor(vis));
+							}
+							catch (found_cycle &ex)
+							{
+								valid = false;
+								std::cout << "!cycle found: " << ex.edge << "\n";
+							}
+						}
+					}
+				}
+
+				// If valid, add action to result.
+				if(valid)
+				{
+					std::cout << "GOOD edge: " << a << "\n";
+					result.push_back(a);
+				}
+				// Remove action from subgraph.
+				boost::remove_edge(add_edge_result.first, subproblem);
 			}
 		}
 		else

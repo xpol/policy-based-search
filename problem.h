@@ -21,6 +21,30 @@
 
 #include <memory>
 
+#ifndef NDEBUG
+#include <algorithm>
+#include <vector>
+#include <string>
+
+template <typename T>
+std::string to_string(std::vector<T> const &V)
+{
+	std::string s("<");
+	
+	std::for_each(std::begin(V), std::end(V), [&](typename std::vector<T>::const_reference E)
+	{
+		s += " ";
+		s += std::to_string(E);
+	});
+	
+	s += " >";
+	
+	return s;
+}
+
+#endif
+
+
 namespace jsearch
 {
 	template <typename Traits>

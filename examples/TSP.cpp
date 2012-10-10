@@ -59,7 +59,7 @@ int main(int , char **)
 {
 	// Define the required problem data.
 	// Graph const G(Australia());
-	problem = new Graph(procedural(4));
+	problem.reset(new Graph(procedural(4)));
 	n = boost::num_vertices(*problem);
 	N = problem->m_num_edges;
 	pair<edge_iter, edge_iter> const EP(boost::edges(*problem));
@@ -71,15 +71,21 @@ int main(int , char **)
 
 	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const minimal(i);
 	Evaluation<MinimalImaginableTour> const eval;
-	
-	TSP::node const solution = jsearch::search(minimal, eval);
-
-	cout << "( ";
-	for_each(begin(solution.state), end(solution.state), [](vector<Index>::const_reference &E)
+	try
 	{
-		cout << E << " ";
-	});
-	cout << ")" << endl;
+		TSP::node const solution = jsearch::search(minimal, eval);
+
+		cout << "( ";
+		for_each(begin(solution.state), end(solution.state), [](vector<Index>::const_reference &E)
+		{
+			cout << E << " ";
+		});
+		cout << ")" << endl;
+	}
+	catch (GoalNotFound &ex)
+	{
+		cout << "Goal not found! :(\n";
+	}
 	
 	return 0;
 }
