@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 	problem.reset(new Graph(procedural(n)));
 #ifndef NDEBUG
 	ofstream dot("TSP.dot");
-	boost::write_graphviz(dot, *problem, boost::make_label_writer());
+	boost::write_graphviz(dot, *problem); // boost::make_label_writer()
 #endif
 	// n = boost::num_vertices(*problem);
 	N = problem->m_num_edges;
