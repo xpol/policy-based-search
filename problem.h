@@ -25,6 +25,8 @@
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <set>
+#include <sstream>
 
 template <typename T>
 std::string to_string(std::vector<T> const &V)
@@ -40,6 +42,22 @@ std::string to_string(std::vector<T> const &V)
 	s += " >";
 	
 	return s;
+}
+
+template <typename T>
+std::string to_string(std::set<T> const &V)
+{
+	std::ostringstream s;
+	s << "{";
+	
+	std::for_each(std::begin(V), std::end(V), [&](typename std::set<T>::const_reference E)
+	{
+		s << " " << E;
+	});
+	
+	s << " }";
+	
+	return s.str();
 }
 
 #endif

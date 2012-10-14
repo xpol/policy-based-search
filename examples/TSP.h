@@ -30,6 +30,7 @@
 #include <string>
 #include <memory>
 #include <unordered_set>
+#include <unordered_map>
 #include <stdexcept>
 #include <iostream>
 
@@ -81,6 +82,8 @@ typedef typename boost::graph_traits<Graph>::edges_size_type edges_size_type;
 typedef typename boost::graph_traits<Graph>::vertex_descriptor vertex_desc;
 typedef typename boost::graph_traits<Graph>::edge_descriptor edge_desc;
 
+typedef typename boost::graph_traits<Graph>::out_edge_iterator out_edge_iterator;
+
 // subgraph is used for testing whether a given combination of edges form a valid subsection of a tour.
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> subgraph;
 vertices_size_type n; // Size of the TSP instance (number of cities).
@@ -107,6 +110,7 @@ std::unique_ptr<Graph> problem;
 // Could these two be combined into a std::map<TSP::action, EdgeProps> without sacrificing complexity?
 std::vector<EdgeProps> COST;
 std::vector<edge_desc> EDGES;
+std::set<std::set<boost::graph_traits<subgraph>::edge_descriptor>> INVALID;
 ////////////////////////////////////////////////////////////////////////
 
 // TSP heuristic: shortest imaginable tour including these edges.
@@ -174,12 +178,12 @@ protected:
 		{
 			predecessors.insert(E);
 		}
-		
+
 	protected:
 		// TODO: Find a way to make this a hash/unordered set.
 		std::set<subgraph::edge_descriptor> predecessors;
 	};
-	
+
 	
 	// I thought about returning a pair of iterators for a while until I realized that, derr, I could be
 	// returning any arbitray subset of the available actions, not a contiguous one.
@@ -219,8 +223,11 @@ protected:
 				if(degree > 2)
 				{
 					valid = false;
+					auto const ei = boost::out_edges(SOURCE, subproblem);
+					std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(ei.first, ei.second);
+					auto const i_result = INVALID.insert(invalid);
 #ifndef NDEBUG
-					std::cout << "!invalid edge: " << a << " on " << SOURCE << "\n";
+					std::cout << "!invalid edge: " << a << " on " << SOURCE << ". " << to_string(invalid) << ", " << i_result.second << (i_result.second ? "" : to_string(*i_result.first)) << "\n";
 #endif
 				}
 				else
@@ -230,8 +237,12 @@ protected:
 					if(degree > 2)
 					{
 						valid = false;
+						auto const ei = boost::out_edges(SOURCE, subproblem);
+						std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(ei.first, ei.second);
+						INVALID.insert(invalid);
+						auto const i_result = INVALID.insert(invalid);
 #ifndef NDEBUG
-						std::cout << "!invalid edge: " << a << " on " << TARGET << "\n";
+						std::cout << "!invalid edge: " << a << " on " << TARGET << ". " << to_string(invalid) << ", " << i_result.second << (i_result.second ? "" : to_string(*i_result.first)) << "\n";
 #endif
 					}
 					else
