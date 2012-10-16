@@ -21,6 +21,30 @@
 
 #include <memory>
 
+#ifndef NDEBUG
+#include <algorithm>
+#include <vector>
+#include <string>
+
+template <typename T>
+std::string to_string(std::vector<T> const &V)
+{
+	std::string s("<");
+	
+	std::for_each(std::begin(V), std::end(V), [&](typename std::vector<T>::const_reference E)
+	{
+		s += " ";
+		s += std::to_string(E);
+	});
+	
+	s += " >";
+	
+	return s;
+}
+
+#endif
+
+
 namespace jsearch
 {
 	template <typename Traits>
@@ -36,7 +60,7 @@ namespace jsearch
 		DefaultNode(State const &STATE, ParentType const PARENT, Action const &ACTION, PathCost const &PATH_COST) : state(STATE), parent(PARENT),  action(ACTION), path_cost(PATH_COST) {}
 
 		State state;
-		ParentType const parent;
+		ParentType parent;
 		Action action;
 		PathCost path_cost;
 	};

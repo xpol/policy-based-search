@@ -19,12 +19,11 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
-#include "problem.h"
 #include "evaluation.h"
+#include "problem.h"
 
 #include <queue>
 #include <set>
-#include <unordered_set>
 #include <algorithm>
 #include <stdexcept>
 #include <memory>
@@ -53,7 +52,7 @@ namespace jsearch
 			template <typename Traits,
 				template <typename State, typename PathCost> class PathCostPolicy,
 				template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarNodeComparator>
-	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<HeuristicPolicy, PathCostPolicy, Comparator> const &, bool const TREE = false)
+	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<HeuristicPolicy, PathCostPolicy, Comparator> const &)
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
@@ -63,7 +62,7 @@ namespace jsearch
 		typedef std::shared_ptr<Node> OpenListElement;
 		// TODO: Try using Boost's pairing heap and Fibonacci heap for the Open list.
 		typedef std::set<OpenListElement, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> OpenList;
-		typedef std::unordered_set<State> ClosedList;
+		typedef std::set<State> ClosedList; // As a type dependency, make this std::unordered_set for non-combinatorial search.
 
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
@@ -72,28 +71,38 @@ namespace jsearch
 		while(!open.empty())
 		{
 			typename OpenList::const_iterator IT = std::begin(open);
+			// I learnt something whilst writing this: S must be a value not a reference in this case!
 			OpenListElement const S = *IT;
 			open.erase(IT);
 
 			if(PROBLEM.goal_test(S->state))
 			{
 #ifndef NDEBUG
-				std::cerr << "open: " << open.size() << ", closed: " << closed.size() << "\n";
+				std::cerr << "open: " << open.size();
+				if(!Traits::combinatorial)
+					std::cerr << ", closed: " << closed.size();
+				std::cerr << "\n";
 #endif
 				return *S; // OK, I don't like non-local returns, but what else?
 			}
 			else
 			{
-				closed.insert(S->state);
-				std::set<Action> const actions = PROBLEM.actions(S->state);
+				if(!Traits::combinatorial)
+					closed.insert(S->state);
+				std::vector<Action> const actions = PROBLEM.actions(S->state);
 				auto const beginning = std::begin(actions), ending = std::end(actions);
+				/* TODO: If combinatorial == true, do lazy child generation.
+				 * This is an optimization whereby only the required children of a state are generated, 
+				 * instead of all of them as per regular A*.
+				 */
 				std::for_each(beginning, ending, [&](typename std::set<Action>::const_reference ACTION)
 				{
-					OpenListElement const child = std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION));
+					OpenListElement const child(std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION)));
 
-					if(!TREE)
+					if(!Traits::combinatorial) // TODO: Is this actually evaluated at compile-time?
 					{
-						// TODO: Check if it is in open or closed.  Sadly linear: can it be improved?
+						/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
+						 *	performance of this section of code.	*/
 						if(closed.find(child->state) == std::end(closed)) // If it is NOT in closed...
 						{
 							for(typename OpenList::iterator it = std::begin(open); it != std::end(open); ++it)
