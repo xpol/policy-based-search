@@ -61,14 +61,27 @@ private:
 };
 */
 
+// Example comparator of Weighted A* with a weight of 10 (owing to the default divisor of 10).
+template <typename Traits,
+	template <typename State, typename PathCost> class PathCostPolicy,
+	template <typename PathCost, typename State> class HeuristicPolicy>
+	using W10AStar = WeightedAStar<Traits, PathCostPolicy, HeuristicPolicy, 100>;
+
 
 int main(int argc, char **argv)
 {
-	// TODO: Use Program Options from Boost.
+	float weight = 1.0;
+	// TODO: Use Program Options from Boost to clean up this ugly mess.
 	if(argc > 1)
 	{
 		istringstream arg(argv[1]);
 		arg >> n;
+
+		if (argc > 2)
+		{
+			istringstream arg(argv[2]);
+			arg >> weight;
+		}
 	}
 	else
 	{
@@ -93,6 +106,7 @@ int main(int argc, char **argv)
 	TSP::state const i;
 
 	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const minimal(i);
+
 	Evaluation<MinimalImaginableTour> const eval;
 	
 	try

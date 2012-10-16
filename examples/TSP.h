@@ -109,6 +109,13 @@ std::vector<EdgeProps> COST;
 std::vector<edge_desc> EDGES;
 ////////////////////////////////////////////////////////////////////////
 
+/*
+template <typename Traits,
+			template <typename State, typename PathCost> class PathCostPolicy,
+			template <typename PathCost, typename State> class HeuristicPolicy>
+using WAStar = jsearch::WAStarNodeComparator<Traits, PathCostPolicy, HeuristicPolicy, 5>;
+*/
+
 // TSP heuristic: shortest imaginable tour including these edges.
 template <typename PathCost, class State>
 class MinimalImaginableTour
