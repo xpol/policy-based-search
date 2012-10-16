@@ -21,6 +21,9 @@
 #define EVALUATION_H
 
 #include <functional>
+#ifndef NDEBUG
+#include <iostream>
+#endif
 
 namespace jsearch
 {
@@ -45,13 +48,14 @@ namespace jsearch
 		}
 	};
 
+	
 	// Comparator classes, passed to the priority_queue.  NOT a policy class, actually a host!
 	template <typename Traits,
 			template <typename State, typename PathCost> class PathCostPolicy,
 			template <typename PathCost, typename State> class HeuristicPolicy>
-	class AStarNodeComparator : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
-							private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
+	class AStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
+					private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
+					private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
@@ -59,6 +63,7 @@ namespace jsearch
 		
 		using PathCostPolicy<Node, PathCost>::g;
 		using HeuristicPolicy<PathCost, State>::h;
+		
 	public:
 		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
 		{
@@ -71,8 +76,8 @@ namespace jsearch
 	template <typename Traits,
 		template <typename State, typename PathCost> class PathCostPolicy,
 		template <typename PathCost, typename State> class HeuristicPolicy,
-		size_t Weight = 10>
-	class WAStarNodeComparator : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
+		size_t Weight = 10, size_t Divisor = 10> // Templates do not accept floats, so we pass a ratio.
+	class WeightedAStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
 							private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
 							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
 	{
@@ -82,24 +87,23 @@ namespace jsearch
 
 		using PathCostPolicy<Node, PathCost>::g;
 		using HeuristicPolicy<PathCost, State>::h;
+		
 	public:
+		WeightedAStar() : weight(static_cast<float>(Weight) / Divisor)
+		{
+#ifndef NDEBUG
+			std::cerr << __FUNCTION__ << "(): " << weight << "\n";
+#endif
+		}
+		
+		
 		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
 		{
-			return g(*A) + (Weight / 10.0) * h(A->state) < g(*B) + (Weight / 10.0) * h(B->state);
+			return g(*A) + weight * h(A->state) < g(*B) + weight * h(B->state);
 		}
-
-		/*
-		// Returns old weight.
-		float weight(float new_weight)
-		{
-			float const old_weight(weight_);
-			weight_ = new_weight;
-			return old_weight;
-		}
-
+		
 	private:
-		float weight_;
-		*/
+		float const weight;  // TODO: This still feels a bit "runny": how to make it totally compile-time constant?  So that it does not even require memory access?
 	};
 
 	
@@ -107,8 +111,8 @@ namespace jsearch
 	template < 	typename Traits,
 				template <typename PathCost, typename State> class HeuristicPolicy,
 				template <typename State, typename PathCost> class PathCostPolicy >
-	class AStarNodeOperator : 	private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-								private PathCostPolicy<typename Traits::state, typename Traits::pathcost>
+	class AStarOperator : 	private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
+							private PathCostPolicy<typename Traits::state, typename Traits::pathcost>
 	{
 		using PathCostPolicy<typename Traits::state, typename Traits::pathcost>::g;
 		using HeuristicPolicy<typename Traits::pathcost, typename Traits::state>::h;
@@ -125,21 +129,9 @@ namespace jsearch
 		template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
 		template <typename Traits,
 			template <typename State, typename PathCost> class PathCostPolicy,
-			template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarNodeComparator>
+			template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStar>
 	class Evaluation
 	{
-		/*
-	public:
-		Evaluation(float const weight) : weight_(weight) { }
-
-		float weight() const
-		{
-			return weight_;
-		}
-		
-	private:
-		float const weight_;
-		*/
 	};
 }
 

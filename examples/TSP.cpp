@@ -61,6 +61,12 @@ private:
 };
 */
 
+// Example comparator of Weighted A* with a weight of 10 (owing to the default divisor of 10).
+template <typename Traits,
+	template <typename State, typename PathCost> class PathCostPolicy,
+	template <typename PathCost, typename State> class HeuristicPolicy>
+	using W10AStar = WeightedAStar<Traits, PathCostPolicy, HeuristicPolicy, 100>;
+
 
 int main(int argc, char **argv)
 {
@@ -101,7 +107,7 @@ int main(int argc, char **argv)
 
 	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const minimal(i);
 
-	Evaluation<MinimalImaginableTour, DefaultPathCost, WAStar> const eval;
+	Evaluation<MinimalImaginableTour> const eval;
 	
 	try
 	{
