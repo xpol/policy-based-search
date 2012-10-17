@@ -55,9 +55,8 @@ struct VertexProps
 struct EdgeProps
 {
 	EdgeProps() {}
-	EdgeProps(std::string const &NAME, unsigned int const &W) : name(NAME), cost(W) {}
+	EdgeProps(unsigned int const &W) : cost(W) {}
 
-	std::string name;
 	unsigned int cost;
 
 	bool operator<(EdgeProps const &OTHER) const
@@ -227,7 +226,7 @@ protected:
 				{
 					valid = false;
 #ifndef NDEBUG
-					std::cout << "!invalid edge: " << a << " on " << SOURCE << "\n";
+					std::cout << "!invalid edge: " << EDGES[a] << " on " << SOURCE << "\n";
 #endif
 				}
 				else
@@ -238,7 +237,7 @@ protected:
 					{
 						valid = false;
 #ifndef NDEBUG
-						std::cout << "!invalid edge: " << a << " on " << TARGET << "\n";
+						std::cout << "!invalid edge: " << EDGES[a] << " on " << TARGET << "\n";
 #endif
 					}
 					else
@@ -266,7 +265,7 @@ protected:
 				if(valid)
 				{
 #ifndef NDEBUG
-					std::cout << "GOOD edge: " << a << "\n";
+					std::cout << "GOOD edge: " << EDGES[a] << "\n";
 #endif
 					result.push_back(a);
 				}
@@ -313,3 +312,4 @@ protected:
 };
 
 #endif // TSP_H
+
