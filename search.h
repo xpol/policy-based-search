@@ -52,7 +52,7 @@ namespace jsearch
 			template <typename Traits,
 				template <typename State, typename PathCost> class PathCostPolicy,
 				template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStar>
-	typename Traits::node search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<HeuristicPolicy, PathCostPolicy, Comparator> const &)
+	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<HeuristicPolicy, PathCostPolicy, Comparator> const &)
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
@@ -61,8 +61,9 @@ namespace jsearch
 
 		typedef std::shared_ptr<Node> OpenListElement;
 		// TODO: Try using Boost's pairing heap and Fibonacci heap for the Open list.
+		// TODO: Use type traits to determine whether to use a set or unordered_set for Open/Closed list?
 		typedef std::set<OpenListElement, Comparator<Traits, PathCostPolicy, HeuristicPolicy>> OpenList;
-		typedef std::set<State> ClosedList; // As a type dependency, make this std::unordered_set for non-combinatorial search.
+		typedef std::set<State> ClosedList;
 
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
@@ -89,38 +90,38 @@ namespace jsearch
 			{
 				if(!Traits::combinatorial)
 					closed.insert(S->state);
-				std::vector<Action> const actions = PROBLEM.actions(S->state);
-				auto const beginning = std::begin(actions), ending = std::end(actions);
+				std::vector<Action> const ACTIONS = PROBLEM.actions(S->state);
+				auto const BEGIN = std::begin(ACTIONS), END = std::end(ACTIONS);
 				/* TODO: If combinatorial == true, do lazy child generation.
 				 * This is an optimization whereby only the required children of a state are generated, 
-				 * instead of all of them as per regular A*.
+				 * instead of all of them as per regular best-first search.
 				 */
-				std::for_each(beginning, ending, [&](typename std::set<Action>::const_reference ACTION)
+				std::for_each(BEGIN, END, [&](typename std::set<Action>::const_reference ACTION)
 				{
-					OpenListElement const child(std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION)));
+					OpenListElement const CHILD(std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION)));
 
 					if(!Traits::combinatorial) // TODO: Is this actually evaluated at compile-time?
 					{
 						/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
 						 *	performance of this section of code.	*/
-						if(closed.find(child->state) == std::end(closed)) // If it is NOT in closed...
+						if(closed.find(CHILD->state) == std::end(closed)) // If it is NOT in closed...
 						{
 							for(typename OpenList::iterator it = std::begin(open); it != std::end(open); ++it)
 							{
-								if(child->state == (*it)->state && child->path_cost < (*it)->path_cost)
+								if(CHILD->state == (*it)->state && CHILD->path_cost < (*it)->path_cost)
 								{
 									open.erase(it);
 									break;
 								}
 							}
-							open.insert(child);
+							open.insert(CHILD);
 						}
 					}
 					else
 					{
 						/*	The combinatorial search spaces in mind are a tree with no repeating nodes,
 							so the algorithm is optimized to not worry about checking in open or closed.	*/
-						open.insert(child);
+						open.insert(CHILD);
 					}
 
 				});

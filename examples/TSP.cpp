@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 	
 	try
 	{
-		TSP::node const solution = jsearch::search(minimal, eval);
+		TSP::node const solution = jsearch::best_first_search(minimal, eval);
 
 		cout << "solution: { ";
 		for_each(begin(solution.state), end(solution.state), [](vector<Index>::const_reference &E)

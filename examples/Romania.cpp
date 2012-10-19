@@ -22,7 +22,7 @@ int main(int, char **)
 	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const Bucharest(Sibiu); // Use Sibiu as initial state.
 	Evaluation<EuclideanDistance> const evaluation;
 
-	auto const solution = jsearch::search(Bucharest, evaluation);
+	auto const solution = jsearch::best_first_search(Bucharest, evaluation);
 
 	print(solution, cout) << endl;
 }
