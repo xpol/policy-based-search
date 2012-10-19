@@ -36,6 +36,15 @@
 namespace jsearch
 {
 	class goal_not_found : public std::exception {};
+
+
+	// Thanks, Andrei!
+	template <int v>
+	struct Int2Type
+	{
+		enum { value = v };
+	};
+	
 	
 	template <typename Traits,
 			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
@@ -88,8 +97,7 @@ namespace jsearch
 			}
 			else
 			{
-				if(!Traits::combinatorial)
-					closed.insert(S->state);
+				handle_parent(closed, S, Int2Type<Traits::combinatorial>());
 				std::vector<Action> const ACTIONS = PROBLEM.actions(S->state);
 				auto const BEGIN = std::begin(ACTIONS), END = std::end(ACTIONS);
 				/* TODO: If combinatorial == true, do lazy child generation.
@@ -100,36 +108,56 @@ namespace jsearch
 				{
 					OpenListElement const CHILD(std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION)));
 
-					if(!Traits::combinatorial) // TODO: Is this actually evaluated at compile-time?
-					{
-						/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
-						 *	performance of this section of code.	*/
-						if(closed.find(CHILD->state) == std::end(closed)) // If it is NOT in closed...
-						{
-							for(typename OpenList::iterator it = std::begin(open); it != std::end(open); ++it)
-							{
-								if(CHILD->state == (*it)->state && CHILD->path_cost < (*it)->path_cost)
-								{
-									open.erase(it);
-									break;
-								}
-							}
-							open.insert(CHILD);
-						}
-					}
-					else
-					{
-						/*	The combinatorial search spaces in mind are a tree with no repeating nodes,
-							so the algorithm is optimized to not worry about checking in open or closed.	*/
-						open.insert(CHILD);
-					}
-
+					handle_child(open, closed, CHILD, Int2Type<Traits::combinatorial>());
 				});
 			}
 
 		}
 		throw goal_not_found();
 	}
+
+
+	// Combinatorial child handler.
+	template <typename E, class OpenList, class ClosedList>
+	inline void handle_child(OpenList &open, ClosedList &, E const &CHILD, Int2Type<true>)
+	{
+		open.insert(CHILD);
+	}
+
+	
+	// Non-combinatorial child handler.
+	template <typename E, class OpenList, class ClosedList>
+	inline void handle_child(OpenList &open, ClosedList &closed, E const &CHILD, Int2Type<false>)
+	{
+		if(closed.find(CHILD->state) == std::end(closed)) // If it is NOT in closed...
+		{
+			/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
+			 *	performance of this section of code.	*/
+			for(typename OpenList::const_iterator IT = std::begin(open); IT != std::end(open); ++IT)
+			{
+				if(CHILD->state == (*IT)->state && CHILD->path_cost < (*IT)->path_cost)
+				{
+					open.erase(IT);
+					break;
+				}
+			}
+			
+			open.insert(CHILD);
+		}		
+	}
+
+
+	template <typename E, class ClosedList>
+	inline void handle_parent(ClosedList &closed, E const &S, Int2Type<true>)
+	{
+		closed.insert(S->state);
+	}
+
+
+	template <typename E, class ClosedList>
+	inline void handle_parent(ClosedList &, E const &, Int2Type<false>)
+	{
+	}	
 }
 
 #endif // SEARCH_H
