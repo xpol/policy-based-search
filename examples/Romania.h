@@ -18,23 +18,26 @@ public:
 	static bool const combinatorial = false;
 };
 
+/* Obviously, one would never use the following data structure in a real program, but for this toy
+ * problem I wanted to keep the conceptual overhead as low as possible and the data structures transparent.
+ */
 typedef std::unordered_map<Romania::state, Romania::pathcost> StateCost;
 
 // Road costs from city to city as an adjacency list.
 std::unordered_map<Romania::state, StateCost> const COST {
-	{ "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80}, {"Arad", 140}, {"Oradea", 151} } },
 	{ "Arad", { {"Zerind", 75}, {"Sibiu", 140}, {"Timisoara", 118} } },
-	{ "Zerind", { {"Oradea", 71}, {"Arad", 75} } },
-	{ "Oradea", { { "Zerind", 71 }, { "Sibiu", 151 } } },
+	{ "Bucharest", { {"Pitesti", 101}, {"Fagaras", 211} } },
+	{ "Craiova", { {"Drobeta", 120}, {"Rimnicu Vilcea", 146}, {"Pitesti", 138} } },
+	{ "Drobeta", { {"Mehadia", 75}, {"Craiova", 120} } },
+	{ "Fagaras", { {"Sibiu", 99}, {"Bucharest", 211} } },	// Done.
 	{ "Lugoj", { {"Timisoara", 111}, {"Mehadia", 70} } },
 	{ "Mehadia", { {"Lugoj", 70}, {"Drobeta", 75} } },
-	{ "Drobeta", { {"Mehadia", 75}, {"Craiova", 120} } },
-	{ "Timisoara", { { "Arad", 118 }, { "Lugoj", 111 } } },	// Done.
-	{ "Fagaras", { {"Sibiu", 99}, {"Bucharest", 211} } },	// Done.
-	{ "Rimnicu Vilcea", { {"Sibiu", 80}, {"Pitesti", 97}, {"Craiova", 146} } },
+	{ "Oradea", { { "Zerind", 71 }, { "Sibiu", 151 } } },
 	{ "Pitesti", { {"Rimnicu Vilcea", 97}, {"Bucharest", 101}, {"Craiova", 138} } },
-	{ "Bucharest", { {"Pitesti", 101}, {"Fagaras", 211} } },
-	{ "Craiova", { {"Drobeta", 120}, {"Rimnicu Vilcea", 146}, {"Pitesti", 138} } }
+	{ "Rimnicu Vilcea", { {"Sibiu", 80}, {"Pitesti", 97}, {"Craiova", 146} } },
+	{ "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80}, {"Arad", 140}, {"Oradea", 151} } },
+	{ "Timisoara", { { "Arad", 118 }, { "Lugoj", 111 } } },	// Done.
+	{ "Zerind", { {"Oradea", 71}, {"Arad", 75} } },
 	
 	// South and eastern sections of the map omitted.
 };
@@ -64,7 +67,7 @@ class Distance
 protected:
 	PathCost step_cost(State const &STATE, Action const &ACTION) const
 	{
-		return COST.at(STATE).find(ACTION)->second;
+		return COST.at(STATE).at(ACTION);
 	}
 };
 
