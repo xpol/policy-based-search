@@ -35,7 +35,13 @@
 
 namespace jsearch
 {
-	class goal_not_found : public std::exception {};
+	class goal_not_found : public std::exception
+	{
+	public:
+		goal_not_found(size_t const &CLOSED) : CLOSED(CLOSED) {}
+		
+		size_t const CLOSED;
+	};
 
 
 	// Thanks, Andrei!
@@ -113,7 +119,7 @@ namespace jsearch
 			}
 
 		}
-		throw goal_not_found();
+		throw goal_not_found(closed.size());
 	}
 
 

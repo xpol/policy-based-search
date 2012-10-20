@@ -74,14 +74,11 @@ int main(int argc, char **argv)
 	// TODO: Use Program Options from Boost to clean up this ugly mess.
 	if(argc > 1)
 	{
-		istringstream arg(argv[1]);
-		arg >> n;
+		istringstream(argv[1]) >> n;
 
 		if (argc > 2)
-		{
-			istringstream arg(argv[2]);
-			arg >> weight;
-		}
+			// TODO: I think this is achievable, but it requires more template magic.
+			istringstream(argv[2]) >> weight;
 	}
 	else
 	{

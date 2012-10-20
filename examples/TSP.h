@@ -181,7 +181,7 @@ protected:
 			predecessors.insert(E);
 		}
 		
-	protected:
+	private:
 		// TODO: Find a way to make this a hash/unordered set.
 		std::set<subgraph::edge_descriptor> predecessors;
 	};
