@@ -72,7 +72,18 @@ namespace jsearch
 	};
 
 
-	// Weighted A* comparator functor.
+	/*	Weighted A* comparator functor.  Until template parameters support float, we pass the weight as a ratio of two numbers:
+		Weight / Divisor.  Therefore, the default weight is 1.0.
+
+		Example weighted comparator with a weight of 10 (owing to the default divisor of 10):
+
+		template <typename Traits,
+			template <typename State, typename PathCost> class PathCostPolicy,
+			template <typename PathCost, typename State> class HeuristicPolicy>
+			using W10AStar = WeightedAStar<Traits, PathCostPolicy, HeuristicPolicy, 100>;
+
+		The template alias W10AStar then fits the required type for the Evaluation class.
+	 */
 	template <typename Traits,
 		template <typename State, typename PathCost> class PathCostPolicy,
 		template <typename PathCost, typename State> class HeuristicPolicy,
