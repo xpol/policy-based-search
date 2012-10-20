@@ -22,21 +22,38 @@ typedef std::unordered_map<Romania::state, Romania::pathcost> StateCost;
 
 // Road costs from city to city as an adjacency list.
 std::unordered_map<Romania::state, StateCost> const COST {
-	// { "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80}, {"Arad", 140}, {"Oradea", 151} } },
-	// { "Arad", { {"Zerind", 75}, {"Sibiu", 140}, {"Timisoara", 118} } },
-	// { "Zerind", { {"Oradea", 71}, {"Arad", 75} } },
-	// { "Oradea", { { "Zerind", 71 }, { "Sibiu", 151 } } },
-	{ "Timisoara", { { "Arad", 118 }, { "Lugoj", 111 } } },
-	{ "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80} } },
-	{ "Fagaras", { {"Sibiu", 99}, {"Bucharest", 211} } },
-	{ "Rimnicu Vilcea", { {"Sibiu", 80}, {"Pitesti", 97} } },
-	{ "Pitesti", { {"Rimnicu Vilcea", 97}, {"Bucharest", 101} } },
-	{ "Bucharest", { {"Pitesti", 101}, {"Fagaras", 211} } }
+	{ "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80}, {"Arad", 140}, {"Oradea", 151} } },
+	{ "Arad", { {"Zerind", 75}, {"Sibiu", 140}, {"Timisoara", 118} } },
+	{ "Zerind", { {"Oradea", 71}, {"Arad", 75} } },
+	{ "Oradea", { { "Zerind", 71 }, { "Sibiu", 151 } } },
+	{ "Lugoj", { {"Timisoara", 111}, {"Mehadia", 70} } },
+	{ "Mehadia", { {"Lugoj", 70}, {"Drobeta", 75} } },
+	{ "Drobeta", { {"Mehadia", 75}, {"Craiova", 120} } },
+	{ "Timisoara", { { "Arad", 118 }, { "Lugoj", 111 } } },	// Done.
+	{ "Fagaras", { {"Sibiu", 99}, {"Bucharest", 211} } },	// Done.
+	{ "Rimnicu Vilcea", { {"Sibiu", 80}, {"Pitesti", 97}, {"Craiova", 146} } },
+	{ "Pitesti", { {"Rimnicu Vilcea", 97}, {"Bucharest", 101}, {"Craiova", 138} } },
+	{ "Bucharest", { {"Pitesti", 101}, {"Fagaras", 211} } },
+	{ "Craiova", { {"Drobeta", 120}, {"Rimnicu Vilcea", 146}, {"Pitesti", 138} } }
+	
+	// South and eastern sections of the map omitted.
 };
 
 // Straight-line distance from city to Bucharest.
 std::unordered_map<Romania::state, Romania::pathcost> const SLD {
-	{"Sibiu", 253}, {"Bucharest", 0}, {"Rimnicu Vilcea", 193}, {"Pitesti", 100}, {"Fagaras", 176}
+	{"Arad", 366},
+	{"Bucharest", 0},
+	{"Craiova", 160},
+	{"Drobeta", 242},
+	{"Fagaras", 176},
+	{"Lugoj", 244},
+	{"Mehadia", 241},
+	{"Oradea", 380},
+	{"Pitesti", 100},
+	{"Rimnicu Vilcea", 193},
+	{"Sibiu", 253},
+	{"Timisoara", 329},
+	{"Zerind", 374},
 };
 
 
@@ -68,13 +85,6 @@ protected:
 		{
 			return P.first;
 		});
-
-		/*
-		std::for_each(std::begin(COST.find(STATE)->second), std::end(COST.find(STATE)->second), [&](typename StateCost::const_reference P)
-		{
-			result.push_back(P.first);
-		});
-		*/
 		
 		return result;
 	}
@@ -109,8 +119,6 @@ class EuclideanDistance
 protected:
 	PathCost h(State const &STATE) const
 	{
-		// std::unordered_map<Romania::state, Romania::pathcost>::const_iterator I(SLD.find(STATE));
-		// return I->second;
 		auto const RESULT = SLD.at(STATE);
 		return RESULT;
 	}

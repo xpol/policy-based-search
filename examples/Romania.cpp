@@ -17,7 +17,7 @@ basic_ostream<charT, traits>& print(Node const &NODE, basic_ostream<charT, trait
 
 int main(int, char **)
 {
-	State const Sibiu("Sibiu");
+	State const Sibiu("Arad");
 
 	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const Bucharest(Sibiu); // Use Sibiu as initial state.
 	Evaluation<EuclideanDistance> const evaluation;

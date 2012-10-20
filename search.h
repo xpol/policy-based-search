@@ -145,19 +145,19 @@ namespace jsearch
 			open.insert(CHILD);
 		}		
 	}
-
+	
+	
+	template <typename E, class ClosedList>
+	inline void handle_parent(ClosedList &, E const &, Int2Type<true>)
+	{
+	}
+	
 
 	template <typename E, class ClosedList>
-	inline void handle_parent(ClosedList &closed, E const &S, Int2Type<true>)
+	inline void handle_parent(ClosedList &closed, E const &S, Int2Type<false>)
 	{
 		closed.insert(S->state);
 	}
-
-
-	template <typename E, class ClosedList>
-	inline void handle_parent(ClosedList &, E const &, Int2Type<false>)
-	{
-	}	
 }
 
 #endif // SEARCH_H
