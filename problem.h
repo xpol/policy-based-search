@@ -31,13 +31,17 @@ std::string to_string(std::vector<T> const &V)
 {
 	std::string s("<");
 	
-	std::for_each(std::begin(V), std::end(V), [&](typename std::vector<T>::const_reference E)
+	if(!V.empty())
 	{
-		s += " ";
-		s += std::to_string(E);
-	});
+		std::for_each(std::begin(V), std::end(V) - 1, [&](typename std::vector<T>::const_reference E)
+		{
+			s += std::to_string(E) + ", ";
+		});
+		
+		s += std::to_string(V.back());
+	}
 	
-	s += " >";
+	s += ">";
 	
 	return s;
 }
