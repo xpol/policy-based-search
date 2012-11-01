@@ -17,14 +17,21 @@ basic_ostream<charT, traits>& print(Node const &NODE, basic_ostream<charT, trait
 
 int main(int, char **)
 {
-	State const Sibiu("Arad");
+	State const INITIAL("Arad");
 
-	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const Bucharest(Sibiu); // Use Sibiu as initial state.
-	Evaluation<EuclideanDistance> const evaluation;
+	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const BUCHAREST(INITIAL); // The problem is to get to Bucharest.
+	Evaluation<EuclideanDistance> const EVALUATION;
 
-	auto const solution = jsearch::best_first_search(Bucharest, evaluation);
-
-	print(solution, cout) << endl;
+	try
+	{
+		auto const SOLUTION = jsearch::best_first_search(BUCHAREST, EVALUATION);
+		
+		print(SOLUTION, cout) << endl;
+	}
+	catch (goal_not_found const &ex)
+	{
+		cout << "No path from " << INITIAL << " to the goal could be found!\n";
+	}
 }
 
 
