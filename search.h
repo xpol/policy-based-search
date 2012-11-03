@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <memory>
+#include "loki/TypeManip.h"
 
 #ifndef NDEBUG
 #include <iostream>
@@ -44,14 +45,6 @@ namespace jsearch
 	};
 
 
-	// Thanks, Andrei!
-	template <int v>
-	struct Int2Type
-	{
-		enum { value = v };
-	};
-	
-	
 	template <typename Traits,
 			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
@@ -103,7 +96,7 @@ namespace jsearch
 			}
 			else
 			{
-				handle_parent(closed, S, Int2Type<Traits::combinatorial>());
+				handle_parent(closed, S, Loki::Int2Type<Traits::combinatorial>());
 				std::vector<Action> const ACTIONS = PROBLEM.actions(S->state);
 				auto const BEGIN = std::begin(ACTIONS), END = std::end(ACTIONS);
 				/* TODO: If combinatorial == true, do lazy child generation.
@@ -114,7 +107,7 @@ namespace jsearch
 				{
 					OpenListElement const CHILD(std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION)));
 
-					handle_child(open, closed, CHILD, Int2Type<Traits::combinatorial>());
+					handle_child(open, closed, CHILD, Loki::Int2Type<Traits::combinatorial>());
 				});
 			}
 
@@ -125,7 +118,7 @@ namespace jsearch
 
 	// Combinatorial child handler.
 	template <typename E, class OpenList, class ClosedList>
-	inline void handle_child(OpenList &open, ClosedList &, E const &CHILD, Int2Type<true>)
+	inline void handle_child(OpenList &open, ClosedList &, E const &CHILD, Loki::Int2Type<true>)
 	{
 		open.insert(CHILD);
 	}
@@ -133,7 +126,7 @@ namespace jsearch
 	
 	// Non-combinatorial child handler.
 	template <typename E, class OpenList, class ClosedList>
-	inline void handle_child(OpenList &open, ClosedList &closed, E const &CHILD, Int2Type<false>)
+	inline void handle_child(OpenList &open, ClosedList &closed, E const &CHILD, Loki::Int2Type<false>)
 	{
 		if(closed.find(CHILD->state) == std::end(closed)) // If it is NOT in closed...
 		{
@@ -154,13 +147,13 @@ namespace jsearch
 	
 	
 	template <typename E, class ClosedList>
-	inline void handle_parent(ClosedList &, E const &, Int2Type<true>)
+	inline void handle_parent(ClosedList &, E const &, Loki::Int2Type<true>)
 	{
 	}
 	
 
 	template <typename E, class ClosedList>
-	inline void handle_parent(ClosedList &closed, E const &S, Int2Type<false>)
+	inline void handle_parent(ClosedList &closed, E const &S, Loki::Int2Type<false>)
 	{
 		closed.insert(S->state);
 	}
