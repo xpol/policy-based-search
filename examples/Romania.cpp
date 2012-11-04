@@ -1,4 +1,4 @@
-#include "examples/Romania.h"
+#include "Romania.h"
 #include "search.h"
 
 #include <iostream>
@@ -11,29 +11,41 @@ typedef Romania::state State;
 typedef Romania::node Node;
 
 
-void print_path(Node const &NODE, std::ostream* out);
+template <class charT, class traits>
+basic_ostream<charT, traits>& print(Node const &NODE, basic_ostream<charT, traits>& os);
 
 
 int main(int, char **)
 {
-	State const Sibiu("Sibiu");
+	State const INITIAL("Arad");
 
-	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const Bucharest(Sibiu); // Use Sibiu as initial state.
-	Evaluation<EuclideanDistance> const evaluation;
+	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const BUCHAREST(INITIAL); // The problem is to get to Bucharest.
+	Evaluation<EuclideanDistance> const EVALUATION;
 
-	auto const solution = jsearch::search(Bucharest, evaluation);
-
-	print_path(solution, &cout);
+	try
+	{
+		auto const SOLUTION = jsearch::best_first_search(BUCHAREST, EVALUATION);
+		
+		print(SOLUTION, cout) << endl;
+	}
+	catch (goal_not_found const &ex)
+	{
+		cout << "No path from " << INITIAL << " to the goal could be found!\n";
+	}
 }
 
 
-void print_path(Node const &NODE, std::ostream* out)
+template <class charT, class traits>
+basic_ostream<charT, traits>& print(Node const &NODE, basic_ostream<charT, traits>& os)
 {
+	
 	if(NODE.parent)
 	{
-		print_path(*NODE.parent, out);
-		*out << " => ";
+		print(*NODE.parent, os);
+		os << " => ";
 	}
 	
-	*out << NODE.state;
+	os << NODE.state;
+	
+	return os;
 }

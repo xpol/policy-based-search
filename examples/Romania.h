@@ -15,26 +15,49 @@ public:
 	typedef std::string action;
 	typedef unsigned int pathcost;
 	typedef jsearch::DefaultNode<Romania> node;
+	typedef unsigned int heuristic; // Often but not necessarily the same as pathcost.
 	static bool const combinatorial = false;
 };
 
+/* Obviously, one would never use the following data structure in a real program, but for this toy
+ * problem I wanted to keep the conceptual overhead as low as possible and the data structures transparent.
+ */
 typedef std::unordered_map<Romania::state, Romania::pathcost> StateCost;
 
 // Road costs from city to city as an adjacency list.
 std::unordered_map<Romania::state, StateCost> const COST {
-	// { "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80}, {"Arad", 140}, {"Oradea", 151} } },
-	{ "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80} } },
-	{ "Fagaras", { {"Sibiu", 99}, {"Bucharest", 211} } },
-	// { "Arad", { {"Zerind", 75}, {"Sibiu", 140}, {"Timisoara", 118} } },
-	// { "Zerind", { {"Oradea", 71}, {"Arad", 75} } },
-	{ "Rimnicu Vilcea", { {"Sibiu", 80}, {"Pitesti", 97} } },
-	{ "Pitesti", { {"Rimnicu Vilcea", 97}, {"Bucharest", 101} } },
-	{ "Bucharest", { {"Pitesti", 101}, {"Fagaras", 211} } }
+	{ "Arad", { {"Zerind", 75}, {"Sibiu", 140}, {"Timisoara", 118} } },
+	{ "Bucharest", { {"Pitesti", 101}, {"Fagaras", 211} } },
+	{ "Craiova", { {"Drobeta", 120}, {"Rimnicu Vilcea", 146}, {"Pitesti", 138} } },
+	{ "Drobeta", { {"Mehadia", 75}, {"Craiova", 120} } },
+	{ "Fagaras", { {"Sibiu", 99}, {"Bucharest", 211} } },	// Done.
+	{ "Lugoj", { {"Timisoara", 111}, {"Mehadia", 70} } },
+	{ "Mehadia", { {"Lugoj", 70}, {"Drobeta", 75} } },
+	{ "Oradea", { { "Zerind", 71 }, { "Sibiu", 151 } } },
+	{ "Pitesti", { {"Rimnicu Vilcea", 97}, {"Bucharest", 101}, {"Craiova", 138} } },
+	{ "Rimnicu Vilcea", { {"Sibiu", 80}, {"Pitesti", 97}, {"Craiova", 146} } },
+	{ "Sibiu", { {"Fagaras", 99}, {"Rimnicu Vilcea", 80}, {"Arad", 140}, {"Oradea", 151} } },
+	{ "Timisoara", { { "Arad", 118 }, { "Lugoj", 111 } } },	// Done.
+	{ "Zerind", { {"Oradea", 71}, {"Arad", 75} } },
+	
+	// South and eastern sections of the map omitted.
 };
 
 // Straight-line distance from city to Bucharest.
-std::unordered_map<Romania::state, Romania::pathcost> const SLD {
-	{"Sibiu", 253}, {"Bucharest", 0}, {"Rimnicu Vilcea", 193}, {"Pitesti", 100}, {"Fagaras", 176}
+std::unordered_map<Romania::state, Romania::heuristic> const SLD {
+	{"Arad", 366},
+	{"Bucharest", 0},
+	{"Craiova", 160},
+	{"Drobeta", 242},
+	{"Fagaras", 176},
+	{"Lugoj", 244},
+	{"Mehadia", 241},
+	{"Oradea", 380},
+	{"Pitesti", 100},
+	{"Rimnicu Vilcea", 193},
+	{"Sibiu", 253},
+	{"Timisoara", 329},
+	{"Zerind", 374},
 };
 
 
@@ -45,7 +68,7 @@ class Distance
 protected:
 	PathCost step_cost(State const &STATE, Action const &ACTION) const
 	{
-		return COST.at(STATE).find(ACTION)->second;
+		return COST.at(STATE).at(ACTION);
 	}
 };
 
@@ -66,13 +89,6 @@ protected:
 		{
 			return P.first;
 		});
-
-		/*
-		std::for_each(std::begin(COST.find(STATE)->second), std::end(COST.find(STATE)->second), [&](typename StateCost::const_reference P)
-		{
-			result.push_back(P.first);
-		});
-		*/
 		
 		return result;
 	}
@@ -107,8 +123,6 @@ class EuclideanDistance
 protected:
 	PathCost h(State const &STATE) const
 	{
-		// std::unordered_map<Romania::state, Romania::pathcost>::const_iterator I(SLD.find(STATE));
-		// return I->second;
 		auto const RESULT = SLD.at(STATE);
 		return RESULT;
 	}

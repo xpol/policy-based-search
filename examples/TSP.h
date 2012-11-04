@@ -1,6 +1,6 @@
 /*
     TSP.h: Travelling Salesman Problem cast as an implicit graph search.
-    Copyright (C) 2012  Jeremy Murphy <jeremy.william.murphy@gmail.com>
+    Copyright (C) 2012  Jeremy W. Murphy <jeremy.william.murphy@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #define TSP_H
 
 #include "problem.h"
+#include "to_string.h"
 
 #include <map>
 #include <set>
@@ -56,9 +57,8 @@ struct VertexProps
 struct EdgeProps
 {
 	EdgeProps() {}
-	EdgeProps(std::string const &NAME, unsigned int const &W) : name(NAME), cost(W) {}
+	EdgeProps(unsigned int const &W) : cost(W) {}
 
-	std::string name;
 	unsigned int cost;
 
 	bool operator<(EdgeProps const &OTHER) const
@@ -112,6 +112,13 @@ std::vector<EdgeProps> COST;
 std::vector<edge_desc> EDGES;
 std::set<std::set<boost::graph_traits<subgraph>::edge_descriptor>> INVALID;
 ////////////////////////////////////////////////////////////////////////
+
+/*
+template <typename Traits,
+			template <typename State, typename PathCost> class PathCostPolicy,
+			template <typename PathCost, typename State> class HeuristicPolicy>
+using WAStar = jsearch::WAStarNodeComparator<Traits, PathCostPolicy, HeuristicPolicy, 5>;
+*/
 
 // TSP heuristic: shortest imaginable tour including these edges.
 template <typename PathCost, class State>
@@ -178,8 +185,7 @@ protected:
 		{
 			predecessors.insert(E);
 		}
-
-	protected:
+	private:
 		// TODO: Find a way to make this a hash/unordered set.
 		std::set<subgraph::edge_descriptor> predecessors;
 	};
@@ -193,7 +199,7 @@ protected:
 		Action const START = STATE.empty() ? 0 : STATE.back() + 1,
 					END = N - n + STATE.size() + 1;
 #ifndef NDEBUG
-		std::cerr << "Generating actions for " << to_string(STATE) << "\n";
+		std::cerr << "Generating actions for " << jwm::to_string(STATE) << "\n";
 #endif
 		if(STATE.size() > 1)
 		{
@@ -227,7 +233,7 @@ protected:
 					std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(ei.first, ei.second);
 					auto const i_result = INVALID.insert(invalid);
 #ifndef NDEBUG
-					std::cout << "!invalid edge: " << a << " on " << SOURCE << ". " << to_string(invalid) << ", " << i_result.second << (i_result.second ? "" : to_string(*i_result.first)) << "\n";
+					std::cout << "!invalid edge: " << a << " on " << SOURCE << ". " << jwm::to_string(invalid) << ", " << i_result.second << (i_result.second ? "" : jwm::to_string(*i_result.first)) << "\n";
 #endif
 				}
 				else
@@ -242,7 +248,7 @@ protected:
 						INVALID.insert(invalid);
 						auto const i_result = INVALID.insert(invalid);
 #ifndef NDEBUG
-						std::cout << "!invalid edge: " << a << " on " << TARGET << ". " << to_string(invalid) << ", " << i_result.second << (i_result.second ? "" : to_string(*i_result.first)) << "\n";
+						std::cout << "!invalid edge: " << a << " on " << TARGET << ". " << jwm::to_string(invalid) << ", " << i_result.second << (i_result.second ? "" : jwm::to_string(*i_result.first)) << "\n";
 #endif
 					}
 					else
@@ -270,7 +276,7 @@ protected:
 				if(valid)
 				{
 #ifndef NDEBUG
-					std::cout << "GOOD edge: " << a << "\n";
+					std::cout << "GOOD edge: " << EDGES[a] << "\n";
 #endif
 					result.push_back(a);
 				}
@@ -317,3 +323,4 @@ protected:
 };
 
 #endif // TSP_H
+

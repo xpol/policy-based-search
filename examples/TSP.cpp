@@ -1,6 +1,6 @@
 /*
     TSP.cpp: Travelling Salesman Problem demonstration.
-    Copyright (C) 2012  Jeremy Murphy <jeremy.william.murphy@gmail.com>
+    Copyright (C) 2012  Jeremy W. Murphy <jeremy.william.murphy@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -61,29 +61,32 @@ private:
 };
 */
 
+// Example comparator of Weighted A* with a weight of 10 (owing to the default divisor of 10).
+template <typename Traits,
+	template <typename State, typename PathCost> class PathCostPolicy,
+	template <typename PathCost, typename State> class HeuristicPolicy>
+	using W10AStar = WeightedAStar<Traits, PathCostPolicy, HeuristicPolicy, 100>;
+
 
 int main(int argc, char **argv)
 {
-	// TODO: Use Program Options from Boost.
+	float weight = 1.0;
+	// TODO: Use Program Options from Boost to clean up this ugly mess.
 	if(argc > 1)
 	{
-		istringstream arg(argv[1]);
-		arg >> n;
+		istringstream(argv[1]) >> n;
+
+		if (argc > 2)
+			// TODO: I think this is achievable, but it requires more template magic.
+			istringstream(argv[2]) >> weight;
 	}
 	else
 	{
 		cerr << "Missing required value for n as argument 1.\n";
 		exit(EXIT_FAILURE);
 	}
-
-	// Graph const G(Australia());
 	
 	problem.reset(new Graph(procedural(n)));
-#ifndef NDEBUG
-	ofstream dot("TSP.dot");
-	boost::write_graphviz(dot, *problem); // boost::make_label_writer()
-#endif
-	// n = boost::num_vertices(*problem);
 	N = problem->m_num_edges;
 	pair<edge_iter, edge_iter> const EP(boost::edges(*problem));
 	
@@ -93,20 +96,21 @@ int main(int argc, char **argv)
 	TSP::state const i;
 
 	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const minimal(i);
+
 	Evaluation<MinimalImaginableTour> const eval;
 	
 	try
 	{
-		TSP::node const solution = jsearch::search(minimal, eval);
+		TSP::node const solution = jsearch::best_first_search(minimal, eval);
 
 		cout << "solution: { ";
 		for_each(begin(solution.state), end(solution.state), [](vector<Index>::const_reference &E)
 		{
-			cout << E << " ";
+			cout << EDGES[E] << " ";
 		});
 		cout << "}, " << solution.path_cost << endl;
 	}
-	catch (GoalNotFound &ex)
+	catch (goal_not_found &ex)
 	{
 		cout << "Goal not found! :(\n";
 	}
@@ -117,10 +121,11 @@ int main(int argc, char **argv)
 
 Graph procedural(size_t const &n)
 {
-	// enum cities { A, B, C, D };
-	vector<char> const CITIES { { 'A', 'B', 'C', 'D', 'E' } }; // TODO: generator
-	vector<string> const EDGE_NAMES = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j" }; // TODO: generator
-	vector<unsigned int> const WEIGHT { { 1, 2, 4, 7, 11, 16, 22, 29, 37, 46 } }; // TODO: generator
+	vector<unsigned int> WEIGHT(n * (n - 1) / 2);
+	std::uniform_int_distribution<TSP::pathcost> distribution(1, 1000);
+	std::mt19937 const engine;
+	auto generator = bind(distribution, engine);
+	generate(begin(WEIGHT), end(WEIGHT), generator);
 	Graph g(n);
 
 	EDGES.reserve(n * (n - 1) / 2);
@@ -129,9 +134,7 @@ Graph procedural(size_t const &n)
 	{
 		for(vertex_desc j = i + 1; j < n; ++j, ++k)
 		{
-			// size_t const K = i * (n - 1) + (j - i) - (i + 1);
-			// cerr << "(" << i << ", " << j << ") k: " << k << endl;
-			auto const E = boost::add_edge(i, j, EdgeProps(EDGE_NAMES[k], WEIGHT[k]), g);
+			auto const E = boost::add_edge(i, j, EdgeProps(WEIGHT[k]), g);
 			if(!E.second)
 				cerr << "Failed to add edge " << E.first << "to the graph." << endl;
 			else
@@ -139,26 +142,22 @@ Graph procedural(size_t const &n)
 		}
 	}
 
-	// Give names to the cities.
+#ifndef NDEBUG
+	ofstream dot("TSP.dot");
+	boost::write_graphviz(dot, g, boost::default_writer(), boost::make_label_writer(boost::get(&EdgeProps::cost, g)));
+#endif
+
 	pair<vertex_iter, vertex_iter> const VP = boost::vertices(g);
-	
-	// wit = begin(WEIGHT);
 	cout << "vertices: ";
 	for (auto vi = VP.first; vi != VP.second; ++vi)
-	{
-		g[*vi].name = CITIES[vi - VP.first];
-		cout << g[*vi].name << " ";
-	}
+		cout << *vi << " ";
 	cout << "" << endl;
-	
 
 	// Verify that it worked.
 	cout << "edges: ";
 	edge_iter ei, ei_end;
 	for (tie(ei, ei_end) = boost::edges(g); ei != ei_end; ++ei)
-	{
-		cout << "(" << g[boost::source(*ei, g)].name << "," << g[boost::target(*ei, g)].name << "):" << g[*ei].cost << " ";
-	}
+		cout << *ei << ": "<< g[*ei].cost << "  ";
 	cout << std::endl;
 	
 	return g;

@@ -1,7 +1,7 @@
 /*
     evaluation.h: Convenience class to make the search() function template easier.
     Also includes heuristic and pathcost policies, and queue comparators.
-    Copyright (C) 2012  Jeremy Murphy <jeremy.william.murphy@gmail.com>
+    Copyright (C) 2012  Jeremy W. Murphy <jeremy.william.murphy@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@
 #define EVALUATION_H
 
 #include <functional>
+#ifndef NDEBUG
+#include <iostream>
+#endif
 
 namespace jsearch
 {
@@ -45,13 +48,14 @@ namespace jsearch
 		}
 	};
 
+	
 	// Comparator classes, passed to the priority_queue.  NOT a policy class, actually a host!
 	template <typename Traits,
 			template <typename State, typename PathCost> class PathCostPolicy,
 			template <typename PathCost, typename State> class HeuristicPolicy>
-	class AStarNodeComparator : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
-							private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
+	class AStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
+					private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
+					private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
@@ -59,6 +63,7 @@ namespace jsearch
 		
 		using PathCostPolicy<Node, PathCost>::g;
 		using HeuristicPolicy<PathCost, State>::h;
+		
 	public:
 		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
 		{
@@ -67,32 +72,60 @@ namespace jsearch
 	};
 
 
-	// AStarOperator
-	template < 	typename Traits,
-				template <typename PathCost, typename State> class HeuristicPolicy,
-				template <typename State, typename PathCost> class PathCostPolicy >
-	class AStarNodeOperator : 	private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-								private PathCostPolicy<typename Traits::state, typename Traits::pathcost>
+	/*	Weighted A* comparator functor.  Until template parameters support float, we pass the weight as a ratio of two numbers:
+		Weight / Divisor.  Therefore, the default weight is 1.0.
+
+		Example weighted comparator with a weight of 10 (owing to the default divisor of 10):
+
+		template <typename Traits,
+			template <typename State, typename PathCost> class PathCostPolicy,
+			template <typename PathCost, typename State> class HeuristicPolicy>
+			using W10AStar = WeightedAStar<Traits, PathCostPolicy, HeuristicPolicy, 100>;
+
+		The template alias W10AStar then fits the required type for the Evaluation class.
+	 */
+	template <typename Traits,
+		template <typename State, typename PathCost> class PathCostPolicy,
+		template <typename PathCost, typename State> class HeuristicPolicy,
+		size_t Weight = 10, size_t Divisor = 10> // Templates do not accept floats, so we pass a ratio.
+	class WeightedAStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
+							private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
+							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
 	{
-		using PathCostPolicy<typename Traits::state, typename Traits::pathcost>::g;
-		using HeuristicPolicy<typename Traits::pathcost, typename Traits::state>::h;
-	protected:
-		bool operator<(typename Traits::node const &OTHER) const
+		typedef typename Traits::node Node;
+		typedef typename Traits::pathcost PathCost;
+		typedef typename Traits::state State;
+
+		using PathCostPolicy<Node, PathCost>::g;
+		using HeuristicPolicy<PathCost, State>::h;
+		
+	public:
+		WeightedAStar() : weight(static_cast<float>(Weight) / Divisor)
 		{
-			return g(*this) + h(this->state) < g(OTHER) + h(OTHER.state);
+#ifndef NDEBUG
+			std::cout << __FUNCTION__ << "(): " << weight << "\n";
+#endif
 		}
+		
+		
+		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
+		{
+			return g(*A) + weight * h(A->state) < g(*B) + weight * h(B->state);
+		}
+		
+	private:
+		float const weight;  // TODO: This still feels a bit "runny": how to make it totally compile-time constant?  So that it does not even require memory access?
 	};
 
-
+	
 	// Convenience class until I figure out a better way to do it.
 	template <template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
 		template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
 		template <typename Traits,
 			template <typename State, typename PathCost> class PathCostPolicy,
-			template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarNodeComparator>
+			template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStar>
 	class Evaluation
 	{
-		// Absolutely nothing!
 	};
 }
 
