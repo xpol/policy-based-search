@@ -103,7 +103,7 @@ namespace jsearch
 		WeightedAStar() : weight(static_cast<float>(Weight) / Divisor)
 		{
 #ifndef NDEBUG
-			std::cerr << __FUNCTION__ << "(): " << weight << "\n";
+			std::cout << __FUNCTION__ << "(): " << weight << "\n";
 #endif
 		}
 		
@@ -118,23 +118,6 @@ namespace jsearch
 	};
 
 	
-	// AStarOperator
-	template < 	typename Traits,
-				template <typename PathCost, typename State> class HeuristicPolicy,
-				template <typename State, typename PathCost> class PathCostPolicy >
-	class AStarOperator : 	private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-							private PathCostPolicy<typename Traits::state, typename Traits::pathcost>
-	{
-		using PathCostPolicy<typename Traits::state, typename Traits::pathcost>::g;
-		using HeuristicPolicy<typename Traits::pathcost, typename Traits::state>::h;
-	protected:
-		bool operator<(typename Traits::node const &OTHER) const
-		{
-			return g(*this) + h(this->state) < g(OTHER) + h(OTHER.state);
-		}
-	};
-
-
 	// Convenience class until I figure out a better way to do it.
 	template <template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
 		template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
