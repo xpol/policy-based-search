@@ -22,7 +22,6 @@
 #include "evaluation.h"
 #include "problem.h"
 
-#include <queue>
 #include <set>
 #include <algorithm>
 #include <stdexcept>
