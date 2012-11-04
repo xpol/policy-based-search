@@ -23,78 +23,26 @@
 
 namespace jwm
 {
-	template <template <typename T, typename Alloc = std::allocator<T>> class Container, typename T>
-	inline std::string open_bracket(Container<T> const &)
-	{
-		return "[";
-	}
-	
-	
-	template <template <typename T, typename Alloc = std::allocator<T>> class Container, typename T>
-	inline std::string close_bracket(Container<T> const &)
-	{
-		return "]";
-	}
-	
-	
-	template <typename T>
-	inline std::string open_bracket(std::vector<T> const &)
-	{
-		return "⟨";
-	}
-	
-	
-	template <typename T>
-	inline std::string close_bracket(std::vector<T> const &)
-	{
-		return "⟩";
-	}
-	
-	
-	template <typename T>
-	inline std::string open_bracket(std::set<T> const &)
-	{
-		return "{";
-	}
-	
-	
-	template <typename T>
-	inline std::string close_bracket(std::set<T> const &)
-	{
-		return "}";
-	}
-	
+	using std::to_string;
 
-	template <typename T>
-	inline std::string open_bracket(std::unordered_set<T> const &)
+	// Sequence containers.
+	template <template <typename T, typename Alloc = std::allocator<T>> class Sequence, typename T>
+	std::string to_string(Sequence<T> const &SEQUENCE)
 	{
-		return "{";
-	}
-	
-	
-	template <typename T>
-	inline std::string close_bracket(std::unordered_set<T> const &)
-	{
-		return "}";
-	}
-	
-	
-	template <template <typename T, typename Alloc = std::allocator<T>> class Container, typename T>
-	std::string to_string(Container<T> const &V)
-	{
-		std::string s(open_bracket(V));
+		typedef typename Sequence<T>::const_reference const_reference;
+		std::string s("⟨");
 		
-		if(!V.empty())
+		if(!SEQUENCE.empty())
 		{
-			std::for_each(std::begin(V), std::end(V) - 1, [&](typename Container<T>::const_reference E)
+			std::for_each(std::begin(SEQUENCE), std::end(SEQUENCE) - 1, [&](const_reference E)
 			{
-				s += std::to_string(E) + ", ";
+				s += to_string(E) + ", ";
 			});
 			
-			s += std::to_string(V.back());
+			s += to_string(SEQUENCE.back());
 		}
 		
-		s += close_bracket(V);
+		s += "⟩";
 		
 		return s;
 	}
