@@ -16,10 +16,7 @@
 */
 
 #include <algorithm>
-#include <vector>
 #include <string>
-#include <set>
-#include <unordered_set>
 
 namespace jwm
 {
