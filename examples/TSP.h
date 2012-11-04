@@ -1,6 +1,6 @@
 /*
     TSP.h: Travelling Salesman Problem cast as an implicit graph search.
-    Copyright (C) 2012  Jeremy Murphy <jeremy.william.murphy@gmail.com>
+    Copyright (C) 2012  Jeremy W. Murphy <jeremy.william.murphy@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #define TSP_H
 
 #include "problem.h"
+#include "to_string.h"
 
 #include <map>
 #include <set>
@@ -195,7 +196,7 @@ protected:
 		Action const START = STATE.empty() ? 0 : STATE.back() + 1,
 					END = N - n + STATE.size() + 1;
 #ifndef NDEBUG
-		std::cerr << "Generating actions for " << to_string(STATE) << "\n";
+		std::cerr << "Generating actions for " << jwm::to_string(STATE) << "\n";
 #endif
 		if(STATE.size() > 1)
 		{

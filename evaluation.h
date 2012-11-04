@@ -1,7 +1,7 @@
 /*
     evaluation.h: Convenience class to make the search() function template easier.
     Also includes heuristic and pathcost policies, and queue comparators.
-    Copyright (C) 2012  Jeremy Murphy <jeremy.william.murphy@gmail.com>
+    Copyright (C) 2012  Jeremy W. Murphy <jeremy.william.murphy@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

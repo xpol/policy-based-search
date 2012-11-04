@@ -1,6 +1,6 @@
 /*
     problem.h: Search problem definition, taken from Russel & Norvig's AIMA.
-    Copyright (C) 2012  Jeremy Murphy <jeremy.william.murphy@gmail.com>
+    Copyright (C) 2012  Jeremy W. Murphy <jeremy.william.murphy@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,34 +20,6 @@
 #define PROBLEM_H
 
 #include <memory>
-
-#ifndef NDEBUG
-#include <algorithm>
-#include <vector>
-#include <string>
-
-template <typename T>
-std::string to_string(std::vector<T> const &V)
-{
-	std::string s("<");
-	
-	if(!V.empty())
-	{
-		std::for_each(std::begin(V), std::end(V) - 1, [&](typename std::vector<T>::const_reference E)
-		{
-			s += std::to_string(E) + ", ";
-		});
-		
-		s += std::to_string(V.back());
-	}
-	
-	s += ">";
-	
-	return s;
-}
-
-#endif
-
 
 namespace jsearch
 {
