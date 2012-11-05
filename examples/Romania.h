@@ -1,3 +1,26 @@
+/*
+    Romania.h: Problem definition.
+    Copyright (C) 2012  Jeremy W. Murphy <jeremy.william.murphy@gmail.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+/* Romania is a country in eastern Europe.  It is also a didactic pathfinding
+ * example in AIMA, set in the same country.  The problem is usually cast as
+ * how to get from Arad, in the northwest, to the capital Bucharest via the
+ * road system.
+ */
 
 #include "problem.h"
 
@@ -26,6 +49,7 @@ typedef std::unordered_map<Romania::state, Romania::pathcost> StateCost;
 
 // Road costs from city to city as an adjacency list.
 std::unordered_map<Romania::state, StateCost> const COST {
+// 	{  ORIGIN,   { DESTINATIONS... }}
 	{ "Arad", { {"Zerind", 75}, {"Sibiu", 140}, {"Timisoara", 118} } },
 	{ "Bucharest", { {"Pitesti", 101}, {"Fagaras", 211} } },
 	{ "Craiova", { {"Drobeta", 120}, {"Rimnicu Vilcea", 146}, {"Pitesti", 138} } },
