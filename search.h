@@ -49,14 +49,14 @@ namespace jsearch
 			template <typename State, typename Action> class ActionsPolicy,
 			template <typename State, typename Action> class ResultPolicy,
 			template <typename State> class GoalTestPolicy,
-			template <typename Traits,
+			template <typename Traits_,
 				template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 				template <typename State, typename Action> class ResultPolicy >
 					class ChildPolicy = DefaultChildPolicy,
 
 			template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
 			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
-			template <typename Traits,
+			template <typename Traits_,
 				template <typename State, typename PathCost> class PathCostPolicy,
 				template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStar>
 	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<HeuristicPolicy, PathCostPolicy, Comparator> const &)

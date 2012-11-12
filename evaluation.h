@@ -126,6 +126,8 @@ namespace jsearch
 			template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStar>
 	class Evaluation
 	{
+	public:
+		Evaluation() {}
 	};
 }
 

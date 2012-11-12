@@ -59,15 +59,15 @@ namespace jsearch
 	};
 
 
-	template < typename ProblemTraits,
+	template <typename ProblemTraits,
 			 template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 			 template <typename State, typename Action> class ActionsPolicy,
 			 template <typename State, typename Action> class ResultPolicy,
 			 template <typename State> class GoalTestPolicy,
-			 template < typename ProblemTraits,
-				template <typename PathCost, typename State, typename Action> class StepCostPolicy,
-				template <typename State, typename Action> class ResultPolicy >
-				class ChildPolicy = DefaultChildPolicy >
+			 template <typename ProblemTraits_,
+				template <typename PathCost, typename State, typename Action> class StepCostPolicy_,
+				template <typename State, typename Action> class ResultPolicy_>
+				class ChildPolicy = DefaultChildPolicy>
 	class Problem :
 		private StepCostPolicy<typename ProblemTraits::pathcost, typename ProblemTraits::state, typename ProblemTraits::action>,
 		private ActionsPolicy<typename ProblemTraits::state, typename ProblemTraits::action>,
