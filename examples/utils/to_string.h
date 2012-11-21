@@ -21,7 +21,37 @@
 namespace jwm
 {
 	using std::to_string;
+	
+	// Universal container element stringifier...?
+	template <template <typename T> class Container, typename T>
+	std::string to_string_element(Container<T> const &V)
+	{
+		typedef typename Container<T>::const_reference const_reference;
+		
+		std::string s;
+		
+		if(!V.empty())
+		{
+			std::for_each(std::begin(V), std::end(V) - 1, [&](const_reference E)
+			{
+				s += to_string(E) + ", ";
+			});
+			
+			s += to_string(V.back());
+		}
+		
+		return s;
+	}
+	
 
+	// Catch-all function.
+	/*
+	template <template <typename T, typename... Params> class Container, typename T>
+	std::string to_string(Container<T> const &CONTAINER, std::string const &OPEN_BRACKET, std::string const &CLOSE_BRACKET)
+	{
+	}
+	*/
+	
 	// Sequence containers.
 	template <template <typename T, typename Alloc = std::allocator<T>> class Sequence, typename T>
 	std::string to_string(Sequence<T> const &SEQUENCE)
@@ -40,6 +70,26 @@ namespace jwm
 		}
 		
 		s += "⟩";
+		
+		return s;
+	}
+	
+
+	// Associative containers.
+	template <template <typename Key, typename Compare = std::less<Key>, typename Alloc = std::allocator<Key>> class Set, typename Key>
+	std::string to_string(Set<Key> const &SET)
+	{
+		typedef typename Set<Key>::const_reference const_reference;
+		std::string s;
+		
+		if(!SET.empty())
+		{
+			s += "{";
+			std::for_each(std::begin(SET), std::end(SET), [&](const_reference E){ s += to_string(E);});
+			s += "}";
+		}
+		else
+			s = "∅";
 		
 		return s;
 	}
