@@ -281,6 +281,12 @@ protected:
 				result.push_back(a);
 		}
 
+#ifndef DEBUG
+		std::vector<edge_desc> tmp;
+		tmp.reserve(result.size());
+		std::for_each(std::begin(result), std::end(result), [&](Action const &A){ tmp.push_back(EDGES[A]); });
+		std::cout << "Actions: " << jwm::to_string(tmp) << std::endl;
+#endif
 		return result;
 	}
 };

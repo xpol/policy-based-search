@@ -122,8 +122,8 @@ int main(int argc, char **argv)
 Graph procedural(size_t const &n)
 {
 	vector<unsigned int> WEIGHT(n * (n - 1) / 2);
-	std::uniform_int_distribution<TSP::pathcost> distribution(1, 1000);
-	std::mt19937 const engine;
+	uniform_int_distribution<TSP::pathcost> distribution(1, 1000);
+	mt19937 const engine;
 	auto generator = bind(distribution, engine);
 	generate(begin(WEIGHT), end(WEIGHT), generator);
 	Graph g(n);
