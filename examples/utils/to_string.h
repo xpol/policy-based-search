@@ -83,13 +83,16 @@ namespace jwm
 	std::string to_string(Set<Key> const &SET)
 	{
 		typedef typename Set<Key>::const_reference const_reference;
-		std::string s("{");
+		std::string s;
 		
 		if(!SET.empty())
 		{
+			s += "{";
+			std::for_each(std::begin(SET), std::end(SET), [&](const_reference E){ s += to_string(E);});
+			s += "}";
 		}
-		
-		s += "}";
+		else
+			s = "∅";
 		
 		return s;
 	}

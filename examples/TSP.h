@@ -107,8 +107,6 @@ public:
 };
 
 std::unique_ptr<Graph> problem;
-// Could these two be combined into a std::map<TSP::action, EdgeProps> without sacrificing complexity?
-std::vector<EdgeProps> COST;
 std::vector<edge_desc> EDGES;
 std::set<std::set<boost::graph_traits<subgraph>::edge_descriptor>> INVALID;
 ////////////////////////////////////////////////////////////////////////
@@ -128,16 +126,16 @@ protected:
 	PathCost h(State const &STATE) const
 	{
 		// Expects edge costs to be ordered.
-		auto START = std::begin(COST);
+		auto START = std::begin(EDGES);
 		bool const EMPTY = STATE.empty();
 		auto const BACK = STATE.back();
 		auto const OFFSET = EMPTY ? 0 : BACK + 1;
 		START += OFFSET;
 		auto const END = START + n - STATE.size();
 
-		PathCost const RESULT = std::accumulate(START, END, 0, [](PathCost const &A, EdgeProps const &B)
+		PathCost const RESULT = std::accumulate(START, END, 0, [](PathCost const &A, edge_desc const &B)
 		{
-			return A + B.cost;
+			return A + (*problem)[B].cost;
 		});
 		
 		return RESULT;
@@ -151,7 +149,7 @@ class EdgeCost
 protected:
 	PathCost step_cost(State const &, Action const &ACTION) const
 	{
-		PathCost const RESULT = COST[ACTION].cost;
+		PathCost const RESULT = (*problem)[EDGES[ACTION]].cost;
 		return RESULT;
 	}
 };
@@ -199,7 +197,9 @@ protected:
 		Action const START = STATE.empty() ? 0 : STATE.back() + 1,
 					END = N - n + STATE.size() + 1;
 #ifndef NDEBUG
-		std::cerr << "Generating actions for " << jwm::to_string(STATE) << "\n";
+		std::cout << "Generating actions for state: {";
+		std::for_each(std::begin(STATE), std::end(STATE), [&](typename State::const_reference ACTION){ std::cout << EDGES[ACTION]; });
+		std::cout << "}" << std::endl;
 #endif
 		if(STATE.size() > 1)
 		{
@@ -233,7 +233,7 @@ protected:
 					std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(ei.first, ei.second);
 					auto const i_result = INVALID.insert(invalid);
 #ifndef NDEBUG
-					std::cout << "!invalid edge: " << a << " on " << SOURCE << ". " << jwm::to_string(invalid) << ", " << i_result.second << (i_result.second ? "" : jwm::to_string(*i_result.first)) << "\n";
+					std::cout << "!invalid SOURCE edge: " << EDGES[a] << " on " << SOURCE << ". " << jwm::to_string(invalid) << ", " << (i_result.second ? "" : jwm::to_string(*i_result.first)) << "\n";
 #endif
 				}
 				else
@@ -243,12 +243,11 @@ protected:
 					if(degree > 2)
 					{
 						valid = false;
-						auto const ei = boost::out_edges(SOURCE, subproblem);
-						std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(ei.first, ei.second);
-						INVALID.insert(invalid);
+						auto const EI = boost::out_edges(TARGET, subproblem);
+						std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(EI.first, EI.second);
 						auto const i_result = INVALID.insert(invalid);
 #ifndef NDEBUG
-						std::cout << "!invalid edge: " << a << " on " << TARGET << ". " << jwm::to_string(invalid) << ", " << i_result.second << (i_result.second ? "" : jwm::to_string(*i_result.first)) << "\n";
+						std::cout << "!invalid TARGET edge: " << EDGES[a] << " on " << TARGET << ". " << jwm::to_string(invalid) << ", " <<  (i_result.second ? "" : jwm::to_string(*i_result.first)) << "\n";
 #endif
 					}
 					else

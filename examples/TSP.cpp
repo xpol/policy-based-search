@@ -68,6 +68,16 @@ template <typename Traits,
 	using W10AStar = WeightedAStar<Traits, PathCostPolicy, HeuristicPolicy, 100>;
 
 
+struct EdgeDescComp
+{
+public:
+	bool operator()(edge_desc const &A, edge_desc const &B)
+	{
+		return (*problem)[A] < (*problem)[B];
+	}
+};
+
+	
 int main(int argc, char **argv)
 {
 	float weight = 1.0;
@@ -88,11 +98,16 @@ int main(int argc, char **argv)
 	
 	problem.reset(new Graph(procedural(n)));
 	N = problem->m_num_edges;
+	EDGES.reserve(N);
 	pair<edge_iter, edge_iter> const EP(boost::edges(*problem));
 	
-	transform(EP.first, EP.second, back_inserter(COST), [&](edge_desc const &E){ return (*problem)[E]; });
-	sort(begin(COST), end(COST));
+	transform(EP.first, EP.second, back_inserter(EDGES), [&](edge_desc const &E){ return E; });
+	sort(begin(EDGES), end(EDGES), EdgeDescComp());
 
+#ifndef NDEBUG
+	cout << "Sorted edge descriptors: " << jwm::to_string(EDGES) << endl;
+#endif
+	
 	TSP::state const i;
 
 	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const minimal(i);
@@ -128,7 +143,7 @@ Graph procedural(size_t const &n)
 	generate(begin(WEIGHT), end(WEIGHT), generator);
 	Graph g(n);
 
-	EDGES.reserve(n * (n - 1) / 2);
+	// EDGES.reserve(n * (n - 1) / 2);
 
 	for(vertex_desc i = 0, k = 0; i < n - 1; ++i)
 	{
@@ -137,8 +152,8 @@ Graph procedural(size_t const &n)
 			auto const E = boost::add_edge(i, j, EdgeProps(WEIGHT[k]), g);
 			if(!E.second)
 				cerr << "Failed to add edge " << E.first << "to the graph." << endl;
-			else
-				EDGES.push_back(E.first);
+			// else
+				// EDGES.push_back(E.first);
 		}
 	}
 
