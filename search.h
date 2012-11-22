@@ -44,6 +44,16 @@ namespace jsearch
 	};
 
 
+	template <template <typename Key, typename Compare = std::less<Key>, typename Alloc = std::allocator<Key>> class Set, typename Key, class Compare>
+	Key pop(Set<Key, Compare> &s)
+	{
+		typename Set<Key, Compare>::const_iterator IT(std::begin(s));
+		Key const E(*IT);
+		s.erase(IT);
+		return E;
+	}
+	
+
 	template <typename Traits,
 			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
@@ -78,11 +88,8 @@ namespace jsearch
 
 		while(!open.empty())
 		{
-			typename OpenList::const_iterator IT = std::begin(open);
-			// I learnt something whilst writing this: S must be a value not a reference in this case!
-			OpenListElement const S = *IT;
-			open.erase(IT);
-
+			OpenListElement const S(pop(open));
+			
 			if(PROBLEM.goal_test(S->state))
 			{
 #ifndef NDEBUG

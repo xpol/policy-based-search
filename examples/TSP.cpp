@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 Graph procedural(size_t const &n)
 {
 	vector<unsigned int> WEIGHT(n * (n - 1) / 2);
-	uniform_int_distribution<TSP::pathcost> distribution(1, 5);
+	uniform_int_distribution<TSP::pathcost> distribution(1, 500);
 	// 4 or 5, bad seed: 1353505682555810
 	//seed: 1353506882865602
 	auto seed(std::chrono::system_clock::now().time_since_epoch().count());
