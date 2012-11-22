@@ -48,14 +48,37 @@ namespace jsearch
 		}
 	};
 
+
+	// Low-h tie policy.
+	template <typename Traits,
+			template <typename State, typename PathCost> class PathCostPolicy,
+			template <typename PathCost, typename State> class HeuristicPolicy>
+	class LowH : private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>
+	{
+		typedef typename Traits::node Node;
+		typedef typename Traits::pathcost PathCost;
+		typedef typename Traits::state State;
+
+		using HeuristicPolicy<PathCost, State>::h;
+		
+	protected:
+		bool split(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
+		{
+			return h(A->state) < h(B->state);
+		}
+	};
+
 	
 	// Comparator classes, passed to the priority_queue.  NOT a policy class, actually a host!
 	template <typename Traits,
 			template <typename State, typename PathCost> class PathCostPolicy,
-			template <typename PathCost, typename State> class HeuristicPolicy>
+			template <typename PathCost, typename State> class HeuristicPolicy,
+			template <typename Traits, template <typename State, typename PathCost> class PathCostPolicy,
+				template <typename PathCost, typename State> class HeuristicPolicy> class TiePolicy>
 	class AStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
 					private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-					private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
+					private PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
+					private TiePolicy<Traits, PathCostPolicy, HeuristicPolicy>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
@@ -63,6 +86,7 @@ namespace jsearch
 		
 		using PathCostPolicy<Node, PathCost>::g;
 		using HeuristicPolicy<PathCost, State>::h;
+		using TiePolicy<Traits, PathCostPolicy, HeuristicPolicy>::split;
 		
 	public:
 		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
@@ -120,10 +144,14 @@ namespace jsearch
 	
 	// Convenience class until I figure out a better way to do it.
 	template <template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
-		template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
-		template <typename Traits,
-			template <typename State, typename PathCost> class PathCostPolicy,
-			template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStar>
+			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
+			template <typename Traits, template <typename State, typename PathCost> class PathCostPolicy,
+				template <typename PathCost, typename State> class HeuristicPolicy> class TiePolicy = LowH,
+			template <typename Traits,
+				template <typename State, typename PathCost> class PathCostPolicy,
+				template <typename PathCost, typename State> class HeuristicPolicy,
+				template <typename Traits, template <typename State, typename PathCost> class PathCostPolicy,
+					template <typename PathCost, typename State> class HeuristicPolicy> class TiePolicy> class Comparator = AStar>
 	class Evaluation
 	{
 	public:
