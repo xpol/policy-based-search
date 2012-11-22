@@ -23,6 +23,7 @@
 #include <iostream>
 #include <algorithm>
 #include <sstream>
+#include <chrono>
 
 #ifndef NDEBUG
 #include <boost/graph/graphviz.hpp>
@@ -137,8 +138,13 @@ int main(int argc, char **argv)
 Graph procedural(size_t const &n)
 {
 	vector<unsigned int> WEIGHT(n * (n - 1) / 2);
-	uniform_int_distribution<TSP::pathcost> distribution(1, 1000);
-	mt19937 const engine;
+	uniform_int_distribution<TSP::pathcost> distribution(1, 5);
+	// 4 or 5, bad seed: 1353505682555810
+	//seed: 1353506882865602
+	auto seed(std::chrono::system_clock::now().time_since_epoch().count());
+	seed = 1353505682555810;
+	cout << "seed: " << seed << endl;
+	mt19937 const engine(seed);
 	auto generator = bind(distribution, engine);
 	generate(begin(WEIGHT), end(WEIGHT), generator);
 	Graph g(n);

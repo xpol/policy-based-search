@@ -38,9 +38,9 @@ namespace jsearch
 	class goal_not_found : public std::exception
 	{
 	public:
-		goal_not_found(size_t const &CLOSED) : CLOSED(CLOSED) {}
+		goal_not_found(size_t const &CLOSED_SIZE) : CLOSED_SIZE(CLOSED_SIZE) {}
 		
-		size_t const CLOSED;
+		size_t const CLOSED_SIZE;
 	};
 
 
@@ -97,20 +97,15 @@ namespace jsearch
 			{
 				handle_parent(closed, S, Loki::Int2Type<Traits::combinatorial>());
 				std::vector<Action> const ACTIONS = PROBLEM.actions(S->state);
-				auto const BEGIN = std::begin(ACTIONS), END = std::end(ACTIONS);
-				/* TODO: If combinatorial == true, do lazy child generation.
-				 * This is an optimization whereby only the required children of a state are generated, 
-				 * instead of all of them as per regular best-first search.
-				 */
-				std::for_each(BEGIN, END, [&](typename std::set<Action>::const_reference ACTION)
+				// TODO: If combinatorial == true, do lazy child generation.
+				for(Action const ACTION : ACTIONS)
 				{
 					OpenListElement const CHILD(std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION)));
-
 					handle_child(open, closed, CHILD, Loki::Int2Type<Traits::combinatorial>());
-				});
+				}
 			}
-
 		}
+		
 		throw goal_not_found(closed.size());
 	}
 
@@ -127,11 +122,13 @@ namespace jsearch
 	template <typename E, class OpenList, class ClosedList>
 	inline void handle_child(OpenList &open, ClosedList &closed, E const &CHILD, Loki::Int2Type<false>)
 	{
+		typedef typename OpenList::const_iterator const_iterator;
+		
 		if(closed.find(CHILD->state) == std::end(closed)) // If it is NOT in closed...
 		{
 			/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
 			 *	performance of this section of code.	*/
-			for(typename OpenList::const_iterator IT = std::begin(open); IT != std::end(open); ++IT)
+			for(const_iterator IT = std::begin(open); IT != std::end(open); ++IT)
 			{
 				if(CHILD->state == (*IT)->state && CHILD->path_cost < (*IT)->path_cost)
 				{

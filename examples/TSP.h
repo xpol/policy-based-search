@@ -90,9 +90,7 @@ vertices_size_type n; // Size of the TSP instance (number of cities).
 edges_size_type N; // Size of the TSP instance (number of edges).
 
 
-typedef unsigned short Index;
-typedef char City;
-// typedef char Edge;
+typedef unsigned int Index;
 
 class TSP;
 // Problem definition
@@ -108,7 +106,7 @@ public:
 
 std::unique_ptr<Graph> problem;
 std::vector<edge_desc> EDGES;
-std::set<std::set<boost::graph_traits<subgraph>::edge_descriptor>> INVALID;
+// std::set<std::set<boost::graph_traits<subgraph>::edge_descriptor>> INVALID;
 ////////////////////////////////////////////////////////////////////////
 
 /*
@@ -199,7 +197,7 @@ protected:
 #ifndef NDEBUG
 		std::cout << "Generating actions for state: {";
 		std::for_each(std::begin(STATE), std::end(STATE), [&](typename State::const_reference ACTION){ std::cout << EDGES[ACTION]; });
-		std::cout << "}" << std::endl;
+		std::cout << "}" << "\n";
 #endif
 		if(STATE.size() > 1)
 		{
@@ -210,7 +208,13 @@ protected:
 			{
 				auto const SOURCE = boost::source(EDGES[E], *problem),
 						   TARGET = boost::target(EDGES[E], *problem);
-				boost::add_edge(SOURCE, TARGET, subproblem); // Use the vertices from the main problem in the subproblem.
+				// Use the vertices from the main problem in the subproblem.
+				auto const RESULT = boost::add_edge(SOURCE, TARGET, subproblem);
+				if(!RESULT.second)
+				{
+					std::cerr << "  ERROR: Failed to add edge " << RESULT.first << " to subgraph.\n";
+					throw std::runtime_error("Failed to add edge.");
+				}
 			});
 			
 			
@@ -221,7 +225,10 @@ protected:
 							TARGET = boost::target(EDGES[a], *problem);
 				auto const add_edge_result = boost::add_edge(SOURCE, TARGET, subproblem);
 				if(!add_edge_result.second)
-					std::cout << "ERROR: Failed to add edge " << add_edge_result.first << " to subgraph.\n";
+				{
+					std::cerr << "  ERROR: Failed to add edge " << add_edge_result.first << " to subgraph.\n";
+					throw std::runtime_error("Failed to add edge.");
+				}
 				// Check the graph for validity.
 				bool valid = true;
 
@@ -231,9 +238,8 @@ protected:
 					valid = false;
 					auto const ei = boost::out_edges(SOURCE, subproblem);
 					std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(ei.first, ei.second);
-					auto const i_result = INVALID.insert(invalid);
 #ifndef NDEBUG
-					std::cout << "!invalid SOURCE edge: " << EDGES[a] << " on " << SOURCE << ". " << jwm::to_string(invalid) << ", " << (i_result.second ? "" : jwm::to_string(*i_result.first)) << "\n";
+					std::cout << "  !invalid SOURCE edge: " << EDGES[a] << " on " << SOURCE << ". " << jwm::to_string(invalid) << "\n";
 #endif
 				}
 				else
@@ -245,9 +251,8 @@ protected:
 						valid = false;
 						auto const EI = boost::out_edges(TARGET, subproblem);
 						std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(EI.first, EI.second);
-						auto const i_result = INVALID.insert(invalid);
 #ifndef NDEBUG
-						std::cout << "!invalid TARGET edge: " << EDGES[a] << " on " << TARGET << ". " << jwm::to_string(invalid) << ", " <<  (i_result.second ? "" : jwm::to_string(*i_result.first)) << "\n";
+						std::cout << "  !invalid TARGET edge: " << EDGES[a] << " on " << TARGET << ". " << jwm::to_string(invalid) << "\n";
 #endif
 					}
 					else
@@ -264,7 +269,7 @@ protected:
 							{
 								valid = false;
 #ifndef NDEBUG
-								std::cout << "!cycle found: " << ex.edge << "\n";
+								std::cout << "  !cycle found: " << EDGES[a] << "\n";
 #endif
 							}
 						}
@@ -275,7 +280,7 @@ protected:
 				if(valid)
 				{
 #ifndef NDEBUG
-					std::cout << "GOOD edge: " << EDGES[a] << "\n";
+					std::cout << "  GOOD edge: " << EDGES[a] << "\n";
 #endif
 					result.push_back(a);
 				}
@@ -290,11 +295,11 @@ protected:
 				result.push_back(a);
 		}
 
-#ifndef DEBUG
+#ifndef NDEBUG
 		std::vector<edge_desc> tmp;
 		tmp.reserve(result.size());
 		std::for_each(std::begin(result), std::end(result), [&](Action const &A){ tmp.push_back(EDGES[A]); });
-		std::cout << "Actions: " << jwm::to_string(tmp) << std::endl;
+		std::cout << "  Actions: " << jwm::to_string(tmp) << "\n";
 #endif
 		return result;
 	}
