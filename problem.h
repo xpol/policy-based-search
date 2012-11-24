@@ -23,6 +23,7 @@
 
 namespace jsearch
 {
+	// TODO: Just a struct at the moment.  Should it enforce access public/private access rights?
 	template <typename Traits>
 	struct DefaultNode
 	{
@@ -30,7 +31,6 @@ namespace jsearch
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
-
 		typedef std::shared_ptr<DefaultNode<Traits>> ParentType;
 
 		DefaultNode(State const &STATE, ParentType const PARENT, Action const &ACTION, PathCost const &PATH_COST) : state(STATE), parent(PARENT),  action(ACTION), path_cost(PATH_COST) {}
@@ -59,26 +59,26 @@ namespace jsearch
 	};
 
 
-	template <typename ProblemTraits,
+	template <typename Traits,
 			 template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 			 template <typename State, typename Action> class ActionsPolicy,
 			 template <typename State, typename Action> class ResultPolicy,
 			 template <typename State> class GoalTestPolicy,
-			 template <typename ProblemTraits_,
+			 template <typename Traits_,
 				template <typename PathCost, typename State, typename Action> class StepCostPolicy_,
 				template <typename State, typename Action> class ResultPolicy_>
 				class ChildPolicy = DefaultChildPolicy>
 	class Problem :
-		private StepCostPolicy<typename ProblemTraits::pathcost, typename ProblemTraits::state, typename ProblemTraits::action>,
-		private ActionsPolicy<typename ProblemTraits::state, typename ProblemTraits::action>,
-		private ResultPolicy<typename ProblemTraits::state, typename ProblemTraits::action>,
-		private GoalTestPolicy<typename ProblemTraits::state>,
-		private ChildPolicy<ProblemTraits, StepCostPolicy, ResultPolicy>
+		private StepCostPolicy<typename Traits::pathcost, typename Traits::state, typename Traits::action>,
+		private ActionsPolicy<typename Traits::state, typename Traits::action>,
+		private ResultPolicy<typename Traits::state, typename Traits::action>,
+		private GoalTestPolicy<typename Traits::state>,
+		private ChildPolicy<Traits, StepCostPolicy, ResultPolicy>
 	{
-		typedef typename ProblemTraits::node Node;
-		typedef typename ProblemTraits::state State;
-		typedef typename ProblemTraits::action Action;
-		typedef typename ProblemTraits::pathcost PathCost;
+		typedef typename Traits::node Node;
+		typedef typename Traits::state State;
+		typedef typename Traits::action Action;
+		typedef typename Traits::pathcost PathCost;
 	public:
 		Problem(State const &INITIAL) : INITIAL(INITIAL) {}
 
@@ -87,7 +87,7 @@ namespace jsearch
 			return INITIAL;
 		}
 
-		using ChildPolicy<ProblemTraits, StepCostPolicy, ResultPolicy>::child;
+		using ChildPolicy<Traits, StepCostPolicy, ResultPolicy>::child;
 		using StepCostPolicy<PathCost, State, Action>::step_cost;
 		using ActionsPolicy<State, Action>::actions;
 		using ResultPolicy<State, Action>::result;

@@ -20,6 +20,7 @@
 #define TSP_H
 
 #include "problem.h"
+#include "evaluation.h"
 #include "to_string.h"
 
 #include <map>
@@ -139,6 +140,11 @@ protected:
 		return RESULT;
 	}
 };
+
+
+// Define an alias template that unites A* with our heuristic policy.
+template <typename Traits>
+using AStarTSP = jsearch::DefaultAStar<Traits, MinimalImaginableTour>;
 
 
 template <typename PathCost, typename State, typename Action>

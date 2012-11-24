@@ -33,12 +33,16 @@ template <class charT, class traits>
 basic_ostream<charT, traits>& print(Node const &NODE, basic_ostream<charT, traits>& os);
 
 
+template <typename Traits>
+using AStarRomania = DefaultAStar<Traits, EuclideanDistance>;
+
+
 int main(int, char **)
 {
 	State const INITIAL("Arad");
 
 	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const BUCHAREST(INITIAL); // The problem is to get to Bucharest.
-	Evaluation<EuclideanDistance> const EVALUATION;
+	Evaluation<AStarRomania> const EVALUATION;
 
 	try
 	{

@@ -51,8 +51,8 @@ namespace jsearch
 
 	// Low-h tie policy.
 	template <typename Traits,
-			template <typename State, typename PathCost> class PathCostPolicy,
-			template <typename PathCost, typename State> class HeuristicPolicy>
+			template <typename PathCost, typename State> class HeuristicPolicy,
+			template <typename State, typename PathCost> class PathCostPolicy>
 	class LowH
 	{
 		typedef typename Traits::node Node;
@@ -82,12 +82,14 @@ namespace jsearch
 	template <typename Traits,
 			template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
 			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
-			template <typename Traits_, template <typename State, typename PathCost> class PathCostPolicy,
-				template <typename PathCost, typename State> class HeuristicPolicy> class TiePolicy = LowH>
+			template <typename Traits_,
+				template <typename PathCost, typename State> class HeuristicPolicy,
+				template <typename State, typename PathCost> class PathCostPolicy>
+					class TiePolicy = LowH>
 	class AStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
 					private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
 					private PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
-					private TiePolicy<Traits, PathCostPolicy, HeuristicPolicy>
+						private TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
@@ -95,7 +97,7 @@ namespace jsearch
 		
 		using PathCostPolicy<Node, PathCost>::g;
 		using HeuristicPolicy<PathCost, State>::h;
-		using TiePolicy<Traits, PathCostPolicy, HeuristicPolicy>::split;
+		using TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>::split;
 		
 	public:
 		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
@@ -108,10 +110,21 @@ namespace jsearch
 
 
 	template <typename Traits,
-			template <typename State, typename PathCost> class PathCostPolicy,
-			template <typename PathCost, typename State> class HeuristicPolicy>
-	using AStarLowH = AStar<Traits, PathCostPolicy, HeuristicPolicy, LowH>;
+			template <typename PathCost, typename State> class HeuristicPolicy,
+			template <typename State, typename PathCost> class PathCostPolicy>
+	using AStarLowH = AStar<Traits, HeuristicPolicy, PathCostPolicy, LowH>;
 
+
+	// Err... can't think of a better name.
+	template <typename Traits,
+			template <typename PathCost, typename State> class HeuristicPolicy>
+	using DefaultAStar = AStarLowH<Traits, HeuristicPolicy, DefaultPathCost>;
+
+
+	// Greedy comparator by using h() == 0.
+	template <typename Traits>
+	using Greedy = DefaultAStar<Traits, ZeroHeuristic>;
+	
 	
 	/*	Weighted A* comparator functor.  Until template parameters support float, we pass the weight as a ratio of two numbers:
 		Weight / Divisor.  Therefore, the default weight is 1.0.
@@ -166,11 +179,7 @@ namespace jsearch
 
 	
 	// Convenience class until I figure out a better way to do it.
-	template <template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
-			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
-			template <typename Traits,
-				template <typename State, typename PathCost> class PathCostPolicy,
-				template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarLowH>
+	template <template <typename Traits> class Comparator = Greedy>
 	class Evaluation
 	{
 	public:

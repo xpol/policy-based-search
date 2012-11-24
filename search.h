@@ -61,15 +61,10 @@ namespace jsearch
 			template <typename State> class GoalTestPolicy,
 			template <typename Traits_,
 				template <typename PathCost, typename State, typename Action> class StepCostPolicy,
-				template <typename State, typename Action> class ResultPolicy >
+				template <typename State, typename Action> class ResultPolicy>
 					class ChildPolicy = DefaultChildPolicy,
-
-			template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
-			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
-			template <typename Traits_,
-				template <typename State, typename PathCost> class PathCostPolicy,
-				template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarLowH>
-	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<HeuristicPolicy, PathCostPolicy, Comparator> const &)
+			template <typename Traits_> class Comparator = Greedy>
+	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<Comparator> const &)
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
@@ -79,7 +74,7 @@ namespace jsearch
 		typedef std::shared_ptr<Node> OpenListElement;
 		// TODO: Try using Boost's pairing heap and Fibonacci heap for the Open list.
 		// TODO: Use type traits to determine whether to use a set or unordered_set for Open/Closed list?
-		typedef std::set<OpenListElement, Comparator<Traits, HeuristicPolicy, PathCostPolicy>> OpenList;
+		typedef std::set<OpenListElement, Comparator<Traits>> OpenList;
 		typedef std::set<State> ClosedList;
 
 		OpenList open;

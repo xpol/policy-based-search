@@ -88,24 +88,22 @@ int main(int argc, char **argv)
 	cout << "Sorted edge descriptors: " << jwm::to_string(EDGES) << endl;
 #endif
 	
-	TSP::state const i;
-
-	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const minimal(i);
-
-	Evaluation<MinimalImaginableTour> const eval;
+	TSP::state const I;
+	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const MINIMAL(I);
+	Evaluation<AStarTSP> const EVAL;
 	
 	try
 	{
-		TSP::node const solution = jsearch::best_first_search(minimal, eval);
+		TSP::node const SOLUTION = jsearch::best_first_search(MINIMAL, EVAL);
 
 		cout << "solution: { ";
-		for_each(begin(solution.state), end(solution.state), [](vector<Index>::const_reference &E)
+		for_each(begin(SOLUTION.state), end(SOLUTION.state), [](vector<Index>::const_reference &E)
 		{
 			cout << EDGES[E] << " ";
 		});
-		cout << "}, " << solution.path_cost << endl;
+		cout << "}, " << SOLUTION.path_cost << endl;
 	}
-	catch (goal_not_found &ex)
+	catch (goal_not_found const &EX)
 	{
 		cout << "Goal not found! :(\n";
 	}
