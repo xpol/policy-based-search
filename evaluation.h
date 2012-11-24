@@ -53,28 +53,37 @@ namespace jsearch
 	template <typename Traits,
 			template <typename State, typename PathCost> class PathCostPolicy,
 			template <typename PathCost, typename State> class HeuristicPolicy>
-	class LowH : private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>
+	class LowH
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
 		typedef typename Traits::state State;
 
-		using HeuristicPolicy<PathCost, State>::h;
+		/* This inner class works around the problem that would arise if this policy class inherited
+		 * from HeuristicPolicy: multiple inheritance in the Comparator class. */
+		class Heuristic : private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>
+		{
+		public:
+			Heuristic() {}
+			using HeuristicPolicy<PathCost, State>::h;
+		};
 		
 	protected:
+		// This function would ideally be called "break" but obviously that is taken.
 		bool split(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
 		{
-			return h(A->state) < h(B->state);
+			Heuristic const POLICY;
+			return POLICY.h(A->state) < POLICY.h(B->state);
 		}
 	};
 
 	
 	// Comparator classes, passed to the priority_queue.  NOT a policy class, actually a host!
 	template <typename Traits,
-			template <typename State, typename PathCost> class PathCostPolicy,
-			template <typename PathCost, typename State> class HeuristicPolicy,
-			template <typename Traits, template <typename State, typename PathCost> class PathCostPolicy,
-				template <typename PathCost, typename State> class HeuristicPolicy> class TiePolicy>
+			template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
+			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
+			template <typename Traits_, template <typename State, typename PathCost> class PathCostPolicy,
+				template <typename PathCost, typename State> class HeuristicPolicy> class TiePolicy = LowH>
 	class AStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
 					private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
 					private PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
@@ -91,30 +100,41 @@ namespace jsearch
 	public:
 		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
 		{
-			return g(*A) + h(A->state) < g(*B) + h(B->state);
+			auto const Af(g(*A) + h(A->state)), Bf(g(*B) + h(B->state));
+			bool result(Af == Bf ? split(A, B) : Af < Bf);
+			return result;
 		}
 	};
 
 
+	template <typename Traits,
+			template <typename State, typename PathCost> class PathCostPolicy,
+			template <typename PathCost, typename State> class HeuristicPolicy>
+	using AStarLowH = AStar<Traits, PathCostPolicy, HeuristicPolicy, LowH>;
+
+	
 	/*	Weighted A* comparator functor.  Until template parameters support float, we pass the weight as a ratio of two numbers:
 		Weight / Divisor.  Therefore, the default weight is 1.0.
 
 		Example weighted comparator with a weight of 10 (owing to the default divisor of 10):
 
 		template <typename Traits,
-			template <typename State, typename PathCost> class PathCostPolicy,
 			template <typename PathCost, typename State> class HeuristicPolicy>
-			using W10AStar = WeightedAStar<Traits, PathCostPolicy, HeuristicPolicy, 100>;
+			template <typename State, typename PathCost> class PathCostPolicy,
+			using W10AStar = WeightedAStar<Traits, HeuristicPolicy, PathCostPolicy, 100>;
 
 		The template alias W10AStar then fits the required type for the Evaluation class.
 	 */
 	template <typename Traits,
-		template <typename State, typename PathCost> class PathCostPolicy,
-		template <typename PathCost, typename State> class HeuristicPolicy,
+		template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
+		template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
+		template <typename Traits_, template <typename State, typename PathCost> class PathCostPolicy,
+		template <typename PathCost, typename State> class HeuristicPolicy> class TiePolicy = LowH,
 		size_t Weight = 10, size_t Divisor = 10> // Templates do not accept floats, so we pass a ratio.
 	class WeightedAStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
 							private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>
+							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
+							private TiePolicy<Traits, PathCostPolicy, HeuristicPolicy>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
@@ -122,6 +142,7 @@ namespace jsearch
 
 		using PathCostPolicy<Node, PathCost>::g;
 		using HeuristicPolicy<PathCost, State>::h;
+		using TiePolicy<Traits, PathCostPolicy, HeuristicPolicy>::split;
 		
 	public:
 		WeightedAStar() : weight(static_cast<float>(Weight) / Divisor)
@@ -134,7 +155,9 @@ namespace jsearch
 		
 		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
 		{
-			return g(*A) + weight * h(A->state) < g(*B) + weight * h(B->state);
+			auto const Af(g(*A) + weight * h(A->state)), Bf(g(*B) + weight * h(B->state));
+			bool result(Af == Bf ? split(A, B) : Af < Bf);
+			return result;
 		}
 		
 	private:
@@ -145,13 +168,9 @@ namespace jsearch
 	// Convenience class until I figure out a better way to do it.
 	template <template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
 			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
-			template <typename Traits, template <typename State, typename PathCost> class PathCostPolicy,
-				template <typename PathCost, typename State> class HeuristicPolicy> class TiePolicy = LowH,
 			template <typename Traits,
 				template <typename State, typename PathCost> class PathCostPolicy,
-				template <typename PathCost, typename State> class HeuristicPolicy,
-				template <typename Traits, template <typename State, typename PathCost> class PathCostPolicy,
-					template <typename PathCost, typename State> class HeuristicPolicy> class TiePolicy> class Comparator = AStar>
+				template <typename PathCost, typename State> class HeuristicPolicy> class Comparator = AStarLowH>
 	class Evaluation
 	{
 	public:

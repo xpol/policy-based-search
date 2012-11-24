@@ -23,7 +23,8 @@
 #include <iostream>
 #include <algorithm>
 #include <sstream>
-#include <chrono>
+// TODO: ctime is not ideal, but chrono is incompatible with clang 3.1.
+#include <ctime>
 
 #ifndef NDEBUG
 #include <boost/graph/graphviz.hpp>
@@ -35,38 +36,7 @@ using namespace std;
 using namespace jsearch;
 
 Graph Australia();
-Graph procedural(size_t const &n);
-
-/*
-class TSPProblem : public jsearch::Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour>
-{
-	typedef typename boost::graph_traits<Graph>::vertex_iterator vertex_iter;
-	typedef typename boost::graph_traits<Graph>::edge_iterator edge_iter;
-	typedef typename boost::graph_traits<Graph>::vertices_size_type vertices_size_type;
-	typedef typename boost::graph_traits<Graph>::edges_size_type edges_size_type;
-
-public:
-	TSPProblem(const State& INITIAL, Graph const &G) : Problem(INITIAL), graph_(G), vertices_(boost::vertices(G)), edges_(boost::edge(G)), n_(boost::num_vertices(G)), N_(boost::num_edges(G)) {};
-	Graph graph() const { return graph_; };
-	std::pair<vertex_iter, vertex_iter> vertices() const;
-	std::pair<edge_iter, edge_iter> edges() const;
-	inline vertices_size_type n() const { return n_; }
-	inline edges_size_type N() const { return N_; }
-	
-private:
-	Graph const graph_;
-	std::pair<vertex_iter, vertex_iter> vertices_;
-	std::pair<edge_iter, edge_iter> edges_;
-	vertices_size_type n_; // Size of the TSP instance (number of cities).
-	edges_size_type N_; // Size of the TSP instance (number of edges).
-};
-*/
-
-// Example comparator of Weighted A* with a weight of 10 (owing to the default divisor of 10).
-template <typename Traits,
-	template <typename State, typename PathCost> class PathCostPolicy,
-	template <typename PathCost, typename State> class HeuristicPolicy>
-	using W10AStar = WeightedAStar<Traits, PathCostPolicy, HeuristicPolicy, 100>;
+Graph procedural(size_t const &n, mt19937::result_type const &SEED);
 
 
 struct EdgeDescComp
@@ -82,22 +52,31 @@ public:
 int main(int argc, char **argv)
 {
 	float weight = 1.0;
+	mt19937::result_type seed;
+	
 	// TODO: Use Program Options from Boost to clean up this ugly mess.
 	if(argc > 1)
 	{
 		istringstream(argv[1]) >> n;
 
 		if (argc > 2)
-			// TODO: I think this is achievable, but it requires more template magic.
-			istringstream(argv[2]) >> weight;
+			istringstream(argv[2]) >> seed;
+		else
+			seed = time(nullptr);
+		// TODO: I think this is achievable, but it requires more template magic.
+			// weight
 	}
 	else
 	{
 		cerr << "Missing required value for n as argument 1.\n";
 		exit(EXIT_FAILURE);
 	}
+
+	// 4 or 5, bad seed: 1353505682555810
+	//seed: 1353506882865602
+	// auto const seed = 1353505682555810;
 	
-	problem.reset(new Graph(procedural(n)));
+	problem.reset(new Graph(procedural(n, seed)));
 	N = problem->m_num_edges;
 	EDGES.reserve(N);
 	pair<edge_iter, edge_iter> const EP(boost::edges(*problem));
@@ -135,21 +114,15 @@ int main(int argc, char **argv)
 }
 
 
-Graph procedural(size_t const &n)
+Graph procedural(size_t const &n, mt19937::result_type const &SEED)
 {
 	vector<unsigned int> WEIGHT(n * (n - 1) / 2);
 	uniform_int_distribution<TSP::pathcost> distribution(1, 500);
-	// 4 or 5, bad seed: 1353505682555810
-	//seed: 1353506882865602
-	auto seed(std::chrono::system_clock::now().time_since_epoch().count());
-	seed = 1353505682555810;
-	cout << "seed: " << seed << endl;
-	mt19937 const engine(seed);
+	cout << "seed: " << SEED << endl;
+	mt19937 const engine(SEED);
 	auto generator = bind(distribution, engine);
 	generate(begin(WEIGHT), end(WEIGHT), generator);
 	Graph g(n);
-
-	// EDGES.reserve(n * (n - 1) / 2);
 
 	for(vertex_desc i = 0, k = 0; i < n - 1; ++i)
 	{
@@ -158,8 +131,6 @@ Graph procedural(size_t const &n)
 			auto const E = boost::add_edge(i, j, EdgeProps(WEIGHT[k]), g);
 			if(!E.second)
 				cerr << "Failed to add edge " << E.first << "to the graph." << endl;
-			// else
-				// EDGES.push_back(E.first);
 		}
 	}
 
@@ -182,6 +153,12 @@ Graph procedural(size_t const &n)
 	cout << std::endl;
 	
 	return g;
+}
+
+
+Graph procedural(size_t const &n)
+{
+	return procedural(n, 0);
 }
 
 
