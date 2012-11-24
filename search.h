@@ -88,10 +88,10 @@ namespace jsearch
 			if(PROBLEM.goal_test(S->state))
 			{
 #ifndef NDEBUG
-				std::cerr << "open: " << open.size();
+				std::cout << "open: " << open.size();
 				if(!Traits::combinatorial)
-					std::cerr << ", closed: " << closed.size();
-				std::cerr << "\n";
+					std::cout << ", closed: " << closed.size();
+				std::cout << "\n";
 #endif
 				return *S; // OK, I don't like non-local returns, but what else?
 			}
@@ -100,6 +100,7 @@ namespace jsearch
 				handle_parent(closed, S, Loki::Int2Type<Traits::combinatorial>());
 				std::vector<Action> const ACTIONS = PROBLEM.actions(S->state);
 				// TODO: If combinatorial == true, do lazy child generation.
+				// TODO: Change to std::for_each once gcc bug #53624 is fixed.
 				for(Action const ACTION : ACTIONS)
 				{
 					OpenListElement const CHILD(std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION)));
