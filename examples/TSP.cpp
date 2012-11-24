@@ -90,11 +90,10 @@ int main(int argc, char **argv)
 	
 	TSP::state const I;
 	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const MINIMAL(I);
-	Evaluation<AStarTSP> const EVAL;
 	
 	try
 	{
-		TSP::node const SOLUTION = jsearch::best_first_search(MINIMAL, EVAL);
+		TSP::node const SOLUTION = jsearch::best_first_search<AStarTSP>(MINIMAL);
 
 		cout << "solution: { ";
 		for_each(begin(SOLUTION.state), end(SOLUTION.state), [](vector<Index>::const_reference &E)

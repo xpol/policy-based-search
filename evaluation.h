@@ -176,15 +176,6 @@ namespace jsearch
 	private:
 		float const weight;  // TODO: This still feels a bit "runny": how to make it totally compile-time constant?  So that it does not even require memory access?
 	};
-
-	
-	// Convenience class until I figure out a better way to do it.
-	template <template <typename Traits> class Comparator = Greedy>
-	class Evaluation
-	{
-	public:
-		Evaluation() {}
-	};
 }
 
 #endif

@@ -40,13 +40,11 @@ using AStarRomania = DefaultAStar<Traits, EuclideanDistance>;
 int main(int, char **)
 {
 	State const INITIAL("Arad");
-
 	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const BUCHAREST(INITIAL); // The problem is to get to Bucharest.
-	Evaluation<AStarRomania> const EVALUATION;
 
 	try
 	{
-		auto const SOLUTION = jsearch::best_first_search(BUCHAREST, EVALUATION);
+		auto const SOLUTION = jsearch::best_first_search<AStarRomania>(BUCHAREST);
 		
 		print(SOLUTION, cout) << endl;
 	}

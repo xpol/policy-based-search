@@ -54,7 +54,8 @@ namespace jsearch
 	}
 	
 
-	template <typename Traits,
+	template <template <typename Traits_> class Comparator = Greedy,
+			typename Traits,
 			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
 			template <typename State, typename Action> class ResultPolicy,
@@ -62,9 +63,8 @@ namespace jsearch
 			template <typename Traits_,
 				template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 				template <typename State, typename Action> class ResultPolicy>
-					class ChildPolicy = DefaultChildPolicy,
-			template <typename Traits_> class Comparator = Greedy>
-	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM, Evaluation<Comparator> const &)
+					class ChildPolicy = DefaultChildPolicy>
+	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM)
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
