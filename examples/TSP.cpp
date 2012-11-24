@@ -42,7 +42,7 @@ Graph procedural(size_t const &n, mt19937::result_type const &SEED);
 struct EdgeDescComp
 {
 public:
-	bool operator()(edge_desc const &A, edge_desc const &B)
+	bool operator()(edge_desc const &A, edge_desc const &B) const
 	{
 		return (*problem)[A] < (*problem)[B];
 	}
