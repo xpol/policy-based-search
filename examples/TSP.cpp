@@ -25,6 +25,7 @@
 #include <sstream>
 // TODO: ctime is not ideal, but chrono is incompatible with clang 3.1.
 #include <ctime>
+#include <locale>
 
 #ifndef NDEBUG
 #include <boost/graph/graphviz.hpp>
@@ -101,6 +102,7 @@ int main(int argc, char **argv)
 	
 	TSP::state const I;
 	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const MINIMAL(I);
+	cout.imbue(locale(""));
 	
 	try
 	{
