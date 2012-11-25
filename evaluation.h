@@ -132,22 +132,27 @@ namespace jsearch
 		Example weighted comparator with a weight of 10 (owing to the default divisor of 10):
 
 		template <typename Traits,
-			template <typename PathCost, typename State> class HeuristicPolicy>
+			template <typename PathCost, typename State> class HeuristicPolicy,
 			template <typename State, typename PathCost> class PathCostPolicy,
-			using W10AStar = WeightedAStar<Traits, HeuristicPolicy, PathCostPolicy, 100>;
+				template <typename Traits_, template <typename State, typename PathCost> class PathCostPolicy,
+				template <typename PathCost, typename State> class HeuristicPolicy> class TiePolicy>
+			using W10AStar = WeightedAStar<Traits, HeuristicPolicy, PathCostPolicy, TiePolicy, 100>;
 
 		The template alias W10AStar then fits the required type for the Evaluation class.
 	 */
+	// TODO: I got a feeling that the weight needs to be a run-time parameter.
 	template <typename Traits,
 		template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
 		template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
-		template <typename Traits_, template <typename State, typename PathCost> class PathCostPolicy,
-		template <typename PathCost, typename State> class HeuristicPolicy> class TiePolicy = LowH,
+		template <typename Traits_,
+			template <typename PathCost, typename State> class HeuristicPolicy,
+			template <typename State, typename PathCost> class PathCostPolicy>
+			class TiePolicy = LowH,
 		size_t Weight = 10, size_t Divisor = 10> // Templates do not accept floats, so we pass a ratio.
 	class WeightedAStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
 							private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
 							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
-							private TiePolicy<Traits, PathCostPolicy, HeuristicPolicy>
+							private TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
@@ -155,7 +160,7 @@ namespace jsearch
 
 		using PathCostPolicy<Node, PathCost>::g;
 		using HeuristicPolicy<PathCost, State>::h;
-		using TiePolicy<Traits, PathCostPolicy, HeuristicPolicy>::split;
+		using TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>::split;
 		
 	public:
 		WeightedAStar() : weight(static_cast<float>(Weight) / Divisor)
@@ -176,6 +181,21 @@ namespace jsearch
 	private:
 		float const weight;  // TODO: This still feels a bit "runny": how to make it totally compile-time constant?  So that it does not even require memory access?
 	};
+
+	
+	template <typename Traits,
+		template <typename PathCost, typename State> class HeuristicPolicy,
+		template <typename State, typename PathCost> class PathCostPolicy,
+		size_t Weight>
+	using WAStarLowH = WeightedAStar<Traits, HeuristicPolicy, PathCostPolicy, LowH, Weight>;
+	
+	
+	// Err... can't think of a better name.
+	template <typename Traits,
+		template <typename PathCost, typename State> class HeuristicPolicy,
+		size_t Weight>
+	using DefaultWAStar = WAStarLowH<Traits, HeuristicPolicy, DefaultPathCost, Weight>;
+	
 }
 
 #endif

@@ -142,11 +142,6 @@ protected:
 };
 
 
-// Define an alias template that unites A* with our heuristic policy.
-template <typename Traits>
-using AStarTSP = jsearch::DefaultAStar<Traits, MinimalImaginableTour>;
-
-
 template <typename PathCost, typename State, typename Action>
 class EdgeCost
 {

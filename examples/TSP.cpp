@@ -48,39 +48,50 @@ public:
 	}
 };
 
-	
+
+template <typename Traits>
+using AStarTSP = jsearch::DefaultAStar<Traits, MinimalImaginableTour>;
+
+// Remember that weights are specified as 10 times larger.
+template <typename Traits>
+using WAStarTSP = jsearch::DefaultWAStar<Traits, MinimalImaginableTour, 100>;
+
+
 int main(int argc, char **argv)
 {
-	float weight = 1.0;
-	mt19937::result_type seed;
+	float weight = 10.0;
+	mt19937::result_type seed(time(nullptr));
 	
-	// TODO: Use Program Options from Boost to clean up this ugly mess.
-	if(argc > 1)
+	// TODO: Use Program Options from Boost?
+	switch(argc)
 	{
-		istringstream(argv[1]) >> n;
-
-		if (argc > 2)
+		case 4:
+			// TODO: Make weight a run-time value.
+			istringstream(argv[3]) >> weight;
+			cout << "weight: " << weight << "\n";
+			weight *= 10;
+		case 3:
 			istringstream(argv[2]) >> seed;
-		else
-			seed = time(nullptr);
-		// TODO: I think this is achievable, but it requires more template magic.
-			// weight
-	}
-	else
-	{
-		cerr << "Missing required value for n as argument 1.\n";
-		exit(EXIT_FAILURE);
+		case 2:
+			istringstream(argv[1]) >> n;
+			break;
+
+		case 1:
+		case 0:
+			cerr << "Missing required value for n as argument 1.\n";
+			exit(EXIT_FAILURE);
+			break;
+
+		default:
+			cerr << "Unexpected extra arguments.\n";
+			exit(EXIT_FAILURE);
+			break;
 	}
 
-	// 4 or 5, bad seed: 1353505682555810
-	//seed: 1353506882865602
-	// auto const seed = 1353505682555810;
-	
 	problem.reset(new Graph(procedural(n, seed)));
 	N = problem->m_num_edges;
 	EDGES.reserve(N);
 	pair<edge_iter, edge_iter> const EP(boost::edges(*problem));
-	
 	transform(EP.first, EP.second, back_inserter(EDGES), [&](edge_desc const &E){ return E; });
 	sort(begin(EDGES), end(EDGES), EdgeDescComp());
 
@@ -93,6 +104,7 @@ int main(int argc, char **argv)
 	
 	try
 	{
+		// Change this to WAStarTSP to use weighted A* (and adjust the weight above if desired).
 		TSP::node const SOLUTION = jsearch::best_first_search<AStarTSP>(MINIMAL);
 
 		cout << "solution: { ";
@@ -150,12 +162,6 @@ Graph procedural(size_t const &n, mt19937::result_type const &SEED)
 	cout << std::endl;
 	
 	return g;
-}
-
-
-Graph procedural(size_t const &n)
-{
-	return procedural(n, 0);
 }
 
 
