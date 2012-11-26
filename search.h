@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <memory>
 #include "loki/TypeManip.h"
+#include <boost/heap/pairing_heap.hpp>
 
 #ifndef NDEBUG
 #include <iostream>
@@ -44,13 +45,29 @@ namespace jsearch
 	};
 
 
-	template <template <typename Key, typename Compare = std::less<Key>, typename Alloc = std::allocator<Key>> class Set, typename Key, class Compare>
-	Key pop(Set<Key, Compare> &s)
+	namespace Private
 	{
-		typename Set<Key, Compare>::const_iterator IT(std::begin(s));
-		Key const E(*IT);
-		s.erase(IT);
-		return E;
+		template <template<typename T, class ...Options> class PriorityQueue, typename T, class ...Options>
+		T pop(PriorityQueue<T, Options...> &pq)
+		{
+			T const E(pq.top());
+			pq.pop();
+			return E;
+		}
+
+		
+		template <template<typename T, class ...Options> class PriorityQueue, typename T, class ...Options>
+		void insert(PriorityQueue<T, Options...> &pq, T const &E)
+		{
+			pq.push(E);
+		}
+
+
+		template <template<typename T, class ...Options> class PriorityQueue, typename T, class ...Options>
+		void erase()
+		{
+			
+		}
 	}
 	
 
@@ -74,16 +91,17 @@ namespace jsearch
 		typedef std::shared_ptr<Node> OpenListElement;
 		// TODO: Try using Boost's pairing heap and Fibonacci heap for the Open list.
 		// TODO: Use type traits to determine whether to use a set or unordered_set for Open/Closed list?
-		typedef std::set<OpenListElement, Comparator<Traits>> OpenList;
+		// typedef std::set<OpenListElement, Comparator<Traits>> OpenList;
+		typedef boost::heap::pairing_heap<OpenListElement, boost::heap::compare<Comparator<Traits>>> OpenList;
 		typedef std::set<State> ClosedList;
 
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
-		open.insert(std::make_shared<Node>(PROBLEM.initial(), nullptr, Action(), 0));
+		open.push(std::make_shared<Node>(PROBLEM.initial(), nullptr, Action(), 0));
 
 		while(!open.empty())
 		{
-			OpenListElement const S(pop(open));
+			OpenListElement const S(Private::pop(open));
 			
 			if(PROBLEM.goal_test(S->state))
 			{
@@ -117,7 +135,7 @@ namespace jsearch
 	template <typename E, class OpenList, class ClosedList>
 	inline void handle_child(OpenList &open, ClosedList &, E const &CHILD, Loki::Int2Type<true>)
 	{
-		open.insert(CHILD);
+		Private::insert(open, CHILD);
 	}
 
 	
@@ -131,16 +149,21 @@ namespace jsearch
 		{
 			/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
 			 *	performance of this section of code.	*/
-			for(const_iterator IT = std::begin(open); IT != std::end(open); ++IT)
+			const_iterator IT;
+			auto const END(std::end(open));
+			for(IT = std::begin(open); IT != END; ++IT)
 			{
 				if(CHILD->state == (*IT)->state && CHILD->path_cost < (*IT)->path_cost)
 				{
-					open.erase(IT);
+					// DecreaseKey operation.
+					auto const H(OpenList::s_handle_from_iterator(IT));
+					open.decrease(H, CHILD);
 					break;
 				}
 			}
-			
-			open.insert(CHILD);
+
+			if(IT == END)
+				Private::insert(open, CHILD);
 		}		
 	}
 	
