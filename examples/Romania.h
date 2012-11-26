@@ -20,6 +20,10 @@
  * example in AIMA, set in the same country.  The problem is usually cast as
  * how to get from Arad, in the northwest, to the capital Bucharest via the
  * road system.
+ *
+ * Arad => Sibiu => Rimnicu Vilcea => Pitesti => Bucharest
+ * Arad => Zerind => Oradea => Sibiu => Fagaras => Bucharest
+ * 
  */
 
 #include "problem.h"

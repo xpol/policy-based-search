@@ -23,6 +23,7 @@
 #include "problem.h"
 
 #include <set>
+#include <unordered_set>
 #include <algorithm>
 #include <stdexcept>
 #include <memory>
@@ -39,9 +40,7 @@ namespace jsearch
 	class goal_not_found : public std::exception
 	{
 	public:
-		goal_not_found(size_t const &CLOSED_SIZE) : CLOSED_SIZE(CLOSED_SIZE) {}
-		
-		size_t const CLOSED_SIZE;
+		goal_not_found() {}
 	};
 
 
@@ -71,6 +70,19 @@ namespace jsearch
 	}
 	
 
+	template <class ClosedList>
+	inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<false>)
+	{
+		std::cout << "closed: " << CLOSED.size() << "\n";
+	}
+	
+	
+	template <class ClosedList>
+	inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<true>)
+	{
+	}
+	
+	
 	template <template <typename Traits_> class Comparator = Greedy,
 			typename Traits,
 			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
@@ -93,7 +105,7 @@ namespace jsearch
 		// TODO: Use type traits to determine whether to use a set or unordered_set for Open/Closed list?
 		// typedef std::set<OpenListElement, Comparator<Traits>> OpenList;
 		typedef boost::heap::pairing_heap<OpenListElement, boost::heap::compare<Comparator<Traits>>> OpenList;
-		typedef std::set<State> ClosedList;
+		typedef typename Loki::Select<Traits::combinatorial, void *, std::unordered_set<State>>::Result ClosedList;
 
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
@@ -102,13 +114,16 @@ namespace jsearch
 		while(!open.empty())
 		{
 			OpenListElement const S(Private::pop(open));
+
+#ifndef NDEBUG
+			std::cout << "pop => " << S->state << "\n";
+#endif
 			
 			if(PROBLEM.goal_test(S->state))
 			{
 #ifndef NDEBUG
 				std::cout << "open: " << open.size();
-				if(!Traits::combinatorial)
-					std::cout << ", closed: " << closed.size();
+				debug_closed(closed, Loki::Int2Type<Traits::combinatorial>());
 				std::cout << "\n";
 #endif
 				return *S; // OK, I don't like non-local returns, but what else?
@@ -127,7 +142,7 @@ namespace jsearch
 			}
 		}
 		
-		throw goal_not_found(closed.size());
+		throw goal_not_found();
 	}
 
 

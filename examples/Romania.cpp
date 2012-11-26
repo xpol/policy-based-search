@@ -46,7 +46,8 @@ int main(int, char **)
 	{
 		auto const SOLUTION = jsearch::best_first_search<AStarRomania>(BUCHAREST);
 		
-		print(SOLUTION, cout) << endl;
+		print(SOLUTION, cout);
+		cout << ": " << SOLUTION.path_cost << "\n";
 	}
 	catch (goal_not_found const &ex)
 	{
