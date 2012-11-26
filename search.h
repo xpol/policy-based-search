@@ -149,21 +149,31 @@ namespace jsearch
 		{
 			/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
 			 *	performance of this section of code.	*/
-			const_iterator IT;
 			auto const END(std::end(open));
-			for(IT = std::begin(open); IT != END; ++IT)
+			bool found(false);
+			
+			for(const_iterator IT = std::begin(open); IT != END; ++IT)
 			{
 				if(CHILD->state == (*IT)->state && CHILD->path_cost < (*IT)->path_cost)
 				{
+					found = true;
+#ifndef NDEBUG
+					std::cout << "Replace " << (*IT)->state << " with " << CHILD->state << "\n";
+#endif
 					// DecreaseKey operation.
 					auto const H(OpenList::s_handle_from_iterator(IT));
-					open.decrease(H, CHILD);
+					open.decrease(H, CHILD); // Invalidates iterator;
 					break;
 				}
 			}
 
-			if(IT == END)
+			if(!found)
+			{
+#ifndef NDEBUG
+				std::cout << "open <= " << CHILD->state << "\n";
+#endif
 				Private::insert(open, CHILD);
+			}
 		}		
 	}
 	
