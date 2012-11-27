@@ -102,7 +102,6 @@ namespace jsearch
 		typedef typename Traits::pathcost PathCost;
 
 		typedef std::shared_ptr<Node> OpenListElement;
-		// TODO: Try using Boost's pairing heap and Fibonacci heap for the Open list.
 		// TODO: Use type traits to determine whether to use a set or unordered_set for Open/Closed list?
 		typedef PriorityQueue<OpenListElement> OpenList;
 		typedef typename Loki::Select<Traits::combinatorial, void *, std::unordered_set<State>>::Result ClosedList;
@@ -113,7 +112,10 @@ namespace jsearch
 
 		while(!open.empty())
 		{
-			OpenListElement const S(Private::pop(open));
+			// OpenListElement const S(Private::pop(open));
+			OpenListElement const S(open.top());
+			open.pop();
+			
 
 #ifndef NDEBUG
 			// std::cout << "pop => " << S->state << "\n";
