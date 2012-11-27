@@ -28,7 +28,6 @@
 #include <stdexcept>
 #include <memory>
 #include "loki/TypeManip.h"
-#include <boost/heap/pairing_heap.hpp>
 
 #ifndef NDEBUG
 #include <iostream>
@@ -73,7 +72,9 @@ namespace jsearch
 	template <class ClosedList>
 	inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<false>)
 	{
+#ifndef NDEBUG
 		std::cout << "closed: " << CLOSED.size() << "\n";
+#endif
 	}
 	
 	
@@ -83,7 +84,7 @@ namespace jsearch
 	}
 	
 	
-	template <template <typename Traits_> class Comparator = Greedy,
+	template <template <typename T> class PriorityQueue,
 			typename Traits,
 			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
@@ -103,20 +104,19 @@ namespace jsearch
 		typedef std::shared_ptr<Node> OpenListElement;
 		// TODO: Try using Boost's pairing heap and Fibonacci heap for the Open list.
 		// TODO: Use type traits to determine whether to use a set or unordered_set for Open/Closed list?
-		// typedef std::set<OpenListElement, Comparator<Traits>> OpenList;
-		typedef boost::heap::pairing_heap<OpenListElement, boost::heap::compare<Comparator<Traits>>> OpenList;
+		typedef PriorityQueue<OpenListElement> OpenList;
 		typedef typename Loki::Select<Traits::combinatorial, void *, std::unordered_set<State>>::Result ClosedList;
 
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
-		open.push(std::make_shared<Node>(PROBLEM.initial(), nullptr, Action(), 0));
+		open.emplace(std::make_shared<Node>(PROBLEM.initial(), nullptr, Action(), 0));
 
 		while(!open.empty())
 		{
 			OpenListElement const S(Private::pop(open));
 
 #ifndef NDEBUG
-			std::cout << "pop => " << S->state << "\n";
+			// std::cout << "pop => " << S->state << "\n";
 #endif
 			
 			if(PROBLEM.goal_test(S->state))
@@ -150,7 +150,7 @@ namespace jsearch
 	template <typename E, class OpenList, class ClosedList>
 	inline void handle_child(OpenList &open, ClosedList &, E const &CHILD, Loki::Int2Type<true>)
 	{
-		Private::insert(open, CHILD);
+		open.push(CHILD);
 	}
 
 	

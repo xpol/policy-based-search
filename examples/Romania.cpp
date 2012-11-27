@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <boost/heap/pairing_heap.hpp>
 
 using namespace jsearch;
 using namespace std;
@@ -36,6 +37,9 @@ basic_ostream<charT, traits>& print(Node const &NODE, basic_ostream<charT, trait
 template <typename Traits>
 using AStarRomania = DefaultAStar<Traits, EuclideanDistance>;
 
+template <typename T>
+using PriorityQueue = boost::heap::pairing_heap<T, boost::heap::compare<AStarRomania<Romania>>>;
+
 
 int main(int, char **)
 {
@@ -44,7 +48,7 @@ int main(int, char **)
 
 	try
 	{
-		auto const SOLUTION = jsearch::best_first_search<AStarRomania>(BUCHAREST);
+		auto const SOLUTION = jsearch::best_first_search<PriorityQueue>(BUCHAREST);
 		
 		print(SOLUTION, cout);
 		cout << ": " << SOLUTION.path_cost << "\n";

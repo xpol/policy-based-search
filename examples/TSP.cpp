@@ -26,6 +26,10 @@
 // TODO: ctime is not ideal, but chrono is incompatible with clang 3.1.
 #include <ctime>
 #include <locale>
+#include <boost/heap/pairing_heap.hpp>
+#include <boost/heap/binomial_heap.hpp>
+#include <boost/heap/d_ary_heap.hpp>
+#include <boost/heap/priority_queue.hpp>
 
 #ifndef NDEBUG
 #include <boost/graph/graphviz.hpp>
@@ -56,6 +60,10 @@ using AStarTSP = jsearch::DefaultAStar<Traits, MinimalImaginableTour>;
 // Remember that weights are specified as 10 times larger.
 template <typename Traits>
 using WAStarTSP = jsearch::DefaultWAStar<Traits, MinimalImaginableTour, 100>;
+
+template <typename T>
+using PriorityQueue = boost::heap::priority_queue<T, boost::heap::compare<AStarTSP<TSP>>>;
+
 
 
 int main(int argc, char **argv)
@@ -107,7 +115,7 @@ int main(int argc, char **argv)
 	try
 	{
 		// Change this to WAStarTSP to use weighted A* (and adjust the weight above if desired).
-		TSP::node const SOLUTION = jsearch::best_first_search<AStarTSP>(MINIMAL);
+		TSP::node const SOLUTION = jsearch::best_first_search<PriorityQueue>(MINIMAL);
 
 		cout << "solution: { ";
 		for_each(begin(SOLUTION.state), end(SOLUTION.state), [](vector<Index>::const_reference &E)
