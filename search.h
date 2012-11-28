@@ -43,7 +43,7 @@ namespace jsearch
 	};
 
 
-	namespace Private
+	namespace
 	{
 		template <template<typename T, class ...Options> class PriorityQueue, typename T, class ...Options>
 		T pop(PriorityQueue<T, Options...> &pq)
@@ -66,21 +66,83 @@ namespace jsearch
 		{
 			
 		}
-	}
-	
+		
 
-	template <class ClosedList>
-	inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<false>)
-	{
-#ifndef NDEBUG
-		std::cout << "closed: " << CLOSED.size() << "\n";
-#endif
-	}
-	
-	
-	template <class ClosedList>
-	inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<true>)
-	{
+		template <class ClosedList>
+		inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<false>)
+		{
+			#ifndef NDEBUG
+			std::cout << "closed: " << CLOSED.size() << "\n";
+			#endif
+		}
+		
+		
+		template <class ClosedList>
+		inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<true>)
+		{
+		}
+		
+		
+		template <typename E, class ClosedList>
+		inline void handle_parent(ClosedList &, E const &, Loki::Int2Type<true>)
+		{
+		}
+		
+		
+		template <typename E, class ClosedList>
+		inline void handle_parent(ClosedList &closed, E const &S, Loki::Int2Type<false>)
+		{
+			closed.insert(S->state());
+		}
+
+
+		
+		
+		// Combinatorial child handler.
+		template <typename E, class OpenList, class ClosedList>
+		inline void handle_child(OpenList &open, ClosedList &, E const &CHILD, Loki::Int2Type<true>)
+		{
+			open.push(CHILD);
+		}
+		
+		
+		// Non-combinatorial child handler.
+		template <typename E, class OpenList, class ClosedList>
+		inline void handle_child(OpenList &open, ClosedList &closed, E const &CHILD, Loki::Int2Type<false>)
+		{
+			typedef typename OpenList::const_iterator const_iterator;
+			
+			if(closed.find(CHILD->state()) == std::end(closed)) // If it is NOT in closed...
+			{
+				/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
+				 *	performance of this section of code.	*/
+				auto const END(std::end(open));
+				bool found(false);
+				
+				for(const_iterator IT = std::begin(open); IT != END; ++IT)
+				{
+					if(CHILD->state() == (*IT)->state() && CHILD->path_cost() < (*IT)->path_cost())
+					{
+						found = true;
+						#ifndef NDEBUG
+						std::cout << "Replace " << (*IT)->state() << " with " << CHILD->state() << "\n";
+						#endif
+						// DecreaseKey operation.
+						auto const H(OpenList::s_handle_from_iterator(IT));
+						open.decrease(H, CHILD); // Invalidates iterator;
+						break;
+					}
+				}
+				
+				if(!found)
+				{
+					#ifndef NDEBUG
+					std::cout << "open <= " << CHILD->state() << "\n";
+					#endif
+					insert(open, CHILD);
+				}
+			}
+		}
 	}
 	
 	
@@ -145,66 +207,6 @@ namespace jsearch
 		}
 		
 		throw goal_not_found();
-	}
-
-
-	// Combinatorial child handler.
-	template <typename E, class OpenList, class ClosedList>
-	inline void handle_child(OpenList &open, ClosedList &, E const &CHILD, Loki::Int2Type<true>)
-	{
-		open.push(CHILD);
-	}
-
-	
-	// Non-combinatorial child handler.
-	template <typename E, class OpenList, class ClosedList>
-	inline void handle_child(OpenList &open, ClosedList &closed, E const &CHILD, Loki::Int2Type<false>)
-	{
-		typedef typename OpenList::const_iterator const_iterator;
-		
-		if(closed.find(CHILD->state()) == std::end(closed)) // If it is NOT in closed...
-		{
-			/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
-			 *	performance of this section of code.	*/
-			auto const END(std::end(open));
-			bool found(false);
-			
-			for(const_iterator IT = std::begin(open); IT != END; ++IT)
-			{
-				if(CHILD->state() == (*IT)->state() && CHILD->path_cost() < (*IT)->path_cost())
-				{
-					found = true;
-#ifndef NDEBUG
-					std::cout << "Replace " << (*IT)->state() << " with " << CHILD->state() << "\n";
-#endif
-					// DecreaseKey operation.
-					auto const H(OpenList::s_handle_from_iterator(IT));
-					open.decrease(H, CHILD); // Invalidates iterator;
-					break;
-				}
-			}
-
-			if(!found)
-			{
-#ifndef NDEBUG
-				std::cout << "open <= " << CHILD->state() << "\n";
-#endif
-				Private::insert(open, CHILD);
-			}
-		}		
-	}
-	
-	
-	template <typename E, class ClosedList>
-	inline void handle_parent(ClosedList &, E const &, Loki::Int2Type<true>)
-	{
-	}
-	
-
-	template <typename E, class ClosedList>
-	inline void handle_parent(ClosedList &closed, E const &S, Loki::Int2Type<false>)
-	{
-		closed.insert(S->state());
 	}
 }
 
