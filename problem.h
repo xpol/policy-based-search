@@ -16,6 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @file problem.h
+ * @brief Problem definition class according to the state model and some associated policy classes.
+ */
+
 #ifndef PROBLEM_H
 #define PROBLEM_H
 
@@ -23,8 +28,10 @@
 
 namespace jsearch
 {
-	// TODO: Just a struct at the moment.  Should it enforce access public/private access rights?
-	// TODO: More importantly, do I need to define the copy and assignment operators?
+	// TODO: Do I need to define the copy and assignment operators?
+	/**
+	 * Uses a std::shared_ptr to point to the parent.
+	 */
 	template <typename Traits>
 	class DefaultNode
 	{

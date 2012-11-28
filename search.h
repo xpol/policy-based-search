@@ -16,6 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @file search.h
+ * @brief Domain-independent best-first search function (and hidden helper functions).
+ */
+
 #ifndef SEARCH_H
 #define SEARCH_H
 
@@ -23,6 +28,7 @@
 #include "problem.h"
 
 #include <set>
+#include <unordered_set>
 #include <algorithm>
 #include <stdexcept>
 #include <memory>
@@ -35,12 +41,14 @@
 
 namespace jsearch
 {
+	/**
+	 * @brief goal_not_found is thrown... when... < drum roll > THE GOAL IS NOT FOUND!
+	 *
+	 */
 	class goal_not_found : public std::exception
 	{
 	public:
-		goal_not_found(size_t const &CLOSED_SIZE) : CLOSED_SIZE(CLOSED_SIZE) {}
-		
-		size_t const CLOSED_SIZE;
+		goal_not_found() {}
 	};
 
 
@@ -72,8 +80,8 @@ namespace jsearch
 
 			if(closed.find(CHILD->state()) == std::end(closed)) // If it is NOT in closed...
 			{
-				/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
-				*	performance of this section of code.	*/
+				/* 	TODO: Sadly linear.  Could be improved with a complementary hash map.
+				 * 	I am personally not very invested in the performance of this section of code.	*/
 				for(const_iterator IT = std::begin(open); IT != std::end(open); ++IT)
 				{
 					if(CHILD->state() == (*IT)->state() && CHILD->path_cost() < (*IT)->path_cost())
@@ -99,6 +107,19 @@ namespace jsearch
 		{
 			closed.insert(S->state());
 		}
+
+
+		template <class ClosedList>
+		inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<false>)
+		{
+			std::cout << "closed: " << CLOSED.size() << "\n";
+		}
+
+
+		template <class ClosedList>
+		inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<true>)
+		{
+		}
 	}
 	
 
@@ -112,6 +133,12 @@ namespace jsearch
 				template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 				template <typename State, typename Action> class ResultPolicy>
 					class ChildPolicy = DefaultChildPolicy>
+	/**
+	 * @brief Domain-independent policy-based best-first search.
+	 *
+	 * @param PROBLEM State model problem definition.
+	 * @return Traits::node
+	 */
 	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM)
 	{
 		typedef typename Traits::node Node;
@@ -120,10 +147,9 @@ namespace jsearch
 		typedef typename Traits::pathcost PathCost;
 
 		typedef std::shared_ptr<Node> OpenListElement;
-		// TODO: Try using Boost's pairing heap and Fibonacci heap for the Open list.
 		// TODO: Use type traits to determine whether to use a set or unordered_set for Open/Closed list?
 		typedef std::set<OpenListElement, Comparator<Traits>> OpenList;
-		typedef std::set<State> ClosedList;
+		typedef typename Loki::Select<Traits::combinatorial, void *, std::unordered_set<State>>::Result ClosedList;
 
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
@@ -136,10 +162,8 @@ namespace jsearch
 			if(PROBLEM.goal_test(S->state()))
 			{
 #ifndef NDEBUG
-				std::cout << "open: " << open.size();
-				if(!Traits::combinatorial)
-					std::cout << ", closed: " << closed.size();
-				std::cout << "\n";
+				std::cout << "open: " << open.size() << "\n";
+				debug_closed(closed, Loki::Int2Type<Traits::combinatorial>());
 #endif
 				return *S; // OK, I don't like non-local returns, but what else?
 			}
@@ -157,7 +181,7 @@ namespace jsearch
 			}
 		}
 		
-		throw goal_not_found(closed.size());
+		throw goal_not_found();
 	}
 }
 
