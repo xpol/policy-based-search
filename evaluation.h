@@ -44,7 +44,7 @@ namespace jsearch
 	protected:
 		PathCost g(Node const &NODE) const
 		{
-			return NODE.path_cost;
+			return NODE.path_cost();
 		}
 	};
 
@@ -73,7 +73,7 @@ namespace jsearch
 		bool split(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
 		{
 			Heuristic const POLICY;
-			return POLICY.h(A->state) > POLICY.h(B->state);
+			return POLICY.h(A->state()) > POLICY.h(B->state());
 		}
 	};
 
@@ -102,7 +102,7 @@ namespace jsearch
 	public:
 		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
 		{
-			auto const Af(g(*A) + h(A->state)), Bf(g(*B) + h(B->state));
+			auto const Af(g(*A) + h(A->state())), Bf(g(*B) + h(B->state()));
 			bool result(Af == Bf ? split(A, B) : Af > Bf);
 			return result;
 		}
@@ -173,7 +173,7 @@ namespace jsearch
 		
 		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
 		{
-			auto const Af(g(*A) + weight * h(A->state)), Bf(g(*B) + weight * h(B->state));
+			auto const Af(g(*A) + weight * h(A->state())), Bf(g(*B) + weight * h(B->state()));
 			bool result(Af == Bf ? split(A, B) : Af < Bf);
 			return result;
 		}

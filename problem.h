@@ -24,8 +24,9 @@
 namespace jsearch
 {
 	// TODO: Just a struct at the moment.  Should it enforce access public/private access rights?
+	// TODO: More importantly, do I need to define the copy and assignment operators?
 	template <typename Traits>
-	struct DefaultNode
+	class DefaultNode
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
@@ -33,12 +34,19 @@ namespace jsearch
 		typedef typename Traits::pathcost PathCost;
 		typedef std::shared_ptr<DefaultNode<Traits>> ParentType;
 
-		DefaultNode(State const &STATE, ParentType const PARENT, Action const &ACTION, PathCost const &PATH_COST) : state(STATE), parent(PARENT),  action(ACTION), path_cost(PATH_COST) {}
+	public:
+		DefaultNode(State const &STATE, ParentType const &PARENT, Action const &ACTION, PathCost const &PATH_COST) : state_(STATE), parent_(PARENT),  action_(ACTION), path_cost_(PATH_COST) {}
 
-		State state;
-		ParentType parent;
-		Action action;
-		PathCost path_cost;
+		State const &state() const { return state_; }
+		ParentType const &parent() const { return parent_; }
+		Action const &action() const { return action_; }
+		PathCost const &path_cost() const { return path_cost_; }
+
+	private:
+		State state_;
+		ParentType parent_;
+		Action action_;
+		PathCost path_cost_;
 	};
 
 

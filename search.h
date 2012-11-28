@@ -118,10 +118,10 @@ namespace jsearch
 			
 
 #ifndef NDEBUG
-			// std::cout << "pop => " << S->state << "\n";
+			// std::cout << "pop => " << S->state() << "\n";
 #endif
 			
-			if(PROBLEM.goal_test(S->state))
+			if(PROBLEM.goal_test(S->state()))
 			{
 #ifndef NDEBUG
 				std::cout << "open: " << open.size();
@@ -133,12 +133,12 @@ namespace jsearch
 			else
 			{
 				handle_parent(closed, S, Loki::Int2Type<Traits::combinatorial>());
-				std::vector<Action> const ACTIONS = PROBLEM.actions(S->state);
+				std::vector<Action> const ACTIONS = PROBLEM.actions(S->state());
 				// TODO: If combinatorial == true, do lazy child generation.
 				// TODO: Change to std::for_each once gcc bug #53624 is fixed.
 				for(Action const ACTION : ACTIONS)
 				{
-					OpenListElement const CHILD(std::make_shared<Node>(PROBLEM.result(S->state, ACTION), S, ACTION, S->path_cost + PROBLEM.step_cost(S->state, ACTION)));
+					OpenListElement const CHILD(std::make_shared<Node>(PROBLEM.result(S->state(), ACTION), S, ACTION, S->path_cost() + PROBLEM.step_cost(S->state(), ACTION)));
 					handle_child(open, closed, CHILD, Loki::Int2Type<Traits::combinatorial>());
 				}
 			}
@@ -162,7 +162,7 @@ namespace jsearch
 	{
 		typedef typename OpenList::const_iterator const_iterator;
 		
-		if(closed.find(CHILD->state) == std::end(closed)) // If it is NOT in closed...
+		if(closed.find(CHILD->state()) == std::end(closed)) // If it is NOT in closed...
 		{
 			/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
 			 *	performance of this section of code.	*/
@@ -171,11 +171,11 @@ namespace jsearch
 			
 			for(const_iterator IT = std::begin(open); IT != END; ++IT)
 			{
-				if(CHILD->state == (*IT)->state && CHILD->path_cost < (*IT)->path_cost)
+				if(CHILD->state() == (*IT)->state() && CHILD->path_cost() < (*IT)->path_cost())
 				{
 					found = true;
 #ifndef NDEBUG
-					std::cout << "Replace " << (*IT)->state << " with " << CHILD->state << "\n";
+					std::cout << "Replace " << (*IT)->state() << " with " << CHILD->state() << "\n";
 #endif
 					// DecreaseKey operation.
 					auto const H(OpenList::s_handle_from_iterator(IT));
@@ -187,7 +187,7 @@ namespace jsearch
 			if(!found)
 			{
 #ifndef NDEBUG
-				std::cout << "open <= " << CHILD->state << "\n";
+				std::cout << "open <= " << CHILD->state() << "\n";
 #endif
 				Private::insert(open, CHILD);
 			}
@@ -204,7 +204,7 @@ namespace jsearch
 	template <typename E, class ClosedList>
 	inline void handle_parent(ClosedList &closed, E const &S, Loki::Int2Type<false>)
 	{
-		closed.insert(S->state);
+		closed.insert(S->state());
 	}
 }
 

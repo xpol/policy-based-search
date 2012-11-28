@@ -118,11 +118,11 @@ int main(int argc, char **argv)
 		TSP::node const SOLUTION = jsearch::best_first_search<PriorityQueue>(MINIMAL);
 
 		cout << "solution: { ";
-		for_each(begin(SOLUTION.state), end(SOLUTION.state), [](vector<Index>::const_reference &E)
+		for_each(begin(SOLUTION.state()), end(SOLUTION.state()), [&](typename TSP::state::const_reference I)
 		{
-			cout << EDGES[E] << " ";
+			cout << EDGES[I] << " ";
 		});
-		cout << "}, " << SOLUTION.path_cost << endl;
+		cout << "}, " << SOLUTION.path_cost() << endl;
 	}
 	catch (goal_not_found const &EX)
 	{
