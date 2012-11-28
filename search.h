@@ -44,13 +44,61 @@ namespace jsearch
 	};
 
 
-	template <template <typename Key, typename Compare = std::less<Key>, typename Alloc = std::allocator<Key>> class Set, typename Key, class Compare>
-	Key pop(Set<Key, Compare> &s)
+	namespace
 	{
-		typename Set<Key, Compare>::const_iterator IT(std::begin(s));
-		Key const E(*IT);
-		s.erase(IT);
-		return E;
+		template <template <typename Key, typename Compare = std::less<Key>, typename Alloc = std::allocator<Key>> class Set, typename Key, class Compare>
+		Key pop(Set<Key, Compare> &s)
+		{
+			typename Set<Key, Compare>::const_iterator IT(std::begin(s));
+			Key const E(*IT);
+			s.erase(IT);
+			return E;
+		}
+
+
+		// Combinatorial child handler.
+		template <typename E, class OpenList, class ClosedList>
+		inline void handle_child(OpenList &open, ClosedList &, E const &CHILD, Loki::Int2Type<true>)
+		{
+			open.insert(CHILD);
+		}
+
+
+		// Non-combinatorial child handler.
+		template <typename E, class OpenList, class ClosedList>
+		inline void handle_child(OpenList &open, ClosedList &closed, E const &CHILD, Loki::Int2Type<false>)
+		{
+			typedef typename OpenList::const_iterator const_iterator;
+
+			if(closed.find(CHILD->state()) == std::end(closed)) // If it is NOT in closed...
+			{
+				/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
+				*	performance of this section of code.	*/
+				for(const_iterator IT = std::begin(open); IT != std::end(open); ++IT)
+				{
+					if(CHILD->state() == (*IT)->state() && CHILD->path_cost() < (*IT)->path_cost())
+					{
+						open.erase(IT);
+						break;
+					}
+				}
+
+				open.insert(CHILD);
+			}
+		}
+
+
+		template <typename E, class ClosedList>
+		inline void handle_parent(ClosedList &, E const &, Loki::Int2Type<true>)
+		{
+		}
+
+
+		template <typename E, class ClosedList>
+		inline void handle_parent(ClosedList &closed, E const &S, Loki::Int2Type<false>)
+		{
+			closed.insert(S->state());
+		}
 	}
 	
 
@@ -110,51 +158,6 @@ namespace jsearch
 		}
 		
 		throw goal_not_found(closed.size());
-	}
-
-
-	// Combinatorial child handler.
-	template <typename E, class OpenList, class ClosedList>
-	inline void handle_child(OpenList &open, ClosedList &, E const &CHILD, Loki::Int2Type<true>)
-	{
-		open.insert(CHILD);
-	}
-
-	
-	// Non-combinatorial child handler.
-	template <typename E, class OpenList, class ClosedList>
-	inline void handle_child(OpenList &open, ClosedList &closed, E const &CHILD, Loki::Int2Type<false>)
-	{
-		typedef typename OpenList::const_iterator const_iterator;
-		
-		if(closed.find(CHILD->state()) == std::end(closed)) // If it is NOT in closed...
-		{
-			/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
-			 *	performance of this section of code.	*/
-			for(const_iterator IT = std::begin(open); IT != std::end(open); ++IT)
-			{
-				if(CHILD->state() == (*IT)->state() && CHILD->path_cost() < (*IT)->path_cost())
-				{
-					open.erase(IT);
-					break;
-				}
-			}
-			
-			open.insert(CHILD);
-		}		
-	}
-	
-	
-	template <typename E, class ClosedList>
-	inline void handle_parent(ClosedList &, E const &, Loki::Int2Type<true>)
-	{
-	}
-	
-
-	template <typename E, class ClosedList>
-	inline void handle_parent(ClosedList &closed, E const &S, Loki::Int2Type<false>)
-	{
-		closed.insert(S->state());
 	}
 }
 
