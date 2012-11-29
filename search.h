@@ -45,35 +45,11 @@ namespace jsearch
 
 	namespace
 	{
-		template <template<typename T, class ...Options> class PriorityQueue, typename T, class ...Options>
-		T pop(PriorityQueue<T, Options...> &pq)
-		{
-			T const E(pq.top());
-			pq.pop();
-			return E;
-		}
-
-		
-		template <template<typename T, class ...Options> class PriorityQueue, typename T, class ...Options>
-		void insert(PriorityQueue<T, Options...> &pq, T const &E)
-		{
-			pq.push(E);
-		}
-
-
-		template <template<typename T, class ...Options> class PriorityQueue, typename T, class ...Options>
-		void erase()
-		{
-			
-		}
-		
-
+#ifndef NDEBUG
 		template <class ClosedList>
 		inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<false>)
 		{
-			#ifndef NDEBUG
 			std::cout << "closed: " << CLOSED.size() << "\n";
-			#endif
 		}
 		
 		
@@ -81,7 +57,8 @@ namespace jsearch
 		inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<true>)
 		{
 		}
-		
+#endif
+
 		
 		template <typename E, class ClosedList>
 		inline void handle_parent(ClosedList &, E const &, Loki::Int2Type<true>)
@@ -95,8 +72,6 @@ namespace jsearch
 			closed.insert(S->state());
 		}
 
-
-		
 		
 		// Combinatorial child handler.
 		template <typename E, class OpenList, class ClosedList>
@@ -139,7 +114,7 @@ namespace jsearch
 					#ifndef NDEBUG
 					std::cout << "open <= " << CHILD->state() << "\n";
 					#endif
-					insert(open, CHILD);
+					open.push(CHILD);
 				}
 			}
 		}
@@ -170,19 +145,13 @@ namespace jsearch
 
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
-		open.emplace(std::make_shared<Node>(PROBLEM.initial(), nullptr, Action(), 0));
+		open.push(std::make_shared<Node>(PROBLEM.initial(), nullptr, Action(), 0));
 
 		while(!open.empty())
 		{
-			// OpenListElement const S(Private::pop(open));
 			OpenListElement const S(open.top());
 			open.pop();
-			
 
-#ifndef NDEBUG
-			// std::cout << "pop => " << S->state() << "\n";
-#endif
-			
 			if(PROBLEM.goal_test(S->state()))
 			{
 #ifndef NDEBUG
