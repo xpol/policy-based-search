@@ -109,6 +109,7 @@ namespace jsearch
 		}
 
 
+#ifndef NDEBUG
 		template <class ClosedList>
 		inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<false>)
 		{
@@ -120,6 +121,7 @@ namespace jsearch
 		inline void debug_closed(ClosedList const &CLOSED, Loki::Int2Type<true>)
 		{
 		}
+#endif
 	}
 	
 
