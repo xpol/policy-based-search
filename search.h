@@ -155,9 +155,8 @@ namespace jsearch
 			if(PROBLEM.goal_test(S->state()))
 			{
 #ifndef NDEBUG
-				std::cout << "open: " << open.size();
+				std::cout << "open: " << open.size() << "\n";
 				debug_closed(closed, Loki::Int2Type<Traits::combinatorial>());
-				std::cout << "\n";
 #endif
 				return *S; // OK, I don't like non-local returns, but what else?
 			}
