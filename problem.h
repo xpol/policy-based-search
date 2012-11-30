@@ -26,6 +26,11 @@
 
 #include <memory>
 
+#ifndef NDEBUG
+#include <iostream>
+#include <typeinfo>
+#endif
+
 namespace jsearch
 {
 	// TODO: Do I need to define the copy and assignment operators?
@@ -42,7 +47,23 @@ namespace jsearch
 		typedef std::shared_ptr<DefaultNode<Traits>> ParentType;
 
 	public:
-		DefaultNode(State const &STATE, ParentType const &PARENT, Action const &ACTION, PathCost const &PATH_COST) : state_(STATE), parent_(PARENT),  action_(ACTION), path_cost_(PATH_COST) {}
+		DefaultNode(State const &STATE, ParentType const &PARENT, Action const &ACTION, PathCost const &PATH_COST) : state_(STATE), parent_(PARENT),  action_(ACTION), path_cost_(PATH_COST)
+#ifndef NDEBUG
+		{
+			++constructed;
+		}
+		
+		static size_t constructed, destructed;
+
+		~DefaultNode()
+		{
+			++destructed;
+			if(destructed==constructed)
+				std::cout << typeid(*this).name() << ": " << constructed << "\n";
+		}
+#else
+		{}
+#endif
 
 		State const &state() const { return state_; }
 		ParentType const &parent() const { return parent_; }
@@ -57,6 +78,15 @@ namespace jsearch
 	};
 
 
+#ifndef NDEBUG
+	template <typename Traits>
+	size_t DefaultNode<Traits>::constructed = 0;
+
+	template <typename Traits>
+	size_t DefaultNode<Traits>::destructed = 0;
+#endif
+
+	
 	template <typename Traits,
 		template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 		template <typename State, typename Action> class ResultPolicy>
