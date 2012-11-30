@@ -53,27 +53,19 @@ namespace jsearch
 	template <typename Traits,
 			template <typename PathCost, typename State> class HeuristicPolicy,
 			template <typename State, typename PathCost> class PathCostPolicy>
-	class LowH
+	class LowH : private virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
 		typedef typename Traits::state State;
 
-		/* This inner class works around the problem that would arise if this policy class inherited
-		 * from HeuristicPolicy: multiple inheritance in the Comparator class. */
-		class Heuristic : private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>
-		{
-		public:
-			Heuristic() {}
-			using HeuristicPolicy<PathCost, State>::h;
-		};
+		using HeuristicPolicy<PathCost, State>::h;
 		
 	protected:
 		// This function would ideally be called "break" but obviously that is taken.
 		bool split(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
 		{
-			Heuristic const POLICY;
-			return POLICY.h(A->state()) > POLICY.h(B->state());
+			return h(A->state()) > h(B->state());
 		}
 	};
 
@@ -87,9 +79,9 @@ namespace jsearch
 				template <typename State, typename PathCost> class PathCostPolicy>
 					class TiePolicy = LowH>
 	class AStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
-					private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-					private PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
-						private TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>
+					private virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
+					private virtual PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
+						private virtual TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
