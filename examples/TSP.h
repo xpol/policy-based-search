@@ -98,8 +98,8 @@ class TSP;
 class TSP
 {
 public:
-	typedef std::vector<Index> state; // Why vector again?  Remind me?  Why not set?  Do I really need back()?
 	typedef Index action;
+	typedef std::vector<action> state; // Why vector again?  Remind me?  Why not set?  Do I really need back()?
 	typedef unsigned int pathcost;
 	typedef jsearch::DefaultNode<TSP> node;
 	static bool const combinatorial = true; // TODO: Hmmm... is this actually usable at compile time?
@@ -190,6 +190,7 @@ protected:
 	
 	// I thought about returning a pair of iterators for a while until I realized that, derr, I could be
 	// returning any arbitray subset of the available actions, not a contiguous one.
+	// Although it looks like this functions returns a State, it doesn't.
 	std::vector<Action> actions(State const &STATE) const
 	{
 		std::vector<Action> result;

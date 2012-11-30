@@ -23,8 +23,7 @@
 
 namespace jsearch
 {
-	// TODO: Just a struct at the moment.  Should it enforce access public/private access rights?
-	// TODO: More importantly, do I need to define the copy and assignment operators?
+	// TODO: Do I need to define the copy and assignment operators?
 	template <typename Traits>
 	class DefaultNode
 	{
