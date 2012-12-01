@@ -29,11 +29,10 @@
 #include <limits>
 #include <iostream>
 
-class Random;
+struct Random;
 
-class Random
+struct Random
 {
-public:
 	typedef uint action;
 	typedef size_t state;
 	typedef size_t pathcost;
