@@ -27,26 +27,29 @@
 
 #include <iostream>
 #include <sstream>
+#include <locale>
 
 using namespace jsearch;
+using namespace std;
 
 template <typename T>
-using PriorityQueue = boost::heap::pairing_heap<T, boost::heap::compare<Dijkstra<Random>>>;
+using PriorityQueue = boost::heap::fibonacci_heap<T, boost::heap::compare<Dijkstra<Random>>>;
 
 int main(int argc, char **argv)
 {
-	std::istringstream(argv[1]) >> max;
+	istringstream(argv[1]) >> max_nodes;
 	Random::state INITIAL(B);
 	Problem<Random, Distance, Neighbours, Visit, GoalTest> const PROBLEM(INITIAL);
+	cout.imbue(locale(""));
 
 	try
 	{
 		auto const SOLUTION = jsearch::best_first_search<PriorityQueue>(PROBLEM);
-		std::cout << "Done.\n";
+		cout << "Done.\n";
 	}
 	catch (goal_not_found const &ex)
 	{
-		std::cout << "No path from " << jwm::to_string(INITIAL) << " to the goal could be found!\n";
+		cout << "No path from " << jwm::to_string(INITIAL) << " to the goal could be found!\n";
 	}
 	
 }

@@ -27,6 +27,7 @@
 #include <functional>
 #include <algorithm>
 #include <limits>
+#include <iostream>
 
 class Random;
 
@@ -44,7 +45,7 @@ public:
 
 namespace
 {
-	size_t generated = 0, max;
+	size_t generated = 0, max_nodes;
 	size_t B(10); // Branching factor.
 	auto generator(std::bind(std::uniform_int_distribution<size_t>(0, std::numeric_limits<size_t>::max()), std::mt19937()));
 }
@@ -81,7 +82,10 @@ class Visit
 protected:
 	State result(State const &STATE, Action const &ACTION) const
 	{
-		++generated;
+		if(++generated % 1000 == 0)
+		{
+			std::cout << generated << std::endl;
+		}
 		return ACTION;
 	}
 };
@@ -93,7 +97,7 @@ class GoalTest
 protected:
 	bool goal_test(State const &STATE) const
 	{
-		return generated >= max;
+		return generated >= max_nodes;
 	}
 };
 
