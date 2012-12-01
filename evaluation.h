@@ -128,7 +128,7 @@ namespace jsearch
 
 	// Greedy comparator by using h() == 0.
 	template <typename Traits>
-	using Greedy = DefaultAStar<Traits, ZeroHeuristic>;
+	using Dijkstra = DefaultAStar<Traits, ZeroHeuristic>;
 	
 	
 	/*	Weighted A* comparator functor.  Until template parameters support float, we pass the weight as a ratio of two numbers:

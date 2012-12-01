@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef TO_STRING
+#define TO_STRING
+
 #include <algorithm>
 #include <string>
 
@@ -93,4 +96,13 @@ namespace jwm
 		
 		return s;
 	}
+
+
+	template <typename T>
+	T to_string(T const &OBJECT)
+	{
+		return OBJECT;
+	}
 }
+
+#endif

@@ -26,6 +26,7 @@
 
 #include "evaluation.h"
 #include "problem.h"
+#include "to_string.h"
 
 #include <set>
 #include <unordered_set>
@@ -125,7 +126,7 @@ namespace jsearch
 	}
 	
 
-	template <template <typename Traits_> class Comparator = Greedy,
+	template <template <typename Traits_> class Comparator = Dijkstra,
 			typename Traits,
 			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
