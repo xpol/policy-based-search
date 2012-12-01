@@ -46,14 +46,6 @@ namespace jwm
 		return s;
 	}
 	
-
-	// Catch-all function.
-	/*
-	template <template <typename T, typename... Params> class Container, typename T>
-	std::string to_string(Container<T> const &CONTAINER, std::string const &OPEN_BRACKET, std::string const &CLOSE_BRACKET)
-	{
-	}
-	*/
 	
 	// Sequence containers.
 	template <template <typename T, typename Alloc = std::allocator<T>> class Sequence, typename T>
@@ -87,8 +79,9 @@ namespace jwm
 		
 		if(!SET.empty())
 		{
-			s += "{";
-			std::for_each(std::begin(SET), std::end(SET), [&](const_reference E){ s += to_string(E);});
+			auto BEGIN(std::begin(SET));
+			s += "{" + to_string(*BEGIN++);
+			std::for_each(BEGIN, std::end(SET), [&](const_reference E){ s += ", " + to_string(E);});
 			s += "}";
 		}
 		else
@@ -98,6 +91,7 @@ namespace jwm
 	}
 
 
+	// OK, so this is cheating... it's not really converting to string.
 	template <typename T>
 	T to_string(T const &OBJECT)
 	{
