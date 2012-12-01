@@ -21,6 +21,7 @@
 
 #include "evaluation.h"
 #include "problem.h"
+#include "to_string.h"
 
 #include <set>
 #include <unordered_set>
@@ -99,9 +100,9 @@ namespace jsearch
 					if(CHILD->state() == (*IT)->state() && CHILD->path_cost() < (*IT)->path_cost())
 					{
 						found = true;
-						#ifndef NDEBUG
-						std::cout << "Replace " << (*IT)->state() << " with " << CHILD->state() << "\n";
-						#endif
+#ifndef NDEBUG
+						std::cout << "Replace " << jwm::to_string((*IT)->state()) << " with " << jwm::to_string(CHILD->state()) << "\n";
+#endif
 						// DecreaseKey operation.
 						auto const H(OpenList::s_handle_from_iterator(IT));
 						open.decrease(H, CHILD); // Invalidates iterator;
@@ -111,9 +112,9 @@ namespace jsearch
 				
 				if(!found)
 				{
-					#ifndef NDEBUG
-					std::cout << "open <= " << CHILD->state() << "\n";
-					#endif
+#ifndef NDEBUG
+					std::cout << "open <= " << jwm::to_string(CHILD->state()) << "\n";
+#endif
 					open.push(CHILD);
 				}
 			}
@@ -141,7 +142,7 @@ namespace jsearch
 		typedef std::shared_ptr<Node> OpenListElement;
 		// TODO: Use type traits to determine whether to use a set or unordered_set for Open/Closed list?
 		typedef PriorityQueue<OpenListElement> OpenList;
-		typedef typename Loki::Select<Traits::combinatorial, void *, std::unordered_set<State>>::Result ClosedList;
+		typedef typename Loki::Select<Traits::combinatorial, void *, std::set<State>>::Result ClosedList;
 
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
