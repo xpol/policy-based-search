@@ -85,8 +85,6 @@ typedef typename boost::graph_traits<Graph>::edge_descriptor edge_desc;
 
 typedef typename boost::graph_traits<Graph>::out_edge_iterator out_edge_iterator;
 
-// subgraph is used for testing whether a given combination of edges form a valid subsection of a tour.
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> subgraph;
 vertices_size_type n; // Size of the TSP instance (number of cities).
 edges_size_type N; // Size of the TSP instance (number of edges).
 
@@ -107,15 +105,6 @@ public:
 
 std::unique_ptr<Graph> problem;
 std::vector<edge_desc> EDGES;
-// std::set<std::set<boost::graph_traits<subgraph>::edge_descriptor>> INVALID;
-////////////////////////////////////////////////////////////////////////
-
-/*
-template <typename Traits,
-			template <typename State, typename PathCost> class PathCostPolicy,
-			template <typename PathCost, typename State> class HeuristicPolicy>
-using WAStar = jsearch::WAStarNodeComparator<Traits, PathCostPolicy, HeuristicPolicy, 5>;
-*/
 
 // TSP heuristic: shortest imaginable tour including these edges.
 template <typename PathCost, class State>
@@ -158,6 +147,8 @@ protected:
 template <typename State, typename Action>
 class HigherCostValidEdges
 {
+	// subgraph is used for testing whether a given combination of edges form a valid subsection of a tour.
+	typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> subgraph;
 protected:
 	class found_cycle : public std::exception
 	{
