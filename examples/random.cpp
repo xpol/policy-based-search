@@ -41,7 +41,9 @@ int main(int argc, char **argv)
 	Random::state INITIAL(B);
 	Problem<Random, Distance, Neighbours, Visit, GoalTest> const PROBLEM(INITIAL);
 	cout.imbue(locale(""));
-
+	cout << "sizeof(" << typeid(Random::node).name() << "): " << sizeof(Random::node) << "\n";
+	cout << "sizeof(" << typeid(shared_ptr<Random::node>).name() << "): " << sizeof(shared_ptr<Random::node>) << "\n";
+	
 	try
 	{
 		auto const SOLUTION = jsearch::best_first_search<PriorityQueue>(PROBLEM);

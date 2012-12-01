@@ -81,9 +81,9 @@ class Visit
 protected:
 	State result(State const &STATE, Action const &ACTION) const
 	{
-		if(++generated % 1000 == 0)
+		if(++generated % 10000 == 0)
 		{
-			std::cout << generated << std::endl;
+			// std::cout << generated << std::endl;
 		}
 		return ACTION;
 	}

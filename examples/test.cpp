@@ -1,3 +1,7 @@
+#include "problem.h"
+#include "evaluation.h"
+#include "random.h"
+
 #include <memory>
 #include <queue>
 #include <random>
@@ -5,14 +9,13 @@
 #include <locale>
 #include <set>
 #include <sstream>
+#include <limits>
+
 #include <boost/heap/pairing_heap.hpp>
 #include <boost/heap/fibonacci_heap.hpp>
 #include <boost/heap/binomial_heap.hpp>
 #include <boost/heap/priority_queue.hpp>
 
-#include "problem.h"
-#include "evaluation.h"
-#include "random.h"
 
 using namespace std;
 using namespace jsearch;
@@ -28,9 +31,75 @@ struct Test
 };
 
 
+// allocator originally copied from:
+//   http://devnikhilk.blogspot.com/2011/08/sample-stl-allocator.html
 
-template <template <typename Key, typename Compare = std::less<Key>, typename Alloc = std::allocator<Key>> class Set, typename Key, class Compare>
-Key pop(Set<Key, Compare> &s)
+size_t used;
+
+template < typename T >
+class MyAlloc
+{
+	
+public:
+	
+	typedef T                  value_type;
+	typedef value_type *       pointer;
+	typedef const value_type * const_pointer;
+	typedef value_type &       reference;
+	typedef const value_type & const_reference;
+	typedef std::size_t        size_type;
+	typedef std::ptrdiff_t     difference_type;
+	
+	template < typename U >
+	struct rebind {
+		typedef MyAlloc< U > other;
+	};
+	
+	MyAlloc() {}
+	~MyAlloc() {}
+	explicit MyAlloc( MyAlloc const & ) {}
+	template < typename U >
+	explicit MyAlloc( MyAlloc< U > const & ) {}
+	
+	pointer       address( reference r       ) { return &r; }
+	const_pointer address( const_reference r ) { return &r; }
+	
+	pointer allocate( size_type n, std::allocator< void >::const_pointer hint = 0 )
+	{
+		const size_type bytes( n * sizeof( T ) );
+		used += bytes;
+		pointer new_memory = reinterpret_cast<pointer>( ::operator new( bytes ) );
+		return new_memory;
+	}
+	void deallocate( pointer p, size_type n )
+	{
+		const size_type bytes( n * sizeof( T ) );
+		used -= bytes;
+		::operator delete( p );
+	}
+	
+	size_type max_size() const
+	{
+		return std::numeric_limits< size_type >::max() / sizeof( T );
+	}
+	
+	void construct( pointer p, const T & t )
+	{
+		new( p ) T( t );
+	}
+	void destroy( pointer p )
+	{
+		p->~T();
+	}
+	
+	bool operator == ( MyAlloc const & other ) { return this == &other; }
+	bool operator != ( MyAlloc const & other ) { return ! ( *this == other ); }
+};
+
+
+
+template <template <typename Key, typename Compare = std::less<Key>, typename Alloc = std::allocator<Key>> class Set, typename Key, typename Compare, typename Alloc>
+Key pop(Set<Key, Compare, Alloc> &s)
 {
 	auto const IT(std::begin(s));
 	Key const E(*IT);
@@ -48,8 +117,8 @@ T pop(PriorityQueue<T, Options...> &pq)
 }
 
 
-template <template <typename Key, typename Compare = std::less<Key>, typename Alloc = std::allocator<Key>> class Set, typename Key, class Compare>
-void push(Set<Key, Compare> &s, Key const &E)
+template <template <typename Key, typename Compare = std::less<Key>, typename Alloc = std::allocator<Key>> class Set, typename Key, typename Compare, typename Alloc>
+void push(Set<Key, Compare, Alloc> &s, Key const &E)
 {
 	s.insert(E);
 }
@@ -61,22 +130,27 @@ void push(PriorityQueue<T, Options...> &pq, T const &E)
 	pq.push(E);
 }
 
+
+typedef std::shared_ptr<Random::node> OpenListElement;
+typedef MyAlloc<OpenListElement> Alloc;
+
 template <typename T>
-using PriorityQueue = boost::heap::fibonacci_heap<T, boost::heap::compare<Dijkstra<Random>>>;
+using PriorityQueue = boost::heap::fibonacci_heap<T, boost::heap::compare<Dijkstra<Random>>, boost::heap::allocator<Alloc>>;
 
 int main(int argc, char **argv)
 {
-	typedef std::shared_ptr<Random::node> OpenListElement;
 	// typedef PriorityQueue<OpenListElement> OpenList;
-	typedef std::set<OpenListElement> OpenList;
+	typedef std::set<OpenListElement, Dijkstra<Random>, MyAlloc<OpenListElement>> OpenList;
 	istringstream(argv[1]) >> max_nodes;
-	cout << "max nodes: " << max_nodes << "\n";
 	OpenList open;
 	uniform_int_distribution<int> const distribution(0, 99);
 	mt19937 const engine;
 	auto generator(bind(distribution, engine));
 	cout.imbue(locale(""));
-
+	cout << "max nodes: " << max_nodes << "\n";
+	cout << "sizeof(" << typeid(Random::node).name() << "): " << sizeof(Random::node) << "\n";
+	cout << "sizeof(" << typeid(shared_ptr<Random::node>).name() << "): " << sizeof(shared_ptr<Random::node>) << "\n";
+	
 	Random::state INITIAL(B);
 	Problem<Random, Distance, Neighbours, Visit, GoalTest> const PROBLEM(INITIAL);
 	
@@ -86,8 +160,8 @@ int main(int argc, char **argv)
 	{
 		OpenListElement const S(pop(open));
 
-		if(open.size() % 1000 == 0)
-			cout << "size: " << open.size() << endl;
+		if(generated % 10000 == 0)
+			cout << "generated: " << generated << ", used: " << used << endl;
 		
 		if(PROBLEM.goal_test(S->state()))
 			return 0;
