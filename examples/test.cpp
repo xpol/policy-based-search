@@ -139,13 +139,11 @@ using PriorityQueue = boost::heap::fibonacci_heap<T, boost::heap::compare<Dijkst
 
 int main(int argc, char **argv)
 {
-	// typedef PriorityQueue<OpenListElement> OpenList;
-	typedef std::set<OpenListElement, Dijkstra<Random>, MyAlloc<OpenListElement>> OpenList;
+	typedef PriorityQueue<OpenListElement> OpenList;
+	// typedef std::set<OpenListElement, Dijkstra<Random>, Alloc> OpenList;
 	istringstream(argv[1]) >> max_nodes;
 	OpenList open;
-	uniform_int_distribution<int> const distribution(0, 99);
-	mt19937 const engine;
-	auto generator(bind(distribution, engine));
+	auto generator(bind(uniform_int_distribution<int>(0, 99), mt19937()));
 	cout.imbue(locale(""));
 	cout << "max nodes: " << max_nodes << "\n";
 	cout << "sizeof(" << typeid(Random::node).name() << "): " << sizeof(Random::node) << "\n";
