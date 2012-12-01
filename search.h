@@ -145,7 +145,7 @@ namespace jsearch
 
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
-		open.push(std::make_shared<Node>(PROBLEM.initial(), nullptr, Action(), 0));
+		open.push(std::make_shared<Node>(PROBLEM.initial(), std::shared_ptr<Node>(), Action(), 0));
 
 		while(!open.empty())
 		{
