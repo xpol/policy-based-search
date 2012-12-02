@@ -24,6 +24,7 @@
 #include <boost/heap/pairing_heap.hpp>
 #include <boost/heap/binomial_heap.hpp>
 #include <boost/heap/d_ary_heap.hpp>
+#include <boost/heap/priority_queue.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -33,7 +34,7 @@ using namespace jsearch;
 using namespace std;
 
 template <typename T>
-using PriorityQueue = boost::heap::fibonacci_heap<T, boost::heap::compare<Dijkstra<Random>>>;
+using PriorityQueue = boost::heap::priority_queue<T, boost::heap::compare<Dijkstra<Random>>>;
 
 int main(int argc, char **argv)
 {
