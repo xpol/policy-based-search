@@ -20,11 +20,6 @@
 #include "search.h"
 #include "to_string.h"
 
-#include <boost/heap/fibonacci_heap.hpp>
-#include <boost/heap/pairing_heap.hpp>
-#include <boost/heap/binomial_heap.hpp>
-#include <boost/heap/d_ary_heap.hpp>
-
 #include <iostream>
 #include <sstream>
 #include <locale>
