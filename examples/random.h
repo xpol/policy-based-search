@@ -45,7 +45,7 @@ struct Random
 namespace
 {
 	size_t generated = 0, max_nodes;
-	size_t B(10); // Branching factor.
+	size_t b(10); // Branching factor.
 	auto generator(std::bind(std::uniform_int_distribution<size_t>(0, std::numeric_limits<size_t>::max()), std::mt19937()));
 }
 
@@ -68,7 +68,7 @@ class Neighbours
 protected:
 	std::vector<Action> actions(State const &STATE) const
 	{
-		std::vector<Action> result(B);
+		std::vector<Action> result(b);
 		std::generate(std::begin(result), std::end(result), generator);
 		return std::move(result);
 	}

@@ -155,7 +155,7 @@ int main(int argc, char **argv)
 	cout << "sizeof(" << typeid(shared_ptr<Random::node>).name() << "): " << sizeof(shared_ptr<Random::node>) << "\n";
 	cout << "typeid(OpenList): " << typeid(OpenList).name() << "\n";
 	
-	Random::state INITIAL(B);
+	Random::state INITIAL(b);
 	Problem<Random, Distance, Neighbours, Visit, GoalTest> const PROBLEM(INITIAL);
 	
 	push(open, std::make_shared<Random::node>(0, std::shared_ptr<Random::node>(), 0, 0));

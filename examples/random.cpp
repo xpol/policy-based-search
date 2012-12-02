@@ -37,8 +37,21 @@ using PriorityQueue = boost::heap::fibonacci_heap<T, boost::heap::compare<Dijkst
 
 int main(int argc, char **argv)
 {
-	istringstream(argv[1]) >> max_nodes;
-	Random::state INITIAL(B);
+	switch(argc)
+	{
+		case 3:
+			istringstream(argv[2]) >> b;
+		case 2:
+			istringstream(argv[1]) >> max_nodes;
+			break;
+			
+		default:
+			cerr << "INVOCATION: " << argv[0] << " <nodes> [branching factor]\n";
+			exit(EXIT_FAILURE);
+			break;
+	}
+	
+	Random::state INITIAL(b);
 	Problem<Random, Distance, Neighbours, Visit, GoalTest> const PROBLEM(INITIAL);
 	cout.imbue(locale(""));
 	cout << "sizeof(" << typeid(Random::node).name() << "): " << sizeof(Random::node) << "\n";
@@ -53,5 +66,4 @@ int main(int argc, char **argv)
 	{
 		cout << "No path from " << jwm::to_string(INITIAL) << " to the goal could be found!\n";
 	}
-	
 }
