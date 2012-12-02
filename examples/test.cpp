@@ -135,12 +135,17 @@ typedef std::shared_ptr<Random::node> OpenListElement;
 typedef MyAlloc<OpenListElement> Alloc;
 
 template <typename T>
-using PriorityQueue = boost::heap::fibonacci_heap<T, boost::heap::compare<Dijkstra<Random>>, boost::heap::allocator<Alloc>>;
+using PriorityQueue = boost::heap::priority_queue<T, boost::heap::compare<Dijkstra<Random>>, boost::heap::allocator<Alloc>>;
 
 int main(int argc, char **argv)
 {
-	typedef PriorityQueue<OpenListElement> OpenList;
-	// typedef std::set<OpenListElement, Dijkstra<Random>, Alloc> OpenList;
+	/***********************************************
+	 * 	Switch between these two OpenList typedefs.
+	 ***********************************************/
+	// typedef PriorityQueue<OpenListElement> OpenList;
+	typedef std::set<OpenListElement, Dijkstra<Random>, Alloc> OpenList;
+
+
 	istringstream(argv[1]) >> max_nodes;
 	OpenList open;
 	auto generator(bind(uniform_int_distribution<int>(0, 99), mt19937()));
@@ -148,6 +153,7 @@ int main(int argc, char **argv)
 	cout << "max nodes: " << max_nodes << "\n";
 	cout << "sizeof(" << typeid(Random::node).name() << "): " << sizeof(Random::node) << "\n";
 	cout << "sizeof(" << typeid(shared_ptr<Random::node>).name() << "): " << sizeof(shared_ptr<Random::node>) << "\n";
+	cout << "typeid(OpenList): " << typeid(OpenList).name() << "\n";
 	
 	Random::state INITIAL(B);
 	Problem<Random, Distance, Neighbours, Visit, GoalTest> const PROBLEM(INITIAL);
@@ -162,15 +168,15 @@ int main(int argc, char **argv)
 			cout << "generated: " << generated << ", used: " << used << endl;
 		
 		if(PROBLEM.goal_test(S->state()))
+		{
+			cout << "Done.\n";
 			return 0;
+		}
 		else
 		{
-			// No closed list, ignore parent.
-			// size_t const ACTIONS(generator());
 			auto const ACTIONS(PROBLEM.actions(S->state()));
 			for(auto ACTION : ACTIONS)
 			{
-				// OpenListElement const CHILD(std::make_shared<Random::node>(ACTION, S, ACTION, S->path_cost() + ACTION));
 				OpenListElement const CHILD(std::make_shared<Random::node>(PROBLEM.result(S->state(), ACTION), S, ACTION, S->path_cost() + PROBLEM.step_cost(S->state(), ACTION)));
 				push(open, CHILD);
 			}

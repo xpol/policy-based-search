@@ -83,7 +83,7 @@ protected:
 	{
 		if(++generated % 10000 == 0)
 		{
-			// std::cout << generated << std::endl;
+			std::cout << generated << std::endl;
 		}
 		return ACTION;
 	}
