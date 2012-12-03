@@ -87,36 +87,27 @@ namespace jsearch
 		template <class OpenList, class ClosedList>
 		inline void handle_child(OpenList &open, ClosedList &closed, typename OpenList::const_reference CHILD, Loki::Int2Type<false>)
 		{
-			typedef typename OpenList::const_iterator const_iterator;
-			
 			if(closed.find(CHILD->state()) == std::end(closed)) // If it is NOT in closed...
 			{
 				/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
 				 *	performance of this section of code.	*/
 				auto const END(std::end(open));
-				bool found(false);
 
-				std::find_if(std::begin(open), std::end(open), [&](typename OpenList::const_reference E)
+				auto const IT(std::find_if(std::begin(open), END, [&](typename OpenList::const_reference E)
 				{
-					return true;
-				});
-				
-				for(const_iterator IT = std::begin(open); IT != END; ++IT)
+					return E->state() == CHILD->state() && E->path_cost() > CHILD->path_cost();
+				}));
+
+				if(IT != END)
 				{
-					if(CHILD->state() == (*IT)->state() && CHILD->path_cost() < (*IT)->path_cost())
-					{
-						found = true;
 #ifndef NDEBUG
-						std::cout << "Replace " << jwm::to_string((*IT)->state()) << " with " << jwm::to_string(CHILD->state()) << "\n";
+					std::cout << "Replace " << jwm::to_string((*IT)->state()) << " with " << jwm::to_string(CHILD->state()) << "\n";
 #endif
-						// DecreaseKey operation.
-						auto const H(OpenList::s_handle_from_iterator(IT));
-						open.decrease(H, CHILD); // Invalidates iterator;
-						break;
-					}
+					// DecreaseKey operation.
+					auto const H(OpenList::s_handle_from_iterator(IT));
+					open.decrease(H, CHILD);
 				}
-				
-				if(!found)
+				else
 				{
 #ifndef NDEBUG
 					std::cout << "open <= " << jwm::to_string(CHILD->state()) << "\n";
