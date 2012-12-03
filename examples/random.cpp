@@ -20,12 +20,16 @@
 #include "search.h"
 #include "to_string.h"
 
+// UNCOMMENT THESE IF YOU HAVE BOOST >= 1.49.0.
+/*
 #include <boost/heap/fibonacci_heap.hpp>
 #include <boost/heap/pairing_heap.hpp>
 #include <boost/heap/binomial_heap.hpp>
 #include <boost/heap/d_ary_heap.hpp>
 #include <boost/heap/priority_queue.hpp>
+*/
 
+#include <queue>
 #include <iostream>
 #include <sstream>
 #include <locale>
@@ -34,8 +38,10 @@ using namespace jsearch;
 using namespace std;
 
 template <typename T>
-using PriorityQueue = boost::heap::priority_queue<T, boost::heap::compare<Dijkstra<Random>>>;
+// using PriorityQueue = boost::heap::priority_queue<T, boost::heap::compare<Dijkstra<Random>>>;
+using PriorityQueue = std::priority_queue<T, vector<T>, Dijkstra<Random>>;
 
+ 
 int main(int argc, char **argv)
 {
 	switch(argc)
