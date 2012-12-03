@@ -82,16 +82,22 @@ namespace jsearch
 	template <typename Traits,
 		template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 		template <typename State, typename Action> class ResultPolicy>
-	class DefaultChildPolicy
+	class DefaultChildPolicy :
+		private virtual StepCostPolicy<typename Traits::pathcost, typename Traits::state, typename Traits::action>,
+		private virtual ResultPolicy<typename Traits::state, typename Traits::action>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
+
+		using StepCostPolicy<PathCost, State, Action>::step_cost;
+		using ResultPolicy<State, Action>::result;
+		
 	protected:
 		Node child(Node const &PARENT, Action const &ACTION)
 		{
-			return Node(PARENT, ACTION, PARENT.path_cost() + StepCostPolicy<PathCost, State, Action>::step_cost(PARENT.state(), ACTION), ResultPolicy<State, Action>::result(PARENT.state(), ACTION));
+			return Node(PARENT, ACTION, PARENT.path_cost() + step_cost(PARENT.state(), ACTION), result(PARENT.state(), ACTION));
 		}
 	};
 
@@ -106,11 +112,11 @@ namespace jsearch
 				template <typename State, typename Action> class ResultPolicy_>
 				class ChildPolicy = DefaultChildPolicy>
 	class Problem :
-		private StepCostPolicy<typename Traits::pathcost, typename Traits::state, typename Traits::action>,
-		private ActionsPolicy<typename Traits::state, typename Traits::action>,
-		private ResultPolicy<typename Traits::state, typename Traits::action>,
-		private GoalTestPolicy<typename Traits::state>,
-		private ChildPolicy<Traits, StepCostPolicy, ResultPolicy>
+		private virtual StepCostPolicy<typename Traits::pathcost, typename Traits::state, typename Traits::action>,
+		private virtual ActionsPolicy<typename Traits::state, typename Traits::action>,
+		private virtual ResultPolicy<typename Traits::state, typename Traits::action>,
+		private virtual GoalTestPolicy<typename Traits::state>,
+		private virtual ChildPolicy<Traits, StepCostPolicy, ResultPolicy>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
