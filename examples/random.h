@@ -29,14 +29,12 @@
 #include <limits>
 #include <iostream>
 
-struct Random;
-
 struct Random
 {
 	typedef uint action;
 	typedef size_t state;
 	typedef size_t pathcost;
-	typedef jsearch::DefaultNode<Random> node;
+	typedef std::shared_ptr<jsearch::DefaultNode<Random>> node;
 	typedef unsigned int heuristic;
 	static bool const combinatorial = true;
 };

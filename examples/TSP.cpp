@@ -110,20 +110,20 @@ int main(int argc, char **argv)
 #endif
 	
 	TSP::state const I;
-	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour> const MINIMAL(I);
+	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour, ComboNodeCreator> const MINIMAL(I);
 	cout.imbue(locale(""));
 	
 	try
 	{
 		// Change this to WAStarTSP to use weighted A* (and adjust the weight above if desired).
-		TSP::node const SOLUTION = jsearch::best_first_search<PriorityQueue>(MINIMAL);
+		auto const SOLUTION(jsearch::best_first_search<PriorityQueue>(MINIMAL));
 
 		cout << "solution: { ";
-		for_each(begin(SOLUTION.state()), end(SOLUTION.state()), [&](typename TSP::state::const_reference I)
+		for_each(begin(SOLUTION->state()), end(SOLUTION->state()), [&](typename TSP::state::const_reference I)
 		{
 			cout << EDGES[I] << " ";
 		});
-		cout << "}, " << SOLUTION.path_cost() << endl;
+		cout << "}, " << SOLUTION->path_cost() << endl;
 	}
 	catch (goal_not_found const &EX)
 	{

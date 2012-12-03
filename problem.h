@@ -28,7 +28,38 @@
 
 namespace jsearch
 {
-	// TODO: Do I need to define the copy and assignment operators?
+	template <typename Traits>
+	class DefaultNodeCreator
+	{
+		typedef typename Traits::node Node;
+		typedef typename Traits::state State;
+		typedef typename Traits::action Action;
+		typedef typename Traits::pathcost PathCost;
+		
+	protected:
+		Node create(State const &STATE, Node const &NODE, Action const &ACTION, PathCost const &PATHCOST) const
+		{
+			return std::make_shared<typename Node::element_type>(STATE, NODE, ACTION, PATHCOST);
+		}
+	};
+
+
+	template <typename Traits>
+	class ComboNodeCreator
+	{
+		typedef typename Traits::node Node;
+		typedef typename Traits::state State;
+		typedef typename Traits::action Action;
+		typedef typename Traits::pathcost PathCost;
+		
+	protected:
+		Node create(State const &STATE, Node const &, Action const &ACTION, PathCost const &PATHCOST) const
+		{
+			return std::make_shared<typename Node::element_type>(STATE, ACTION, PATHCOST);
+		}
+	};
+
+	
 	template <typename Traits>
 	class DefaultNode
 	{
@@ -36,55 +67,60 @@ namespace jsearch
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
-		typedef std::shared_ptr<DefaultNode<Traits>> ParentType;
 
 	public:
-		DefaultNode(State const &STATE, ParentType const &PARENT, Action const &ACTION, PathCost const &PATH_COST) : state_(STATE), parent_(PARENT),  action_(ACTION), path_cost_(PATH_COST)
-#ifndef NDEBUG
-		{
-			++constructed;
-		}
-		
-		static size_t constructed, destructed;
+		DefaultNode(State const &STATE, Node const &PARENT, Action const &ACTION, PathCost const &PATH_COST) : state_(STATE), parent_(PARENT),  action_(ACTION), path_cost_(PATH_COST) {}
 
-		~DefaultNode()
-		{
-			++destructed;
-			if(destructed==constructed)
-				std::cout << typeid(*this).name() << ": " << constructed << "\n";
-		}
-#else
-		{}
-#endif
+		DefaultNode(DefaultNode<Traits> const &OTHER) = delete;
+
+		DefaultNode<Traits> &operator=(DefaultNode<Traits> const &OTHER) = delete;
 
 		State const &state() const { return state_; }
-		ParentType const &parent() const { return parent_; }
+		Node const &parent() const { return parent_; }
 		Action const &action() const { return action_; }
 		PathCost const &path_cost() const { return path_cost_; }
 
 	private:
 		State state_;
-		ParentType parent_;
+		Node parent_;
 		Action action_;
 		PathCost path_cost_;
 	};
 
 
-#ifndef NDEBUG
 	template <typename Traits>
-	size_t DefaultNode<Traits>::constructed = 0;
-
-	template <typename Traits>
-	size_t DefaultNode<Traits>::destructed = 0;
-#endif
-
+	class ComboNode
+	{
+		typedef typename Traits::state State;
+		typedef typename Traits::action Action;
+		typedef typename Traits::pathcost PathCost;
+		
+	public:
+		ComboNode(State const &STATE, Action const &ACTION, PathCost const &PATH_COST) : state_(STATE), action_(ACTION), path_cost_(PATH_COST) {}
+		
+		ComboNode(ComboNode<Traits> const &OTHER) = delete;
+		
+		ComboNode<Traits> &operator=(ComboNode<Traits> const &OTHER) = delete;
+		
+		State const &state() const { return state_; }
+		Action const &action() const { return action_; }
+		PathCost const &path_cost() const { return path_cost_; }
+		
+	private:
+		State state_;
+		Action action_;
+		PathCost path_cost_;
+	};
 	
+
 	template <typename Traits,
 		template <typename PathCost, typename State, typename Action> class StepCostPolicy,
-		template <typename State, typename Action> class ResultPolicy>
+		template <typename State, typename Action> class ResultPolicy,
+		template <typename Traits_> class CreatePolicy = DefaultNodeCreator>
 	class DefaultChildPolicy :
 		private virtual StepCostPolicy<typename Traits::pathcost, typename Traits::state, typename Traits::action>,
-		private virtual ResultPolicy<typename Traits::state, typename Traits::action>
+		private virtual ResultPolicy<typename Traits::state, typename Traits::action>,
+		private virtual CreatePolicy<Traits>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
@@ -93,11 +129,12 @@ namespace jsearch
 
 		using StepCostPolicy<PathCost, State, Action>::step_cost;
 		using ResultPolicy<State, Action>::result;
+		using CreatePolicy<Traits>::create;
 		
 	protected:
-		Node child(Node const &PARENT, Action const &ACTION)
+		Node child(Node const &PARENT, Action const &ACTION) const
 		{
-			return Node(PARENT, ACTION, PARENT.path_cost() + step_cost(PARENT.state(), ACTION), result(PARENT.state(), ACTION));
+			return create(result(PARENT->state(), ACTION), PARENT, ACTION, PARENT->path_cost() + step_cost(PARENT->state(), ACTION));
 		}
 	};
 
@@ -107,16 +144,19 @@ namespace jsearch
 			 template <typename State, typename Action> class ActionsPolicy,
 			 template <typename State, typename Action> class ResultPolicy,
 			 template <typename State> class GoalTestPolicy,
+			 template <typename Traits_> class CreatePolicy = DefaultNodeCreator,
 			 template <typename Traits_,
 				template <typename PathCost, typename State, typename Action> class StepCostPolicy_,
-				template <typename State, typename Action> class ResultPolicy_>
+				template <typename State, typename Action> class ResultPolicy_,
+				template <typename Traits__> class CreatePolicy>
 				class ChildPolicy = DefaultChildPolicy>
 	class Problem :
 		private virtual StepCostPolicy<typename Traits::pathcost, typename Traits::state, typename Traits::action>,
 		private virtual ActionsPolicy<typename Traits::state, typename Traits::action>,
 		private virtual ResultPolicy<typename Traits::state, typename Traits::action>,
 		private virtual GoalTestPolicy<typename Traits::state>,
-		private virtual ChildPolicy<Traits, StepCostPolicy, ResultPolicy>
+		private virtual ChildPolicy<Traits, StepCostPolicy, ResultPolicy, CreatePolicy>,
+		private virtual CreatePolicy<Traits>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
@@ -130,12 +170,13 @@ namespace jsearch
 			return INITIAL;
 		}
 
-		using ChildPolicy<Traits, StepCostPolicy, ResultPolicy>::child;
+		using ChildPolicy<Traits, StepCostPolicy, ResultPolicy, CreatePolicy>::child;
 		using StepCostPolicy<PathCost, State, Action>::step_cost;
 		using ActionsPolicy<State, Action>::actions;
 		using ResultPolicy<State, Action>::result;
 		using GoalTestPolicy<State>::goal_test;
-
+		using CreatePolicy<Traits>::create;
+		
 	private:
 		State const INITIAL;
 	};

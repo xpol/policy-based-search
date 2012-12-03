@@ -44,7 +44,7 @@ namespace jsearch
 	protected:
 		PathCost g(Node const &NODE) const
 		{
-			return NODE.path_cost();
+			return NODE->path_cost();
 		}
 	};
 
@@ -63,7 +63,7 @@ namespace jsearch
 		
 	protected:
 		// This function would ideally be called "break" but obviously that is taken.
-		bool split(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
+		bool split(Node const &A, Node const &B) const
 		{
 			return h(A->state()) > h(B->state());
 		}
@@ -92,9 +92,9 @@ namespace jsearch
 		using TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>::split;
 		
 	public:
-		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
+		bool operator()(Node const &A, Node const &B) const
 		{
-			auto const Af(g(*A) + h(A->state())), Bf(g(*B) + h(B->state()));
+			auto const Af(g(A) + h(A->state())), Bf(g(B) + h(B->state()));
 			bool result(Af == Bf ? split(A, B) : Af > Bf);
 			return result;
 		}
@@ -163,9 +163,9 @@ namespace jsearch
 		}
 		
 		
-		bool operator()(std::shared_ptr<Node> const &A, std::shared_ptr<Node> const &B) const
+		bool operator()(Node const &A, Node const &B) const
 		{
-			auto const Af(g(*A) + weight * h(A->state())), Bf(g(*B) + weight * h(B->state()));
+			auto const Af(g(A) + weight * h(A->state())), Bf(g(B) + weight * h(B->state()));
 			bool result(Af == Bf ? split(A, B) : Af < Bf);
 			return result;
 		}

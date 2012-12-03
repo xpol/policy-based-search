@@ -91,7 +91,6 @@ edges_size_type N; // Size of the TSP instance (number of edges).
 
 typedef unsigned int Index;
 
-class TSP;
 // Problem definition
 class TSP
 {
@@ -99,7 +98,7 @@ public:
 	typedef Index action;
 	typedef std::vector<action> state; // Why vector again?  Remind me?  Why not set?  Do I really need back()?
 	typedef unsigned int pathcost;
-	typedef jsearch::DefaultNode<TSP> node;
+	typedef std::shared_ptr<jsearch::ComboNode<TSP>> node;
 	static bool const combinatorial = true; // TODO: Hmmm... is this actually usable at compile time?
 };
 

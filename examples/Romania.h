@@ -41,7 +41,7 @@ public:
 	typedef std::string state;
 	typedef std::string action;
 	typedef unsigned int pathcost;
-	typedef jsearch::DefaultNode<Romania> node;
+	typedef std::shared_ptr<jsearch::DefaultNode<Romania>> node;
 	typedef unsigned int heuristic; // Often but not necessarily the same as pathcost.
 	static bool const combinatorial = false;
 };

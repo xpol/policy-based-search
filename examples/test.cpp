@@ -131,8 +131,8 @@ void push(PriorityQueue<T, Options...> &pq, T const &E)
 }
 
 
-typedef std::shared_ptr<Random::node> OpenListElement;
-typedef MyAlloc<OpenListElement> Alloc;
+typedef Random::node Node;
+typedef MyAlloc<Node> Alloc;
 
 template <typename T>
 using PriorityQueue = boost::heap::priority_queue<T, boost::heap::compare<Dijkstra<Random>>, boost::heap::allocator<Alloc>>;
@@ -142,8 +142,8 @@ int main(int argc, char **argv)
 	/***********************************************
 	 * 	Switch between these two OpenList typedefs.
 	 ***********************************************/
-	// typedef PriorityQueue<OpenListElement> OpenList;
-	typedef std::set<OpenListElement, Dijkstra<Random>, Alloc> OpenList;
+	// typedef PriorityQueue<Node> OpenList;
+	typedef std::set<Node, Dijkstra<Random>, Alloc> OpenList;
 
 
 	istringstream(argv[1]) >> max_nodes;
@@ -158,11 +158,11 @@ int main(int argc, char **argv)
 	Random::state INITIAL(b);
 	Problem<Random, Distance, Neighbours, Visit, GoalTest> const PROBLEM(INITIAL);
 	
-	push(open, std::make_shared<Random::node>(0, std::shared_ptr<Random::node>(), 0, 0));
+	push(open, std::make_shared<Random::node::element_type>(0, Node(), 0, 0));
 	// Do dummy A*.
 	while(!open.empty())
 	{
-		OpenListElement const S(pop(open));
+		Node const S(pop(open));
 
 		if(generated % 10000 == 0)
 			cout << "generated: " << generated << ", used: " << used << endl;
@@ -177,7 +177,7 @@ int main(int argc, char **argv)
 			auto const ACTIONS(PROBLEM.actions(S->state()));
 			for(auto ACTION : ACTIONS)
 			{
-				OpenListElement const CHILD(std::make_shared<Random::node>(PROBLEM.result(S->state(), ACTION), S, ACTION, S->path_cost() + PROBLEM.step_cost(S->state(), ACTION)));
+				auto const CHILD(PROBLEM.child(S, ACTION));
 				push(open, CHILD);
 			}
 		}

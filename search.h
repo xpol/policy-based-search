@@ -60,31 +60,32 @@ namespace jsearch
 		}
 #endif
 
-		
+
+		// Interesting: this function needs a different template to the false specialization.
 		template <typename E, class ClosedList>
 		inline void handle_parent(ClosedList &, E const &, Loki::Int2Type<true>)
 		{
 		}
 		
 		
-		template <typename E, class ClosedList>
-		inline void handle_parent(ClosedList &closed, E const &S, Loki::Int2Type<false>)
+		template <class ClosedList>
+		inline void handle_parent(ClosedList &closed, typename ClosedList::const_reference S, Loki::Int2Type<false>)
 		{
-			closed.insert(S->state());
+			closed.insert(S);
 		}
 
 		
 		// Combinatorial child handler.
-		template <typename E, class OpenList, class ClosedList>
-		inline void handle_child(OpenList &open, ClosedList &, E const &CHILD, Loki::Int2Type<true>)
+		template <class OpenList, class ClosedList>
+		inline void handle_child(OpenList &open, ClosedList &, typename OpenList::const_reference CHILD, Loki::Int2Type<true>)
 		{
 			open.push(CHILD);
 		}
 		
 		
 		// Non-combinatorial child handler.
-		template <typename E, class OpenList, class ClosedList>
-		inline void handle_child(OpenList &open, ClosedList &closed, E const &CHILD, Loki::Int2Type<false>)
+		template <class OpenList, class ClosedList>
+		inline void handle_child(OpenList &open, ClosedList &closed, typename OpenList::const_reference CHILD, Loki::Int2Type<false>)
 		{
 			typedef typename OpenList::const_iterator const_iterator;
 			
@@ -94,6 +95,11 @@ namespace jsearch
 				 *	performance of this section of code.	*/
 				auto const END(std::end(open));
 				bool found(false);
+
+				std::find_if(std::begin(open), std::end(open), [&](typename OpenList::const_reference E)
+				{
+					return true;
+				});
 				
 				for(const_iterator IT = std::begin(open); IT != END; ++IT)
 				{
@@ -128,29 +134,30 @@ namespace jsearch
 			template <typename State, typename Action> class ActionsPolicy,
 			template <typename State, typename Action> class ResultPolicy,
 			template <typename State> class GoalTestPolicy,
+			template <typename Traits_> class CreatePolicy = DefaultNodeCreator,
 			template <typename Traits_,
 				template <typename PathCost, typename State, typename Action> class StepCostPolicy,
-				template <typename State, typename Action> class ResultPolicy>
-					class ChildPolicy = DefaultChildPolicy>
-	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, ChildPolicy> const &PROBLEM)
+				template <typename State, typename Action> class ResultPolicy,
+				template <typename Traits__> class CreatePolicy>
+				class ChildPolicy = DefaultChildPolicy>
+	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM)
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 
-		typedef std::shared_ptr<Node> OpenListElement;
+		typedef PriorityQueue<Node> OpenList;
 		// TODO: Use type traits to determine whether to use a set or unordered_set for Open/Closed list?
-		typedef PriorityQueue<OpenListElement> OpenList;
 		typedef typename Loki::Select<Traits::combinatorial, void *, std::set<State>>::Result ClosedList;
 
 		OpenList open;
 		ClosedList closed; // TODO: Make the closed list optional for combinatorial search.
-		open.push(std::make_shared<Node>(PROBLEM.initial(), std::shared_ptr<Node>(), Action(), 0));
+		open.push(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
 
 		while(!open.empty())
 		{
-			OpenListElement const S(open.top());
+			Node const S(open.top());
 			open.pop();
 
 			if(PROBLEM.goal_test(S->state()))
@@ -159,17 +166,17 @@ namespace jsearch
 				std::cout << "open: " << open.size() << "\n";
 				debug_closed(closed, Loki::Int2Type<Traits::combinatorial>());
 #endif
-				return *S; // OK, I don't like non-local returns, but what else?
+				return S;
 			}
 			else
 			{
-				handle_parent(closed, S, Loki::Int2Type<Traits::combinatorial>());
-				std::vector<Action> const ACTIONS = PROBLEM.actions(S->state());
+				handle_parent(closed, S->state(), Loki::Int2Type<Traits::combinatorial>());
+				std::vector<Action> const ACTIONS(PROBLEM.actions(S->state()));
 				// TODO: If combinatorial == true, do lazy child generation.
 				// TODO: Change to std::for_each once gcc bug #53624 is fixed.
 				for(Action const ACTION : ACTIONS)
 				{
-					OpenListElement const CHILD(std::make_shared<Node>(PROBLEM.result(S->state(), ACTION), S, ACTION, S->path_cost() + PROBLEM.step_cost(S->state(), ACTION)));
+					Node const CHILD(PROBLEM.child(S, ACTION));
 					handle_child(open, closed, CHILD, Loki::Int2Type<Traits::combinatorial>());
 				}
 			}
