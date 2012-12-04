@@ -19,12 +19,14 @@
 #ifndef PROBLEM_H
 #define PROBLEM_H
 
-#include <memory>
-
 #ifndef NDEBUG
+#include "to_string.h"
 #include <iostream>
 #include <typeinfo>
 #endif
+
+#include <memory>
+
 
 namespace jsearch
 {
@@ -59,7 +61,8 @@ namespace jsearch
 		}
 	};
 
-	
+
+	// Default- and ComboNode are the rare case of a concrete base class.
 	template <typename Traits>
 	class DefaultNode
 	{
@@ -88,6 +91,16 @@ namespace jsearch
 	};
 
 
+#ifndef NDEBUG
+	template <typename Traits>
+	std::ostream& operator<<(std::ostream& stream, DefaultNode<Traits> const &NODE)
+	{
+		stream << "{" << jwm::to_string(NODE.state()) << ", " << NODE.parent() << ", " << NODE.action() << ", " << NODE.path_cost() << "}";
+		return stream;
+	}
+#endif
+
+
 	template <typename Traits>
 	class ComboNode
 	{
@@ -111,6 +124,16 @@ namespace jsearch
 		Action action_;
 		PathCost path_cost_;
 	};
+
+
+#ifndef NDEBUG
+	template <typename Traits>
+	std::ostream& operator<<(std::ostream& stream, ComboNode<Traits> const &NODE)
+	{
+		stream << "{" << jwm::to_string(NODE.state()) << ", " << NODE.action() << ", " << NODE.path_cost() << "}";
+		return stream;
+	}
+#endif
 	
 
 	template <typename Traits,

@@ -92,9 +92,8 @@ edges_size_type N; // Size of the TSP instance (number of edges).
 typedef unsigned int Index;
 
 // Problem definition
-class TSP
+struct TSP
 {
-public:
 	typedef Index action;
 	typedef std::vector<action> state; // Why vector again?  Remind me?  Why not set?  Do I really need back()?
 	typedef unsigned int pathcost;

@@ -65,7 +65,10 @@ namespace jsearch
 		// This function would ideally be called "break" but obviously that is taken.
 		bool split(Node const &A, Node const &B) const
 		{
-			return h(A->state()) > h(B->state());
+			auto const Ah(h(A->state())), Bh(h(B->state()));
+			// If the heuristic values are identical, we must break the tie on something, so it has to be the State.
+			auto const RESULT(Ah == Bh ? A->state() > B->state() : Ah > Bh);
+			return RESULT;
 		}
 	};
 
@@ -95,7 +98,7 @@ namespace jsearch
 		bool operator()(Node const &A, Node const &B) const
 		{
 			auto const Af(g(A) + h(A->state())), Bf(g(B) + h(B->state()));
-			bool result(Af == Bf ? split(A, B) : Af > Bf);
+			bool const result(Af == Bf ? split(A, B) : Af > Bf);
 			return result;
 		}
 	};
@@ -142,9 +145,9 @@ namespace jsearch
 			class TiePolicy = LowH,
 		size_t Weight = 10, size_t Divisor = 10> // Templates do not accept floats, so we pass a ratio.
 	class WeightedAStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
-							private HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-							private PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
-							private TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>
+							private virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
+							private virtual PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
+							private virtual TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;

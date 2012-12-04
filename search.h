@@ -71,7 +71,9 @@ namespace jsearch
 			template <typename T> class Alloc>
 	void push(Set<Key, Compare, Alloc<Key>> &s, Key const &E)
 	{
-		s.insert(E);
+		auto const RESULT(s.insert(E));
+		if(!RESULT.second)
+			throw std::logic_error("FUCK.");
 	}
 
 
