@@ -99,7 +99,7 @@ public:
 	typedef std::vector<action> state; // Why vector again?  Remind me?  Why not set?  Do I really need back()?
 	typedef unsigned int pathcost;
 	typedef std::shared_ptr<jsearch::ComboNode<TSP>> node;
-	static bool const combinatorial = true; // TODO: Hmmm... is this actually usable at compile time?
+	static constexpr bool const combinatorial = true; // TODO: Hmmm... is this actually usable at compile time?
 };
 
 std::unique_ptr<Graph> problem;
@@ -113,17 +113,16 @@ protected:
 	PathCost h(State const &STATE) const
 	{
 		// Expects edge costs to be ordered.
-		auto START = std::begin(EDGES);
-		bool const EMPTY = STATE.empty();
-		auto const BACK = STATE.back();
-		auto const OFFSET = EMPTY ? 0 : BACK + 1;
-		START += OFFSET;
-		auto const END = START + n - STATE.size();
+		bool const EMPTY(STATE.empty());
+		auto const BACK(STATE.back());
+		auto const OFFSET(EMPTY ? 0 : BACK + 1);
+		auto const START(std::begin(EDGES) + OFFSET);
+		auto const END(START + n - STATE.size());
 
-		PathCost const RESULT = std::accumulate(START, END, 0, [](PathCost const &A, edge_desc const &B)
+		PathCost const RESULT(std::accumulate(START, END, 0, [&](PathCost const &A, edge_desc const &B)
 		{
 			return A + (*problem)[B].cost;
-		});
+		}));
 		
 		return RESULT;
 	}

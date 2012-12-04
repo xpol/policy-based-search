@@ -63,9 +63,8 @@ template <typename Traits>
 using WAStarTSP = jsearch::DefaultWAStar<Traits, MinimalImaginableTour, 100>;
 
 template <typename T>
-// using PriorityQueue = boost::heap::priority_queue<T, boost::heap::compare<AStarTSP<TSP>>>;
-// using PriorityQueue = std::priority_queue<T, vector<T>, AStarTSP<TSP>>;
-using PriorityQueue = std::set<T, AStarTSP<TSP>>;
+using PriorityQueue = boost::heap::priority_queue<T, boost::heap::compare<AStarTSP<TSP>>>;
+// using PriorityQueue = std::set<T, AStarTSP<TSP>>;
 
 
 int main(int argc, char **argv)
