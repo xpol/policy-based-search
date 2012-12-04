@@ -26,11 +26,15 @@
 // TODO: ctime is not ideal, but chrono is incompatible with clang 3.1.
 #include <ctime>
 #include <locale>
+
+// UNCOMMENT THESE IF YOU HAVE BOOST >= 1.49.0
+/*
 #include <boost/heap/pairing_heap.hpp>
 #include <boost/heap/binomial_heap.hpp>
 #include <boost/heap/d_ary_heap.hpp>
 #include <boost/heap/priority_queue.hpp>
 #include <boost/heap/fibonacci_heap.hpp>
+*/
 
 #ifndef NDEBUG
 #include <boost/graph/graphviz.hpp>
@@ -64,7 +68,8 @@ using WAStarTSP = jsearch::DefaultWAStar<Traits, MinimalImaginableTour, 100>;
 
 template <typename T>
 // using PriorityQueue = boost::heap::priority_queue<T, boost::heap::compare<AStarTSP<TSP>>>;
-using PriorityQueue = std::set<T, AStarTSP<TSP>>;
+// using PriorityQueue = std::set<T, AStarTSP<TSP>>;
+using PriorityQueue = std::priority_queue<T, std::vector<T>, AStarTSP<TSP>>;
 
 
 int main(int argc, char **argv)
@@ -98,6 +103,7 @@ int main(int argc, char **argv)
 			break;
 	}
 
+	cout << "PriorityQueue: " << typeid(PriorityQueue<char>).name() << "\n";
 	problem.reset(new Graph(procedural(n, seed)));
 	N = problem->m_num_edges;
 	EDGES.reserve(N);
