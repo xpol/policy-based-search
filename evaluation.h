@@ -31,6 +31,9 @@ namespace jsearch
 	class ZeroHeuristic
 	{
 	protected:
+		ZeroHeuristic() {}
+		~ZeroHeuristic() {}
+		
 		PathCost h(State const &) const
 		{
 			return 0;
@@ -42,6 +45,9 @@ namespace jsearch
 	class DefaultPathCost
 	{
 	protected:
+		DefaultPathCost() {}
+		~DefaultPathCost() {}
+
 		PathCost g(Node const &NODE) const
 		{
 			return NODE->path_cost();
@@ -49,11 +55,36 @@ namespace jsearch
 	};
 
 
-	// Low-h tie policy.
+	// Low-h tie policy, non-total.
+	template <typename Traits,
+	template <typename PathCost, typename State> class HeuristicPolicy,
+	template <typename State, typename PathCost> class PathCostPolicy>
+	class LowH : protected virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>
+	{
+		typedef typename Traits::node Node;
+		typedef typename Traits::pathcost PathCost;
+		typedef typename Traits::state State;
+		
+		using HeuristicPolicy<PathCost, State>::h;
+		
+	protected:
+		LowH() {}
+		~LowH() {}
+		
+		// This function would ideally be called "break" but obviously that is taken.
+		bool split(Node const &A, Node const &B) const
+		{
+			auto const Ah(h(A->state())), Bh(h(B->state()));
+			return Ah > Bh;
+		}
+	};
+
+
+	// Low-h tie policy, total ordering.
 	template <typename Traits,
 			template <typename PathCost, typename State> class HeuristicPolicy,
 			template <typename State, typename PathCost> class PathCostPolicy>
-	class LowH : private virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>
+	class LowHTotal : protected virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
@@ -62,11 +93,13 @@ namespace jsearch
 		using HeuristicPolicy<PathCost, State>::h;
 		
 	protected:
+		LowHTotal() {}
+		~LowHTotal() {}
+		
 		// This function would ideally be called "break" but obviously that is taken.
 		bool split(Node const &A, Node const &B) const
 		{
 			auto const Ah(h(A->state())), Bh(h(B->state()));
-			// If the heuristic values are identical, we must break the tie on something, so it has to be the State.
 			auto const RESULT(Ah == Bh ? A->state() > B->state() : Ah > Bh);
 			return RESULT;
 		}
@@ -82,9 +115,9 @@ namespace jsearch
 				template <typename State, typename PathCost> class PathCostPolicy>
 					class TiePolicy = LowH>
 	class AStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
-					private virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-					private virtual PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
-						private virtual TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>
+					protected virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
+					protected virtual PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
+						protected virtual TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
@@ -145,9 +178,9 @@ namespace jsearch
 			class TiePolicy = LowH,
 		size_t Weight = 10, size_t Divisor = 10> // Templates do not accept floats, so we pass a ratio.
 	class WeightedAStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
-							private virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-							private virtual PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
-							private virtual TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>
+							protected virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
+							protected virtual PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
+							protected virtual TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;

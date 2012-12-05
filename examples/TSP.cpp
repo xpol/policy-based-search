@@ -26,6 +26,7 @@
 // TODO: ctime is not ideal, but chrono is incompatible with clang 3.1.
 #include <ctime>
 #include <locale>
+#include <queue>
 
 // UNCOMMENT THESE IF YOU HAVE BOOST >= 1.49.0
 /*

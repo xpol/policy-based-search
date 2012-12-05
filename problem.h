@@ -39,6 +39,9 @@ namespace jsearch
 		typedef typename Traits::pathcost PathCost;
 		
 	protected:
+		DefaultNodeCreator() {}
+		~DefaultNodeCreator() {}
+
 		Node create(State const &STATE, Node const &NODE, Action const &ACTION, PathCost const &PATHCOST) const
 		{
 			return std::make_shared<typename Node::element_type>(STATE, NODE, ACTION, PATHCOST);
@@ -55,6 +58,9 @@ namespace jsearch
 		typedef typename Traits::pathcost PathCost;
 		
 	protected:
+		ComboNodeCreator() {}
+		~ComboNodeCreator() {}
+
 		Node create(State const &STATE, Node const &, Action const &ACTION, PathCost const &PATHCOST) const
 		{
 			return std::make_shared<typename Node::element_type>(STATE, ACTION, PATHCOST);
@@ -141,9 +147,9 @@ namespace jsearch
 		template <typename State, typename Action> class ResultPolicy,
 		template <typename Traits_> class CreatePolicy = DefaultNodeCreator>
 	class DefaultChildPolicy :
-		private virtual StepCostPolicy<typename Traits::pathcost, typename Traits::state, typename Traits::action>,
-		private virtual ResultPolicy<typename Traits::state, typename Traits::action>,
-		private virtual CreatePolicy<Traits>
+		protected virtual StepCostPolicy<typename Traits::pathcost, typename Traits::state, typename Traits::action>,
+		protected virtual ResultPolicy<typename Traits::state, typename Traits::action>,
+		protected virtual CreatePolicy<Traits>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
@@ -155,6 +161,9 @@ namespace jsearch
 		using CreatePolicy<Traits>::create;
 		
 	protected:
+		DefaultChildPolicy() {}
+		~DefaultChildPolicy() {}
+
 		Node child(Node const &PARENT, Action const &ACTION) const
 		{
 			return create(result(PARENT->state(), ACTION), PARENT, ACTION, PARENT->path_cost() + step_cost(PARENT->state(), ACTION));
@@ -174,12 +183,12 @@ namespace jsearch
 				template <typename Traits__> class CreatePolicy>
 				class ChildPolicy = DefaultChildPolicy>
 	class Problem :
-		private virtual StepCostPolicy<typename Traits::pathcost, typename Traits::state, typename Traits::action>,
-		private virtual ActionsPolicy<typename Traits::state, typename Traits::action>,
-		private virtual ResultPolicy<typename Traits::state, typename Traits::action>,
-		private virtual GoalTestPolicy<typename Traits::state>,
-		private virtual ChildPolicy<Traits, StepCostPolicy, ResultPolicy, CreatePolicy>,
-		private virtual CreatePolicy<Traits>
+		protected virtual StepCostPolicy<typename Traits::pathcost, typename Traits::state, typename Traits::action>,
+		protected virtual ActionsPolicy<typename Traits::state, typename Traits::action>,
+		protected virtual ResultPolicy<typename Traits::state, typename Traits::action>,
+		protected virtual GoalTestPolicy<typename Traits::state>,
+		protected virtual ChildPolicy<Traits, StepCostPolicy, ResultPolicy, CreatePolicy>,
+		protected virtual CreatePolicy<Traits>
 	{
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
