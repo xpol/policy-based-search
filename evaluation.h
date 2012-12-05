@@ -57,8 +57,8 @@ namespace jsearch
 
 	// Low-h tie policy, non-total.
 	template <typename Traits,
-	template <typename PathCost, typename State> class HeuristicPolicy,
-	template <typename State, typename PathCost> class PathCostPolicy>
+			template <typename PathCost, typename State> class HeuristicPolicy,
+			template <typename State, typename PathCost> class PathCostPolicy>
 	class LowH : protected virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>
 	{
 		typedef typename Traits::node Node;
@@ -131,8 +131,8 @@ namespace jsearch
 		bool operator()(Node const &A, Node const &B) const
 		{
 			auto const Af(g(A) + h(A->state())), Bf(g(B) + h(B->state()));
-			bool const result(Af == Bf ? split(A, B) : Af > Bf);
-			return result;
+			bool const RESULT(Af == Bf ? split(A, B) : Af > Bf);
+			return RESULT;
 		}
 	};
 
