@@ -17,6 +17,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @file evaluation.h
+ * @brief A* comparator and associated heuristic, tie-breaker and path-cost policies.
+ */
+
 #ifndef EVALUATION_H
 #define EVALUATION_H
 

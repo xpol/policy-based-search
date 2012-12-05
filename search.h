@@ -16,6 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @file search.h
+ * @brief Domain-independent best-first search function (and hidden helper functions).
+ */
+
 #ifndef SEARCH_H
 #define SEARCH_H
 
@@ -34,6 +39,10 @@
 
 namespace jsearch
 {
+	/**
+	 * @brief goal_not_found is thrown... when... < drum roll > THE GOAL IS NOT FOUND!
+	 *
+	 */
 	class goal_not_found : public std::exception
 	{
 	public:

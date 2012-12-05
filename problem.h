@@ -16,6 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @file problem.h
+ * @brief Problem definition class according to the state model and some associated policy classes.
+ */
+
 #ifndef PROBLEM_H
 #define PROBLEM_H
 
