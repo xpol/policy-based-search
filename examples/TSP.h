@@ -109,6 +109,9 @@ template <typename PathCost, class State>
 class MinimalImaginableTour
 {
 protected:
+	MinimalImaginableTour() {}
+	~MinimalImaginableTour() {}
+	
 	PathCost h(State const &STATE) const
 	{
 		// Expects edge costs to be ordered.
@@ -132,6 +135,9 @@ template <typename PathCost, typename State, typename Action>
 class EdgeCost
 {
 protected:
+	EdgeCost() {}
+	~EdgeCost() {}
+	
 	PathCost step_cost(State const &, Action const &ACTION) const
 	{
 		PathCost const RESULT = (*problem)[EDGES[ACTION]].cost;
@@ -147,6 +153,9 @@ class HigherCostValidEdges
 	// subgraph is used for testing whether a given combination of edges form a valid subsection of a tour.
 	typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> subgraph;
 protected:
+	HigherCostValidEdges(){}
+	~HigherCostValidEdges(){}
+	
 	class found_cycle : public std::exception
 	{
 	public:
@@ -301,6 +310,9 @@ template <typename State, typename Action>
 class AppendEdge	// ho ho ho
 {
 protected:
+	AppendEdge() {}
+	~AppendEdge() {}
+	
 	State result(State const &PARENT, Action const &ACTION) const
 	{
 		State child(PARENT);
@@ -316,6 +328,9 @@ template <typename State>
 class ValidTour
 {
 protected:
+	ValidTour() {}
+	~ValidTour() {}
+	
 	bool goal_test(State const &STATE) const
 	{
 		return STATE.size() == n;
@@ -323,4 +338,3 @@ protected:
 };
 
 #endif // TSP_H
-
