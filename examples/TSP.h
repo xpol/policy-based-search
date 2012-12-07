@@ -185,12 +185,11 @@ protected:
 			});
 			
 
-			for(auto EDGE(START); EDGE != END; ++EDGE)
-			// std::for_each(START, END, [&](edge_desc const &EDGE)
+			for(auto edge(START); edge != END; ++edge)
 			{
 				// Add candidate action to the subgraph.
-				auto const SOURCE(boost::source(*EDGE, *problem)),
-							TARGET(boost::target(*EDGE, *problem));
+				auto const SOURCE(boost::source(*edge, *problem)),
+							TARGET(boost::target(*edge, *problem));
 				auto const add_edge_result(boost::add_edge(SOURCE, TARGET, subproblem));
 				if(!add_edge_result.second)
 				{
@@ -207,7 +206,7 @@ protected:
 					auto const EI(boost::out_edges(SOURCE, subproblem));
 					std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(EI.first, EI.second);
 #ifndef NDEBUG
-					std::cout << "  !invalid SOURCE edge: " << *EDGE << " on " << SOURCE << ". " << jwm::to_string(invalid) << "\n";
+					std::cout << "  !invalid SOURCE edge: " << *edge << " on " << SOURCE << ". " << jwm::to_string(invalid) << "\n";
 #endif
 				}
 				else
@@ -220,7 +219,7 @@ protected:
 						auto const EI(boost::out_edges(TARGET, subproblem));
 						std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(EI.first, EI.second);
 #ifndef NDEBUG
-						std::cout << "  !invalid TARGET edge: " << *EDGE << " on " << TARGET << ". " << jwm::to_string(invalid) << "\n";
+						std::cout << "  !invalid TARGET edge: " << *edge << " on " << TARGET << ". " << jwm::to_string(invalid) << "\n";
 #endif
 					}
 					else
@@ -237,7 +236,7 @@ protected:
 							{
 								valid = false;
 #ifndef NDEBUG
-								std::cout << "  !cycle found: " << *EDGE << "\n";
+								std::cout << "  !cycle found: " << *edge << "\n";
 #endif
 							}
 						}
@@ -248,9 +247,9 @@ protected:
 				if(valid)
 				{
 #ifndef NDEBUG
-					std::cout << "  GOOD edge: " << *EDGE << "\n";
+					std::cout << "  GOOD edge: " << *edge << "\n";
 #endif
-					result.push_back(EDGE);
+					result.push_back(edge);
 				}
 				// Remove action from subgraph.
 				boost::remove_edge(add_edge_result.first, subproblem);
@@ -259,8 +258,8 @@ protected:
 		else
 		{
 			// All actions are theoretically valid.
-			for(auto EDGE(START); EDGE != END; ++EDGE)
-				result.push_back(EDGE);
+			for(auto edge(START); edge != END; ++edge)
+				result.push_back(edge);
 		}
 
 #ifndef NDEBUG
@@ -279,8 +278,7 @@ private:
 		found_cycle(subgraph::edge_descriptor const &EDGE) : edge(EDGE) {};
 		subgraph::edge_descriptor const edge;
 	};
-	
-	// Cycle-detector.
+
 	struct cycle_detector : public boost::dfs_visitor<>
 	{
 		template <class Edge, class Graph>
