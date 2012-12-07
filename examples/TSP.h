@@ -88,21 +88,19 @@ typedef typename boost::graph_traits<Graph>::out_edge_iterator out_edge_iterator
 vertices_size_type n; // Size of the TSP instance (number of cities).
 edges_size_type N; // Size of the TSP instance (number of edges).
 
-
-typedef unsigned int Index;
+std::unique_ptr<Graph> problem;
+std::vector<edge_desc> EDGES;
 
 // Problem definition
 struct TSP
 {
-	typedef Index action;
+	typedef typename std::vector<edge_desc>::const_iterator action;
 	typedef std::vector<action> state; // Why vector again?  Remind me?  Why not set?  Do I really need back()?
 	typedef unsigned int pathcost;
 	typedef std::shared_ptr<jsearch::ComboNode<TSP>> node;
 	static constexpr bool const combinatorial = true; // TODO: Hmmm... is this actually usable at compile time?
 };
 
-std::unique_ptr<Graph> problem;
-std::vector<edge_desc> EDGES;
 
 // TSP heuristic: shortest imaginable tour including these edges.
 template <typename PathCost, class State>
@@ -115,10 +113,9 @@ protected:
 	PathCost h(State const &STATE) const
 	{
 		// Expects edge costs to be ordered.
-		bool const EMPTY(STATE.empty());
-		auto const BACK(STATE.back());
-		auto const OFFSET(EMPTY ? 0 : BACK + 1);
-		auto const START(std::begin(EDGES) + OFFSET);
+		auto const EMPTY(STATE.empty());
+		auto const LAST(STATE.back());
+		auto const START(EMPTY ? std::begin(EDGES) : LAST + 1);
 		auto const END(START + n - STATE.size());
 
 		PathCost const RESULT(std::accumulate(START, END, 0, [&](PathCost const &A, edge_desc const &B)
@@ -140,7 +137,7 @@ protected:
 	
 	PathCost step_cost(State const &, Action const &ACTION) const
 	{
-		PathCost const RESULT = (*problem)[EDGES[ACTION]].cost;
+		PathCost const RESULT((*problem)[*ACTION].cost);
 		return RESULT;
 	}
 };
@@ -156,6 +153,126 @@ protected:
 	HigherCostValidEdges(){}
 	~HigherCostValidEdges(){}
 	
+	// I thought about returning a pair of iterators for a while until I realized that, derr, I could be
+	// returning any arbitray subset of the available actions, not a contiguous one.
+	// Although it looks like this functions returns a State, it doesn't.
+	std::vector<Action> actions(State const &STATE) const
+	{
+		std::vector<Action> result;
+		auto const START(STATE.empty() ? std::begin(EDGES) : STATE.back() + 1),
+					END(std::begin(EDGES) + N - n + STATE.size() + 1);
+#ifndef NDEBUG
+		std::cout << "Generating actions for state: {";
+		std::for_each(std::begin(STATE), std::end(STATE), [&](typename State::const_reference ACTION){ std::cout << *ACTION; });
+		std::cout << "}" << "\n";
+#endif
+		if(STATE.size() > 1)
+		{
+			// Create a graph containing all the edges in STATE.
+			subgraph subproblem;
+			
+			std::for_each(std::begin(STATE), std::end(STATE), [&](typename State::const_reference &E)
+			{
+				auto const SOURCE(boost::source(*E, *problem)),
+						   TARGET(boost::target(*E, *problem));
+				// Use the vertices from the main problem in the subproblem.
+				auto const RESULT(boost::add_edge(SOURCE, TARGET, subproblem));
+				if(!RESULT.second)
+				{
+					std::cerr << "  ERROR: Failed to add edge " << RESULT.first << " to subgraph.\n";
+					throw std::runtime_error("Failed to add edge.");
+				}
+			});
+			
+
+			for(auto EDGE(START); EDGE != END; ++EDGE)
+			// std::for_each(START, END, [&](edge_desc const &EDGE)
+			{
+				// Add candidate action to the subgraph.
+				auto const SOURCE(boost::source(*EDGE, *problem)),
+							TARGET(boost::target(*EDGE, *problem));
+				auto const add_edge_result(boost::add_edge(SOURCE, TARGET, subproblem));
+				if(!add_edge_result.second)
+				{
+					std::cerr << "  ERROR: Failed to add edge " << add_edge_result.first << " to subgraph.\n";
+					throw std::runtime_error("Failed to add edge.");
+				}
+				// Check the graph for validity.
+				bool valid(true);
+
+				auto degree(boost::out_degree(SOURCE, subproblem));
+				if(degree > 2)
+				{
+					valid = false;
+					auto const EI(boost::out_edges(SOURCE, subproblem));
+					std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(EI.first, EI.second);
+#ifndef NDEBUG
+					std::cout << "  !invalid SOURCE edge: " << *EDGE << " on " << SOURCE << ". " << jwm::to_string(invalid) << "\n";
+#endif
+				}
+				else
+				{
+					degree = boost::out_degree(TARGET, subproblem);
+
+					if(degree > 2)
+					{
+						valid = false;
+						auto const EI(boost::out_edges(TARGET, subproblem));
+						std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(EI.first, EI.second);
+#ifndef NDEBUG
+						std::cout << "  !invalid TARGET edge: " << *EDGE << " on " << TARGET << ". " << jwm::to_string(invalid) << "\n";
+#endif
+					}
+					else
+					{
+						if(STATE.size() != n - 1)
+						{
+							cycle_detector vis;
+
+							try
+							{
+								boost::depth_first_search(subproblem, boost::visitor(vis));
+							}
+							catch (found_cycle &ex)
+							{
+								valid = false;
+#ifndef NDEBUG
+								std::cout << "  !cycle found: " << *EDGE << "\n";
+#endif
+							}
+						}
+					}
+				}
+
+				// If valid, add action to result.
+				if(valid)
+				{
+#ifndef NDEBUG
+					std::cout << "  GOOD edge: " << *EDGE << "\n";
+#endif
+					result.push_back(EDGE);
+				}
+				// Remove action from subgraph.
+				boost::remove_edge(add_edge_result.first, subproblem);
+			}
+		}
+		else
+		{
+			// All actions are theoretically valid.
+			for(auto EDGE(START); EDGE != END; ++EDGE)
+				result.push_back(EDGE);
+		}
+
+#ifndef NDEBUG
+		std::vector<edge_desc> tmp;
+		tmp.reserve(result.size());
+		std::for_each(std::begin(result), std::end(result), [&](Action const &A){ tmp.push_back(*A); });
+		std::cout << "  Actions: " << jwm::to_string(tmp) << "\n";
+#endif
+		return result;
+	}
+
+private:
 	class found_cycle : public std::exception
 	{
 	public:
@@ -173,7 +290,7 @@ protected:
 			if(predecessors.find(E) == std::end(predecessors))
 				throw found_cycle(E);
 		}
-
+		
 		template <class Edge, class Graph>
 		void tree_edge(Edge const &E, Graph &)
 		{
@@ -183,125 +300,6 @@ protected:
 		// TODO: Find a way to make this a hash/unordered set.
 		std::set<subgraph::edge_descriptor> predecessors;
 	};
-
-	
-	// I thought about returning a pair of iterators for a while until I realized that, derr, I could be
-	// returning any arbitray subset of the available actions, not a contiguous one.
-	// Although it looks like this functions returns a State, it doesn't.
-	std::vector<Action> actions(State const &STATE) const
-	{
-		std::vector<Action> result;
-		Action const START = STATE.empty() ? 0 : STATE.back() + 1,
-					END = N - n + STATE.size() + 1;
-#ifndef NDEBUG
-		std::cout << "Generating actions for state: {";
-		std::for_each(std::begin(STATE), std::end(STATE), [&](typename State::const_reference ACTION){ std::cout << EDGES[ACTION]; });
-		std::cout << "}" << "\n";
-#endif
-		if(STATE.size() > 1)
-		{
-			// Create a graph containing all the edges in STATE.
-			subgraph subproblem;
-			
-			std::for_each(std::begin(STATE), std::end(STATE), [&](typename State::const_reference &E)
-			{
-				auto const SOURCE = boost::source(EDGES[E], *problem),
-						   TARGET = boost::target(EDGES[E], *problem);
-				// Use the vertices from the main problem in the subproblem.
-				auto const RESULT = boost::add_edge(SOURCE, TARGET, subproblem);
-				if(!RESULT.second)
-				{
-					std::cerr << "  ERROR: Failed to add edge " << RESULT.first << " to subgraph.\n";
-					throw std::runtime_error("Failed to add edge.");
-				}
-			});
-			
-			
-			for(Action a = START; a < END; ++a)
-			{
-				// Add candidate action to the subgraph.
-				auto const SOURCE = boost::source(EDGES[a], *problem),
-							TARGET = boost::target(EDGES[a], *problem);
-				auto const add_edge_result = boost::add_edge(SOURCE, TARGET, subproblem);
-				if(!add_edge_result.second)
-				{
-					std::cerr << "  ERROR: Failed to add edge " << add_edge_result.first << " to subgraph.\n";
-					throw std::runtime_error("Failed to add edge.");
-				}
-				// Check the graph for validity.
-				bool valid = true;
-
-				auto degree = boost::out_degree(SOURCE, subproblem);
-				if(degree > 2)
-				{
-					valid = false;
-					auto const ei = boost::out_edges(SOURCE, subproblem);
-					std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(ei.first, ei.second);
-#ifndef NDEBUG
-					std::cout << "  !invalid SOURCE edge: " << EDGES[a] << " on " << SOURCE << ". " << jwm::to_string(invalid) << "\n";
-#endif
-				}
-				else
-				{
-					degree = boost::out_degree(TARGET, subproblem);
-
-					if(degree > 2)
-					{
-						valid = false;
-						auto const EI = boost::out_edges(TARGET, subproblem);
-						std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(EI.first, EI.second);
-#ifndef NDEBUG
-						std::cout << "  !invalid TARGET edge: " << EDGES[a] << " on " << TARGET << ". " << jwm::to_string(invalid) << "\n";
-#endif
-					}
-					else
-					{
-						if(STATE.size() != n - 1)
-						{
-							cycle_detector vis;
-
-							try
-							{
-								boost::depth_first_search(subproblem, boost::visitor(vis));
-							}
-							catch (found_cycle &ex)
-							{
-								valid = false;
-#ifndef NDEBUG
-								std::cout << "  !cycle found: " << EDGES[a] << "\n";
-#endif
-							}
-						}
-					}
-				}
-
-				// If valid, add action to result.
-				if(valid)
-				{
-#ifndef NDEBUG
-					std::cout << "  GOOD edge: " << EDGES[a] << "\n";
-#endif
-					result.push_back(a);
-				}
-				// Remove action from subgraph.
-				boost::remove_edge(add_edge_result.first, subproblem);
-			}
-		}
-		else
-		{
-			// All actions are theoretically valid.
-			for(Action a = START; a < END; ++a)
-				result.push_back(a);
-		}
-
-#ifndef NDEBUG
-		std::vector<edge_desc> tmp;
-		tmp.reserve(result.size());
-		std::for_each(std::begin(result), std::end(result), [&](Action const &A){ tmp.push_back(EDGES[A]); });
-		std::cout << "  Actions: " << jwm::to_string(tmp) << "\n";
-#endif
-		return result;
-	}
 };
 
 

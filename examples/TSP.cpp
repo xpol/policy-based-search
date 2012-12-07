@@ -116,8 +116,8 @@ int main(int argc, char **argv)
 	cout << "Sorted edge descriptors: " << jwm::to_string(EDGES) << endl;
 #endif
 	
-	TSP::state const I;
-	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour, ComboNodeCreator> const MINIMAL(I);
+	TSP::state const INITIAL;
+	Problem<TSP, EdgeCost, HigherCostValidEdges, AppendEdge, ValidTour, ComboNodeCreator> const MINIMAL(INITIAL);
 	cout.imbue(locale(""));
 	
 	try
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
 		cout << "solution: { ";
 		for_each(begin(SOLUTION->state()), end(SOLUTION->state()), [&](typename TSP::state::const_reference I)
 		{
-			cout << EDGES[I] << " ";
+			cout << *I << " ";
 		});
 		cout << "}, " << SOLUTION->path_cost() << endl;
 	}
