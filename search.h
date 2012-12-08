@@ -32,9 +32,7 @@
 #include <stdexcept>
 #include "loki/TypeManip.h"
 
-#ifndef NDEBUG
 #include <iostream>
-#endif
 
 
 namespace jsearch
@@ -261,9 +259,7 @@ namespace jsearch
 
 			if(PROBLEM.goal_test(S->state()))
 			{
-#ifndef NDEBUG
 				std::cout << "open: " << open.size() << "\n";
-#endif
 				return S;
 			}
 			else
