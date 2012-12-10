@@ -200,6 +200,9 @@ namespace jsearch
 		while(!open.empty())
 		{
 			Node const S(pop(open));
+#ifndef NDEBUG
+			std::cout << S->state() << " <= open\n";
+#endif
 
 			if(PROBLEM.goal_test(S->state()))
 			{
