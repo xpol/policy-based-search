@@ -23,7 +23,6 @@
 #include "evaluation.h"
 #include "to_string.h"
 
-#include <map>
 #include <set>
 #include <vector>
 #include <algorithm>
@@ -31,13 +30,14 @@
 #include <array>
 #include <string>
 #include <memory>
-#include <unordered_set>
-#include <unordered_map>
 #include <stdexcept>
+#include <sstream>
+
+#ifndef NDEBUG
 #include <iostream>
+#endif
 
 #include <boost/graph/graph_traits.hpp>
-#include <boost/graph/edge_list.hpp>
 #include <boost/graph/adjacency_matrix.hpp>
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -179,8 +179,9 @@ protected:
 				auto const RESULT(boost::add_edge(SOURCE, TARGET, subproblem));
 				if(!RESULT.second)
 				{
-					std::cerr << "  ERROR: Failed to add edge " << RESULT.first << " to subgraph.\n";
-					throw std::runtime_error("Failed to add edge.");
+					std::ostringstream tmp;
+					tmp << "  ERROR: Failed to add edge " << RESULT.first << " to subgraph.\n";
+					throw std::logic_error(tmp.str());
 				}
 			});
 			
@@ -190,11 +191,12 @@ protected:
 				// Add candidate action to the subgraph.
 				auto const SOURCE(boost::source(*edge, *problem)),
 							TARGET(boost::target(*edge, *problem));
-				auto const add_edge_result(boost::add_edge(SOURCE, TARGET, subproblem));
-				if(!add_edge_result.second)
+				auto const ADD_EDGE_RESULT(boost::add_edge(SOURCE, TARGET, subproblem));
+				if(!ADD_EDGE_RESULT.second)
 				{
-					std::cerr << "  ERROR: Failed to add edge " << add_edge_result.first << " to subgraph.\n";
-					throw std::runtime_error("Failed to add edge.");
+					std::ostringstream tmp;
+					tmp << "  ERROR: Failed to add edge " << ADD_EDGE_RESULT.first << " to subgraph.\n";
+					throw std::logic_error(tmp.str());
 				}
 				// Check the graph for validity.
 				bool valid(true);
@@ -203,9 +205,9 @@ protected:
 				if(degree > 2)
 				{
 					valid = false;
+#ifndef NDEBUG
 					auto const EI(boost::out_edges(SOURCE, subproblem));
 					std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(EI.first, EI.second);
-#ifndef NDEBUG
 					std::cout << "  !invalid SOURCE edge: " << *edge << " on " << SOURCE << ". " << jwm::to_string(invalid) << "\n";
 #endif
 				}
@@ -216,9 +218,9 @@ protected:
 					if(degree > 2)
 					{
 						valid = false;
+#ifndef NDEBUG
 						auto const EI(boost::out_edges(TARGET, subproblem));
 						std::set<boost::graph_traits<subgraph>::edge_descriptor> const invalid(EI.first, EI.second);
-#ifndef NDEBUG
 						std::cout << "  !invalid TARGET edge: " << *edge << " on " << TARGET << ". " << jwm::to_string(invalid) << "\n";
 #endif
 					}
@@ -252,7 +254,7 @@ protected:
 					result.push_back(edge);
 				}
 				// Remove action from subgraph.
-				boost::remove_edge(add_edge_result.first, subproblem);
+				boost::remove_edge(ADD_EDGE_RESULT.first, subproblem);
 			}
 		}
 		else
