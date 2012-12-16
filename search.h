@@ -128,42 +128,59 @@ namespace jsearch
 
 	// Combinatorial child handler.
 	template <class OpenList>
-	inline void handle_child(OpenList &open, typename OpenList::const_reference CHILD, Loki::Int2Type<true>)
+	inline void handle_child(OpenList &open, typename OpenList::const_reference CHILD)
 	{
 		push(open, CHILD);
 	}
 
 		
-	// Non-combinatorial child handler.
+	/**
+	 * Canonical child handler.
+	 *
+	 * @return: A const reference to an OpenList element that equals i) nullptr if CHILD was not added to open, ii) CHILD if CHILD was added to open, or iii) another element if CHILD replaced it on open.
+	 * */
 	template <class OpenList, class ClosedList>
-	inline void handle_child(OpenList &open, ClosedList &closed, typename OpenList::const_reference CHILD, Loki::Int2Type<false>)
+	inline typename OpenList::value_type handle_child(OpenList &open, ClosedList &closed, typename OpenList::const_reference CHILD)
 	{
+		typename OpenList::value_type result(nullptr); // Initialize to nullptr since it might be a bald pointer.
+
+
 		if(closed.find(CHILD->state()) == std::end(closed)) // If it is NOT in closed...
 		{
 			/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
 				*	performance of this section of code.	*/
-			auto const END(std::end(open));
-
-			auto const IT(std::find_if(std::begin(open), END, [&](typename OpenList::const_reference E)
-			{
-				return E->state() == CHILD->state() && E->path_cost() > CHILD->path_cost();
-			}));
+			auto const 	END(std::end(open)),
+						IT(std::find_if(std::begin(open), END, [&](typename OpenList::const_reference E)
+						{
+							return E->state() == CHILD->state();
+						}));
 
 			if(IT != END)
 			{
+				if(CHILD->path_cost() < (*IT)->path_cost())
+				{
+					decrease_key(open, IT, CHILD);
+					result = *IT;
 #ifndef NDEBUG
-				std::cout << "Replace " << jwm::to_string((*IT)->state()) << " with " << jwm::to_string(CHILD->state()) << "\n";
+					std::cout << jwm::to_string(CHILD->state()) << ": replace " << (*IT)->path_cost() << " with " << CHILD->path_cost() << ".\n";
 #endif
-				decrease_key(open, IT, CHILD);
+				}
+#ifndef NDEBUG
+				else
+					std::cout << jwm::to_string(CHILD->state()) << ": keep " << (*IT)->path_cost() << " and throw away " << CHILD->path_cost() << ".\n";
+#endif
 			}
 			else
 			{
+				push(open, CHILD);
+				result = CHILD;
 #ifndef NDEBUG
 				std::cout << "open <= " << jwm::to_string(CHILD->state()) << "\n";
 #endif
-				push(open, CHILD);
 			}
 		}
+
+		return result;
 	}
 
 
@@ -220,7 +237,7 @@ namespace jsearch
 				for(Action const ACTION : ACTIONS)
 				{
 					Node const CHILD(PROBLEM.child(S, ACTION));
-					handle_child(open, closed, CHILD, Loki::Int2Type<Traits::combinatorial>());
+					handle_child(open, closed, CHILD);
 				}
 			}
 		}
@@ -273,7 +290,7 @@ namespace jsearch
 				for(Action const ACTION : ACTIONS)
 				{
 					Node const CHILD(PROBLEM.child(S, ACTION));
-					handle_child(open, CHILD, Loki::Int2Type<Traits::combinatorial>());
+					handle_child(open, CHILD);
 				}
 			}
 		}
