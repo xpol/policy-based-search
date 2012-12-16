@@ -159,8 +159,8 @@ protected:
 	std::vector<Action> actions(State const &STATE) const
 	{
 		std::vector<Action> result;
-		auto const START(STATE.empty() ? std::begin(EDGES) : STATE.back() + 1),
-					END(std::begin(EDGES) + N - n + STATE.size() + 1);
+		auto const START(STATE.empty() ? EDGES.cbegin() : STATE.back() + 1),
+					END(EDGES.cbegin() + N - n + STATE.size() + 1);
 #ifndef NDEBUG
 		std::cout << "Generating actions for state: {";
 		std::for_each(std::begin(STATE), std::end(STATE), [&](typename State::const_reference ACTION){ std::cout << *ACTION; });
