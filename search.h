@@ -187,7 +187,8 @@ namespace jsearch
 	/**************************
 	 * 	 	 CANONICAL		  *
 	 **************************/
-	template <template <typename T> class PriorityQueue,
+	template <template <typename T, typename Comparator> class PriorityQueue,
+			template <typename Traits> class Comparator,
 			template <typename T> class MembershipBag,
 			typename Traits,
 			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
@@ -207,7 +208,7 @@ namespace jsearch
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 
-		typedef PriorityQueue<Node> OpenList;
+		typedef PriorityQueue<Node, Comparator<Traits>> OpenList;
 		typedef MembershipBag<State> ClosedList;
 
 		OpenList open;
@@ -249,7 +250,8 @@ namespace jsearch
 	/**************************
 	 *		COMBINATORIAL	  *
 	 **************************/
-	template <template <typename T> class PriorityQueue,
+	template <template <typename T, typename Comparator> class PriorityQueue,
+			template <typename Traits> class Comparator,
 			typename Traits,
 			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
@@ -268,7 +270,7 @@ namespace jsearch
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 
-		typedef PriorityQueue<Node> OpenList;
+		typedef PriorityQueue<Node, Comparator<Traits>> OpenList;
 
 		OpenList open;
 		push(open, PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));

@@ -67,10 +67,10 @@ using AStarTSP = jsearch::DefaultAStar<Traits, MinimalImaginableTour>;
 template <typename Traits>
 using WAStarTSP = jsearch::DefaultWAStar<Traits, MinimalImaginableTour, 100>;
 
-template <typename T>
+template <typename T, typename Comparator>
 // using PriorityQueue = boost::heap::priority_queue<T, boost::heap::compare<AStarTSP<TSP>>>;
 // using PriorityQueue = std::set<T, AStarTSP<TSP>>;
-using PriorityQueue = std::priority_queue<T, std::vector<T>, AStarTSP<TSP>>;
+using PriorityQueue = std::priority_queue<T, std::vector<T>, Comparator>;
 
 
 int main(int argc, char **argv)
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 			break;
 	}
 
-	cout << "PriorityQueue: " << typeid(PriorityQueue<char>).name() << "\n";
+	cout << "PriorityQueue: " << typeid(PriorityQueue<char, AStarTSP<TSP>>).name() << "\n";
 	problem.reset(new Graph(procedural(n, seed)));
 	N = problem->m_num_edges;
 	EDGES.reserve(N);
@@ -123,7 +123,7 @@ int main(int argc, char **argv)
 	try
 	{
 		// Change this to WAStarTSP to use weighted A* (and adjust the weight above if desired).
-		auto const SOLUTION(jsearch::best_first_search<PriorityQueue>(MINIMAL));
+		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, AStarTSP>(MINIMAL));
 
 		cout << "solution: { ";
 		for_each(begin(SOLUTION->state()), end(SOLUTION->state()), [&](typename TSP::state::const_reference I)
