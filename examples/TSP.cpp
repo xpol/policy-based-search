@@ -23,8 +23,7 @@
 #include <iostream>
 #include <algorithm>
 #include <sstream>
-// TODO: ctime is not ideal, but chrono is incompatible with clang 3.1.
-#include <ctime>
+#include <chrono>
 #include <locale>
 #include <queue>
 
@@ -76,7 +75,7 @@ using PriorityQueue = std::priority_queue<T, std::vector<T>, Comparator>;
 int main(int argc, char **argv)
 {
 	float weight = 10.0;
-	mt19937::result_type seed(time(nullptr));
+	mt19937::result_type seed(chrono::high_resolution_clock::to_time_t(chrono::high_resolution_clock::now()));
 	
 	// TODO: Use Program Options from Boost?
 	switch(argc)

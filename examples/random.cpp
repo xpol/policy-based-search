@@ -23,11 +23,12 @@
 #include <random>
 #include <sstream>
 #include <unordered_set>
-#include <ctime>
+#include <chrono>
 #include <iostream>
 #include <algorithm>
 #include <string>
 #include <iterator>
+#include <locale>
 
 #include <boost/heap/binomial_heap.hpp>
 
@@ -54,7 +55,7 @@ using ClosedList = std::unordered_set<T>;
 int main(int argc, char **argv)
 {
 	size_t n(0);
-	mt19937::result_type seed(time(nullptr));
+	mt19937::result_type seed(chrono::high_resolution_clock::to_time_t(chrono::high_resolution_clock::now()));
 	string const ARGV0(argv[0]);
 	
 	// TODO: Use Program Options from Boost?
@@ -99,8 +100,11 @@ int main(int argc, char **argv)
 	
 	try
 	{
+		auto const T0(chrono::high_resolution_clock::now());
 		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, Dijkstra, ClosedList>(PROBLEM));
-		cout << "Done.\n";
+		auto const ELAPSED(chrono::high_resolution_clock::now() - T0);
+		cout.imbue(locale(""));
+		cout << "Done: " << std::chrono::duration_cast<std::chrono::microseconds>(ELAPSED).count() << " µs\n";
 	}
 	catch (goal_not_found const &ex)
 	{
@@ -113,27 +117,27 @@ Graph procedural(size_t const &N, size_t const &B, mt19937::result_type const &S
 {
 	Graph g(N);
 	uniform_int_distribution<Random::pathcost> weight_dist(1, 500);
-	uniform_int_distribution<vertex_desc> vertex_dist(0, N - 1);
 	cout << "seed: " << SEED << endl;
 	mt19937 const engine(SEED);
 	auto weight_generator(bind(weight_dist, engine));
-	auto vertex_generator(bind(vertex_dist, engine));
 
-	for(vertex_desc i(0); i < N - 1; ++i)
+	for(vertex_desc i(0); i < N - B; ++i)
 	{
+		uniform_int_distribution<vertex_desc> vertex_dist(i + 1, N - 1);
+		auto vertex_generator(bind(vertex_dist, engine));
 		unsigned char failures(0);
 		while(boost::out_degree(i, g) < B && failures < 3)
 		{
 			auto const V(vertex_generator());
-			if(V != i && boost::in_degree(V, g) < B)
+			if(boost::in_degree(V, g) < B)
 			{	
 				auto const W(weight_generator());
 				auto const E(boost::add_edge(i, V, W, g));
 				if(!E.second)
 				{
 					// ostringstream tmp;
-					cerr << "Failed to add edge " << E.first << " to vertex " << i << ".\n";
-					if(++failures == 3)
+					// cerr << "Failed to add edge " << E.first << " to vertex " << i << ".\n";
+					if(++failures == B)
 						cerr << "Bailing out on vertex " << i << "\n";
 					// throw logic_error(tmp.str());
 				}
