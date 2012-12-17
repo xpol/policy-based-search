@@ -115,8 +115,8 @@ namespace jsearch
 #ifndef NDEBUG
 					std::cout << jwm::to_string(CHILD->state()) << ": replace " << (*IT)->path_cost() << " with " << CHILD->path_cost() << ".\n";
 #endif
-					decrease_key(open, IT, CHILD);
 					result = *IT;
+					decrease_key(open, IT, CHILD);
 				}
 #ifndef NDEBUG
 				else
