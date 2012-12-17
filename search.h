@@ -68,7 +68,7 @@ namespace jsearch
 	inline void decrease_key(PriorityQueue<T, Options...> &pq, typename PriorityQueue<T, Options...>::const_iterator IT, typename PriorityQueue<T, Options...>::const_reference E)
 	{
 		auto const H(PriorityQueue<T, Options...>::s_handle_from_iterator(IT));
-		pq.decrease(H, E);
+		pq.increase(H, E);
 	}
 
 
