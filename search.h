@@ -48,23 +48,8 @@ namespace jsearch
 	};
 
 
-	template <template <typename Key_, typename Compare_, typename Alloc_ = std::allocator<Key_>> class Set,
-			typename Key,
-			typename Compare,
-			template <typename T> class Alloc>
-	Key pop(Set<Key, Compare, Alloc<Key>> &s)
-	{
-		auto it(std::end(s));
-		Key const E(*--it);
-		s.erase(it);
-		return E;
-	}
-
-
-	template <template <typename T, typename... Options> class PriorityQueue,
-				typename T,
-				typename... Options>
-	T pop(PriorityQueue<T, Options...> &pq)
+	template <template <typename T, typename... Options> class PriorityQueue, typename T, typename... Options>
+	inline T pop(PriorityQueue<T, Options...> &pq)
 	{
 		auto const E(pq.top());
 		pq.pop();
@@ -72,50 +57,18 @@ namespace jsearch
 	}
 
 
-	template <template <typename Key_, typename Compare_, typename Alloc_ = std::allocator<Key_>> class Set,
-			typename Key,
-			typename Compare,
-			template <typename T> class Alloc>
-	void push(Set<Key, Compare, Alloc<Key>> &s, Key const &E)
-	{
-		auto const RESULT(s.insert(E));
-		if(!RESULT.second)
-			throw std::logic_error("FUCK.");
-	}
-
-
-	template <template <class T, class ...Options> class PriorityQueue, class T, class ...Options>
-	void push(PriorityQueue<T, Options...> &pq, T const &E)
+	template <template <typename T, typename ...Options> class PriorityQueue, typename T, typename ...Options>
+	inline void push(PriorityQueue<T, Options...> &pq, T const &E)
 	{
 		pq.push(E);
 	}
 
 
-	template <template <typename Key_, typename Compare_, typename Alloc_ = std::allocator<Key_>> class Set,
-			typename Key,
-			typename Compare,
-			template <typename T> class Alloc>
-	inline void decrease_key(Set<Key, Compare, Alloc<Key>> &s, typename Set<Key, Compare, Alloc<Key>>::const_iterator IT, typename Set<Key, Compare, Alloc<Key>>::const_reference E)
-	{
-		s.erase(IT);
-		s.insert(E);
-	}
-
-
-	template <template <typename T, typename... Options> class PriorityQueue,
-		typename T,
-		typename... Options>
+	template <template <typename T, typename... Options> class PriorityQueue, typename T, typename... Options>
 	inline void decrease_key(PriorityQueue<T, Options...> &pq, typename PriorityQueue<T, Options...>::const_iterator IT, typename PriorityQueue<T, Options...>::const_reference E)
 	{
 		auto const H(PriorityQueue<T, Options...>::s_handle_from_iterator(IT));
 		pq.decrease(H, E);
-	}
-
-
-	// Interesting: this function needs a different template to the false specialization.
-	template <typename E, class ClosedList>
-	inline void handle_parent(ClosedList &, E const &, Loki::Int2Type<true>)
-	{
 	}
 
 

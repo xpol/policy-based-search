@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <boost/heap/pairing_heap.hpp>
 #include <boost/heap/binomial_heap.hpp>
-#include <set>
 #include <unordered_set>
 
 using namespace jsearch;
@@ -42,7 +41,6 @@ using AStarRomania = DefaultAStar<Traits, EuclideanDistance>;
 
 template <typename T, typename Comparator>
 using PriorityQueue = boost::heap::binomial_heap<T, boost::heap::compare<Comparator>>;
-// using PriorityQueue = std::set<T, AStarRomania<Romania>>;
 
 template <typename T>
 using ClosedList = std::unordered_set<T>;
