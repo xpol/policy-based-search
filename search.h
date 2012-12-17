@@ -90,7 +90,10 @@ namespace jsearch
 	/**
 	 * Canonical child handler.
 	 *
-	 * @return: A const reference to an OpenList element that equals i) nullptr if CHILD was not added to open, ii) CHILD if CHILD was added to open, or iii) another element if CHILD replaced it on open.
+	 * @return: An OpenList element that equals
+	 * 				i) nullptr if CHILD was not added to open (because it was in closed),
+	 * 				ii) CHILD if CHILD was added to open, or
+	 * 				iii) another element if CHILD replaced it on open.
 	 * */
 	template <class OpenList, class ClosedList>
 	inline typename OpenList::value_type handle_child(OpenList &open, ClosedList &closed, typename OpenList::const_reference CHILD)

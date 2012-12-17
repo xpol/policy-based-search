@@ -43,8 +43,8 @@ using namespace jsearch;
 typedef Random::state State;
 typedef Random::node Node;
 
-
 Graph procedural(size_t const &N, size_t const &B, mt19937::result_type const &SEED);
+string backtrace(Node const &NODE);
 
 template <typename T, typename Comparator>
 using PriorityQueue = boost::heap::binomial_heap<T, boost::heap::compare<Comparator>>;
@@ -105,6 +105,7 @@ int main(int argc, char **argv)
 		auto const ELAPSED(chrono::high_resolution_clock::now() - T0);
 		cout.imbue(locale(""));
 		cout << "Done: " << std::chrono::duration_cast<std::chrono::microseconds>(ELAPSED).count() << " µs\n";
+		cout << backtrace(SOLUTION) << "\n";
 	}
 	catch (goal_not_found const &ex)
 	{
@@ -156,4 +157,10 @@ Graph procedural(size_t const &N, size_t const &B, mt19937::result_type const &S
 #endif
 
 	return g;
+}
+
+
+string backtrace(Node const &NODE)
+{
+	return (NODE->parent() ? backtrace(NODE->parent()) + " => " : "") + to_string(NODE->state());
 }
