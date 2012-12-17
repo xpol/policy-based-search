@@ -45,6 +45,7 @@ typedef Random::node Node;
 
 Graph procedural(size_t const &N, size_t const &B, mt19937::result_type const &SEED);
 string backtrace(Node const &NODE);
+Graph square();
 
 template <typename T, typename Comparator>
 using PriorityQueue = boost::heap::binomial_heap<T, boost::heap::compare<Comparator>>;
@@ -94,6 +95,7 @@ int main(int argc, char **argv)
 	cout << "graph size: " << n << "\n";
 	
 	G = new Graph(procedural(n, b, seed));
+	// G = new Graph(square());
 	weight = new WeightMap(get(boost::edge_weight, *G));
 	State const INITIAL(*boost::vertices(*G).first);
 	Problem<Random, Distance, Neighbours, Visit, GoalTest> const PROBLEM(INITIAL);
@@ -105,7 +107,7 @@ int main(int argc, char **argv)
 		auto const ELAPSED(chrono::high_resolution_clock::now() - T0);
 		cout.imbue(locale(""));
 		cout << "Done: " << std::chrono::duration_cast<std::chrono::microseconds>(ELAPSED).count() << " µs\n";
-		cout << backtrace(SOLUTION) << "\n";
+		cout << backtrace(SOLUTION) << ": " << SOLUTION->path_cost() << "\n";
 	}
 	catch (goal_not_found const &ex)
 	{
@@ -130,7 +132,7 @@ Graph procedural(size_t const &N, size_t const &B, mt19937::result_type const &S
 		while(boost::out_degree(i, g) < B && failures < 3)
 		{
 			auto const V(vertex_generator());
-			if(boost::in_degree(V, g) < B)
+			if(V != i && boost::in_degree(V, g) < B)
 			{	
 				auto const W(weight_generator());
 				auto const E(boost::add_edge(i, V, W, g));
@@ -163,4 +165,25 @@ Graph procedural(size_t const &N, size_t const &B, mt19937::result_type const &S
 string backtrace(Node const &NODE)
 {
 	return (NODE->parent() ? backtrace(NODE->parent()) + " => " : "") + to_string(NODE->state());
+}
+
+
+Graph square()
+{
+	Graph g(4);
+
+	// source, target, weight, graph
+	boost::add_edge(0, 1, 1, g);
+	boost::add_edge(0, 2, 5, g);
+	boost::add_edge(0, 3, 10, g);
+	boost::add_edge(1, 2, 1, g);
+	boost::add_edge(1, 3, 3, g);
+	boost::add_edge(2, 3, 1, g);
+
+#ifndef NDEBUG
+	ofstream dot("Random.dot");
+	boost::write_graphviz(dot, g, boost::default_writer(), boost::make_label_writer(boost::get(boost::edge_weight, g)));
+#endif
+
+	return g;
 }
