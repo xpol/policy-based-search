@@ -79,9 +79,9 @@ namespace jwm
 		
 		if(!SET.empty())
 		{
-			auto BEGIN(std::begin(SET));
-			s += "{" + to_string(*BEGIN++);
-			std::for_each(BEGIN, std::end(SET), [&](const_reference E){ s += ", " + to_string(E);});
+			auto begin(std::begin(SET));
+			s += "{" + to_string(*begin++);
+			std::for_each(begin, std::end(SET), [&](const_reference E){ s += ", " + to_string(E); });
 			s += "}";
 		}
 		else
@@ -91,11 +91,10 @@ namespace jwm
 	}
 
 
-	// OK, so this is cheating... it's not really converting to string.
-	template <typename T>
-	T to_string(T const &OBJECT)
+	/* If the element of a container IS a string, then of course we just return it.	 */
+	inline std::string to_string(std::string const &S)
 	{
-		return OBJECT;
+		return S;
 	}
 }
 
