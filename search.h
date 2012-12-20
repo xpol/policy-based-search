@@ -32,8 +32,9 @@
 #include <stdexcept>
 #include "loki/TypeManip.h"
 
+#ifndef NDEBUG
 #include <iostream>
-
+#endif
 
 namespace jsearch
 {
@@ -57,13 +58,6 @@ namespace jsearch
 	}
 
 
-	template <template <typename T, typename ...Options> class PriorityQueue, typename T, typename ...Options>
-	inline void push(PriorityQueue<T, Options...> &pq, T const &E)
-	{
-		pq.push(E);
-	}
-
-
 	template <template <typename T, typename... Options> class PriorityQueue, typename T, typename... Options>
 	inline void decrease_key(PriorityQueue<T, Options...> &pq, typename PriorityQueue<T, Options...>::const_iterator IT, typename PriorityQueue<T, Options...>::const_reference E)
 	{
@@ -72,18 +66,11 @@ namespace jsearch
 	}
 
 
-	template <class ClosedList>
-	inline void handle_parent(ClosedList &closed, typename ClosedList::const_reference S, Loki::Int2Type<false>)
-	{
-		closed.insert(S);
-	}
-
-
 	// Combinatorial child handler.
 	template <class OpenList>
 	inline void handle_child(OpenList &open, typename OpenList::const_reference CHILD)
 	{
-		push(open, CHILD);
+		open.push(CHILD);
 	}
 
 		
@@ -128,7 +115,7 @@ namespace jsearch
 			}
 			else
 			{
-				push(open, CHILD);
+				open.push(CHILD);
 				result = CHILD;
 #ifndef NDEBUG
 				std::cout << "open <= " << jwm::to_string(CHILD->state()) << "\n";
@@ -169,7 +156,7 @@ namespace jsearch
 
 		OpenList open;
 		ClosedList closed;
-		push(open, PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
+		open.push(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
 
 		while(!open.empty())
 		{
@@ -188,7 +175,7 @@ namespace jsearch
 			}
 			else
 			{
-				handle_parent(closed, S->state(), Loki::Int2Type<Traits::combinatorial>());
+				closed.insert(S->state());
 				std::vector<Action> const ACTIONS(PROBLEM.actions(S->state()));
 				// TODO: Change to std::for_each once gcc bug #53624 is fixed.
 				for(Action const ACTION : ACTIONS)
@@ -229,7 +216,7 @@ namespace jsearch
 		typedef PriorityQueue<Node, Comparator<Traits>> OpenList;
 
 		OpenList open;
-		push(open, PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
+		open.push(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
 
 		while(!open.empty())
 		{
@@ -237,7 +224,9 @@ namespace jsearch
 
 			if(PROBLEM.goal_test(S->state()))
 			{
+#ifndef NDEBUG
 				std::cout << "open: " << open.size() << "\n";
+#endif
 				return S;
 			}
 			else
