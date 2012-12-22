@@ -59,7 +59,7 @@ namespace jsearch
 
 
 	template <template <typename T, typename... Options> class PriorityQueue, typename T, typename... Options>
-	inline void decrease_key(PriorityQueue<T, Options...> &pq, typename PriorityQueue<T, Options...>::const_iterator IT, typename PriorityQueue<T, Options...>::const_reference E)
+	inline void decrease_key(PriorityQueue<T, Options...> &pq, typename PriorityQueue<T, Options...>::iterator const &IT, typename PriorityQueue<T, Options...>::const_reference E)
 	{
 		auto const H(PriorityQueue<T, Options...>::s_handle_from_iterator(IT));
 		pq.increase(H, E);
