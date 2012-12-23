@@ -67,7 +67,7 @@ namespace jsearch
 	public:
 
 		/** Type used to identify particular nodes. */
-		typedef typename NodePtr::element_type::State Id;
+		typedef typename NodePtr::element_type::State State;
 
 		/** Type used to hold path cost (lower is better ). */
 		typedef typename NodePtr::element_type::PathCost Cost;
@@ -81,7 +81,7 @@ namespace jsearch
 		/**
 		 * Insert @a node into the set or update existing node.
 		 *
-		 * If no node with same id exists, a new node is inserted.  If
+		 * If no node with same state exists, a new node is inserted.  If
 		 * such a node does already exist, then the cost of the existing
 		 * node is compared with the cost in @a node.  If the cost in @a
 		 * node is lower, then the existing node has its cost and info
@@ -108,22 +108,22 @@ namespace jsearch
 		NodePtr get_and_pop_min_cost_node();
 
 		/**
-		 * Retrieve node with the given @a id (if any).
+		 * Retrieve node with the given @a state (if any).
 		 *
-		 * @param[in] id identifier to search for.
+		 * @param[in] state identifier to search for.
 		 *
-		 * @return pointer to node with the given id, or an unset pointer.
+		 * @return pointer to node with the given state, or an unset pointer.
 		 */
-		NodePtr get_node_by_id(const Id & id) const;
+		NodePtr get_node_by_s(const State & s) const;
 
 		/**
-		 * Retrieve and delete node with the given @a id (if any).
+		 * Retrieve and delete node with the given @a s (if any).
 		 *
-		 * @param[in] id identifier to search for
+		 * @param[in] s identifier to search for
 		 *
-		 * @return pointer to node with the given id, or an unset pointer.
+		 * @return pointer to node with the given s, or an unset pointer.
 		 */
-		NodePtr get_and_pop_node_by_id(const Id & id);
+		NodePtr get_and_pop_node_by_s(const State & s);
 
 		/**
 		 * Determine whether this set is empty.
@@ -152,13 +152,13 @@ namespace jsearch
 		// underlying storage can resize.
 		typedef std::size_t node_index_t;
 
-		// a type for looking up priv_value_types, indexed by Id
-		typedef std::map<const Id *, node_index_t, detail::ptr_less_type<Id>> id_to_nx_t;
+		// a type for looking up priv_value_types, indexed by State
+		typedef std::map<const State *, node_index_t, detail::ptr_less_type<State>> s_to_nx_t;
 
 		// ... and some convenience typedefs derived from it
-		typedef typename id_to_nx_t::iterator       id_iter_t;
-		typedef typename id_to_nx_t::const_iterator id_const_iter_t;
-		typedef typename id_to_nx_t::value_type     id_item_t;
+		typedef typename s_to_nx_t::iterator       s_iter_t;
+		typedef typename s_to_nx_t::const_iterator s_const_iter_t;
+		typedef typename s_to_nx_t::value_type     s_item_t;
 
 		// a type for a heap for finding current min cost
 		typedef std::vector<node_index_t> cost_to_nx_heap_t;
@@ -171,7 +171,7 @@ namespace jsearch
 		{
 			NodePtr np;         // "node pointer"
 			heap_index_t hx;    // "heap index"
-			id_iter_t ii;       // "id iterator"
+			s_iter_t ii;       	// "state iterator"
 		};
 
 		// a type for main storage for the info
@@ -181,8 +181,8 @@ namespace jsearch
 		// order.
 		priv_value_vec_t nodes;
 
-		// set of indexes into nodes, locatable by id
-		id_to_nx_t ids;
+		// set of indexes into nodes, locatable by s
+		s_to_nx_t ss;
 
 		// heap of node indexes, ordered by cost
 		cost_to_nx_heap_t heap;
@@ -201,7 +201,7 @@ namespace jsearch
 // ---------------------------------------------------------------------
 
 	template <typename NodePtr>
-	node_set<NodePtr>::node_set() : nodes(), ids(), heap()
+	node_set<NodePtr>::node_set() : nodes(), ss(), heap()
 	{
 	}
 
@@ -216,18 +216,18 @@ namespace jsearch
 	inline bool
 	node_set<NodePtr>::insert_or_update(NodePtr np)
 	{
-		const Id * idp(&(np->state()));
+		const State * sp(&(np->state()));
 
-		id_iter_t ii(ids.find(idp));
+		s_iter_t ii(ss.find(sp));
 
-		if(ii == ids.end())
+		if(ii == ss.end())
 		{
 			// this is where the new node will live (eventually)
 			const node_index_t nx(nodes.size());
 
-			// we now add it to the id lookup structure
+			// we now add it to the s lookup structure
 			bool inserted;
-			std::tie(ii, inserted) = ids.insert(id_item_t(idp, nx));
+			std::tie(ii, inserted) = ss.insert(s_item_t(sp, nx));
 
 			// and put it at the end of the heap
 			const heap_index_t hx(heap.size());
@@ -246,8 +246,8 @@ namespace jsearch
 		if(node.np->path_cost() > np->path_cost())
 		{
 			node.np = np;
-			ids.erase(node.ii);
-			ids.insert( { & (np->state()), nx });
+			ss.erase(node.ii);
+			ss.insert( { & (np->state()), nx });
 			fix_heap(node.hx);
 			return true;
 		}
@@ -281,11 +281,11 @@ namespace jsearch
 
 	template <typename NodePtr>
 	inline NodePtr
-	node_set<NodePtr>::get_node_by_id(const Id & id) const
+	node_set<NodePtr>::get_node_by_s(const State & s) const
 	{
-		id_const_iter_t cit(ids.find(&id));
+		s_const_iter_t cit(ss.find(&s));
 
-		if(cit == ids.end())
+		if(cit == ss.end())
 			return NodePtr();
 		else
 			return nodes[ cit->second ].np;
@@ -293,11 +293,11 @@ namespace jsearch
 
 	template <typename NodePtr>
 	inline NodePtr
-	node_set<NodePtr>::get_and_pop_node_by_id(const Id & id)
+	node_set<NodePtr>::get_and_pop_node_by_s(const State & s)
 	{
-		id_const_iter_t cit(ids.find(&id));
+		s_const_iter_t cit(ss.find(&s));
 
-		if(cit == ids.end())
+		if(cit == ss.end())
 			return NodePtr();
 		else
 			return erase_node(cit->second);
@@ -328,16 +328,16 @@ namespace jsearch
 		for(node_index_t i = 0; i < nodes.size(); ++i)
 			os << "|   "
 			   "node[" << i << "]: "
-			   "id='" << nodes[i].np->state() << "', "
+			   "s='" << nodes[i].np->state() << "', "
 			   "cost=" << nodes[i].np->path_cost() << ", "
 			   "hx=" << nodes[i].hx << ", "
 			   "ii=" << reinterpret_cast< const void * >(&(*(nodes[i].ii))) << std::endl;
 
-		os << "| id map:" << std::endl;
+		os << "| s map:" << std::endl;
 
-		for(const id_item_t & i : ids)
+		for(const s_item_t & i : ss)
 			os << "|   "
-			   "id='" << *(i.first) << "', "
+			   "s='" << *(i.first) << "', "
 			   "nx=" << i.second << std::endl;
 
 		os << "| heap:" << std::endl;
@@ -432,13 +432,13 @@ namespace jsearch
 		if(nodes.size() == 1)
 		{
 			nodes.clear();
-			ids.clear();
+			ss.clear();
 			heap.clear();
 			return rv;
 		}
 
-		// remove from id mapping
-		ids.erase(node.ii);
+		// remove from s mapping
+		ss.erase(node.ii);
 
 		// remove from heap
 		if(node.hx + 1 < heap.size())
@@ -459,7 +459,7 @@ namespace jsearch
 			// copy last element over now-vacant slot
 			node = nodes.back();
 
-			// update the id pointer for the last node
+			// update the s pointer for the last node
 			node.ii->second = nx;
 
 			// and update the heap to point at the correct slot
