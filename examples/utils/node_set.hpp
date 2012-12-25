@@ -2,7 +2,7 @@
 #define JSEARCH_NODE_SET_HPP 1
 
 /**
- * @file node_set.hpp
+ * @file queue_set.hpp
  *
  * Container suitable for A* searchs.
  *
@@ -23,7 +23,7 @@
 
 #ifndef NDEBUG
 #  include <iostream>
-#  define DEBUG( x ) std::clog << "node_set: " << x << std::endl
+#  define DEBUG( x ) std::clog << "queue_set: " << x << std::endl
 #else
 #  define DEBUG( x ) do {} while ( 0 )
 #endif
@@ -62,7 +62,7 @@ namespace jsearch
 	 */
 
 	template <typename NodePtr>
-	class node_set
+	class queue_set
 	{
 	public:
 
@@ -72,11 +72,11 @@ namespace jsearch
 		/** Type used to hold path cost (lower is better ). */
 		typedef typename NodePtr::element_type::PathCost Cost;
 
-		/** Create a new node_set. */
-		node_set();
+		/** Create a new queue_set. */
+		queue_set();
 
-		/** Destroy this node_set. */
-		~node_set();
+		/** Destroy this queue_set. */
+		~queue_set();
 
 		/**
 		 * Insert @a node into the set or update existing node.
@@ -201,12 +201,12 @@ namespace jsearch
 // ---------------------------------------------------------------------
 
 	template <typename NodePtr>
-	node_set<NodePtr>::node_set() : nodes(), ss(), heap()
+	queue_set<NodePtr>::queue_set() : nodes(), ss(), heap()
 	{
 	}
 
 	template <typename NodePtr>
-	node_set<NodePtr>::~node_set()
+	queue_set<NodePtr>::~queue_set()
 	{
 	}
 
@@ -214,7 +214,7 @@ namespace jsearch
 
 	template <typename NodePtr>
 	inline bool
-	node_set<NodePtr>::insert_or_update(NodePtr np)
+	queue_set<NodePtr>::insert_or_update(NodePtr np)
 	{
 		const State * sp(&(np->state()));
 
@@ -259,7 +259,7 @@ namespace jsearch
 
 	template <typename NodePtr>
 	inline NodePtr
-	node_set<NodePtr>::get_min_cost_node() const
+	queue_set<NodePtr>::get_min_cost_node() const
 	{
 		if(heap.empty())
 			return NodePtr();
@@ -269,7 +269,7 @@ namespace jsearch
 
 	template <typename NodePtr>
 	inline NodePtr
-	node_set<NodePtr>::get_and_pop_min_cost_node()
+	queue_set<NodePtr>::get_and_pop_min_cost_node()
 	{
 		if(heap.empty())
 			return NodePtr();
@@ -281,7 +281,7 @@ namespace jsearch
 
 	template <typename NodePtr>
 	inline NodePtr
-	node_set<NodePtr>::get_node_by_s(const State & s) const
+	queue_set<NodePtr>::get_node_by_s(const State & s) const
 	{
 		s_const_iter_t cit(ss.find(&s));
 
@@ -293,7 +293,7 @@ namespace jsearch
 
 	template <typename NodePtr>
 	inline NodePtr
-	node_set<NodePtr>::get_and_pop_node_by_s(const State & s)
+	queue_set<NodePtr>::get_and_pop_node_by_s(const State & s)
 	{
 		s_const_iter_t cit(ss.find(&s));
 
@@ -307,21 +307,21 @@ namespace jsearch
 
 	template <typename NodePtr>
 	inline bool
-	node_set<NodePtr>::empty() const
+	queue_set<NodePtr>::empty() const
 	{
 		return nodes.empty();
 	}
 
 	template <typename NodePtr>
 	inline std::size_t
-	node_set<NodePtr>::size() const
+	queue_set<NodePtr>::size() const
 	{
 		return nodes.size();
 	}
 
 	template <typename NodePtr>
 	inline void
-	node_set<NodePtr>::dump(std::ostream & os) const
+	queue_set<NodePtr>::dump(std::ostream & os) const
 	{
 		os << "| priv nodes:" << std::endl;
 
@@ -351,7 +351,7 @@ namespace jsearch
 
 	template <typename NodePtr>
 	inline void
-	node_set<NodePtr>::swap_heap(const heap_index_t hx1, const heap_index_t hx2)
+	queue_set<NodePtr>::swap_heap(const heap_index_t hx1, const heap_index_t hx2)
 	{
 		DEBUG("swap_heap: hx1=" << hx1 << ", hx2=" << hx2);
 
@@ -370,7 +370,7 @@ namespace jsearch
 
 	template <typename NodePtr>
 	inline void
-	node_set<NodePtr>::fix_heap(heap_index_t hx)
+	queue_set<NodePtr>::fix_heap(heap_index_t hx)
 	{
 		DEBUG("fix_heap: hx=" << hx);
 
@@ -422,7 +422,7 @@ namespace jsearch
 
 	template <typename NodePtr>
 	inline NodePtr
-	node_set<NodePtr>::erase_node(const node_index_t nx)
+	queue_set<NodePtr>::erase_node(const node_index_t nx)
 	{
 		priv_value_t & node(nodes[ nx ]);
 
