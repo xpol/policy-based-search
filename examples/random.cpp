@@ -34,6 +34,8 @@
 #include <boost/heap/binomial_heap.hpp>
 #include <boost/heap/d_ary_heap.hpp>
 
+#include <unordered_map>
+
 #ifndef NDEBUG
 #include <boost/graph/graphviz.hpp>
 #include <fstream>
@@ -55,8 +57,13 @@ using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, bo
 template <typename T>
 using ClosedList = std::unordered_set<T>;
 
+
+template <typename T>
+using QueueSet = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>>;
+
 int main(int argc, char **argv)
 {
+	queue_set<QueueSet, Node> foo;
 	size_t n(0);
 	mt19937::result_type seed(chrono::high_resolution_clock::to_time_t(chrono::high_resolution_clock::now()));
 	string const ARGV0(argv[0]);

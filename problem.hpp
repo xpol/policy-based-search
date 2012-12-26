@@ -77,12 +77,12 @@ namespace jsearch
 	template <typename Traits>
 	class DefaultNode
 	{
+	public:
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
-
-	public:
+		
 		DefaultNode(State const &STATE, Node const &PARENT, Action const &ACTION, PathCost const &PATH_COST) : state_(STATE), parent_(PARENT),  action_(ACTION), path_cost_(PATH_COST) {}
 
 		DefaultNode(DefaultNode<Traits> const &OTHER) = delete;
