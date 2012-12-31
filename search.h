@@ -88,39 +88,36 @@ namespace jsearch
 		typename OpenList::value_type result(nullptr); // Initialize to nullptr since it might be a bald pointer.
 
 
-		if(closed.find(CHILD->state()) == std::end(closed)) // If it is NOT in closed...
-		{
-			/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
-				*	performance of this section of code.	*/
-			auto const 	END(std::end(open)),
-						IT(std::find_if(std::begin(open), END, [&](typename OpenList::const_reference E)
-						{
-							return E->state() == CHILD->state();
-						}));
+		/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
+			*	performance of this section of code.	*/
+		auto const 	END(std::end(open)),
+					IT(std::find_if(std::begin(open), END, [&](typename OpenList::const_reference E)
+					{
+						return E->state() == CHILD->state();
+					}));
 
-			if(IT != END)
+		if(IT != END)
+		{
+			if(CHILD->path_cost() < (*IT)->path_cost())
 			{
-				if(CHILD->path_cost() < (*IT)->path_cost())
-				{
 #ifndef NDEBUG
-					std::cout << jwm::to_string(CHILD->state()) << ": replace " << (*IT)->path_cost() << " with " << CHILD->path_cost() << ".\n";
+				std::cout << jwm::to_string(CHILD->state()) << ": replace " << (*IT)->path_cost() << " with " << CHILD->path_cost() << ".\n";
 #endif
-					result = *IT;
-					decrease_key(open, IT, CHILD);
-				}
-#ifndef NDEBUG
-				else
-					std::cout << jwm::to_string(CHILD->state()) << ": keep " << (*IT)->path_cost() << " and throw away " << CHILD->path_cost() << ".\n";
-#endif
+				result = *IT;
+				decrease_key(open, IT, CHILD);
 			}
+#ifndef NDEBUG
 			else
-			{
-				open.push(CHILD);
-				result = CHILD;
-#ifndef NDEBUG
-				std::cout << "open <= " << jwm::to_string(CHILD->state()) << "\n";
+				std::cout << jwm::to_string(CHILD->state()) << ": keep " << (*IT)->path_cost() << " and throw away " << CHILD->path_cost() << ".\n";
 #endif
-			}
+		}
+		else
+		{
+			open.push(CHILD);
+			result = CHILD;
+#ifndef NDEBUG
+			std::cout << "open <= " << jwm::to_string(CHILD->state()) << "\n";
+#endif
 		}
 
 		return result;
@@ -176,12 +173,16 @@ namespace jsearch
 			else
 			{
 				closed.insert(S->state());
-				std::vector<Action> const ACTIONS(PROBLEM.actions(S->state()));
+				auto const ACTIONS(PROBLEM.actions(S->state()));
 				// TODO: Change to std::for_each once gcc bug #53624 is fixed.
 				for(Action const ACTION : ACTIONS)
 				{
-					Node const CHILD(PROBLEM.child(S, ACTION));
-					handle_child(open, closed, CHILD);
+					auto const SUCCESSOR(PROBLEM.result(S->state(), ACTION));
+					if(closed.find(SUCCESSOR) == std::end(closed)) // If it is NOT in closed...
+					{
+						auto const CHILD(PROBLEM.child(S, ACTION, SUCCESSOR));
+						handle_child(open, closed, CHILD);
+					}
 				}
 			}
 		}

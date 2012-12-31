@@ -173,6 +173,11 @@ namespace jsearch
 		{
 			return create(result(PARENT->state(), ACTION), PARENT, ACTION, PARENT->path_cost() + step_cost(PARENT->state(), ACTION));
 		}
+
+		Node child(Node const &PARENT, Action const &ACTION, State const &STATE) const
+		{
+			return create(STATE, PARENT, ACTION, PARENT->path_cost() + step_cost(PARENT->state(), ACTION));
+		}
 	};
 
 
