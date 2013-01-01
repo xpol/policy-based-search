@@ -66,24 +66,16 @@ namespace jsearch
 	}
 
 
-	// Combinatorial child handler.
-	template <class OpenList>
-	inline void handle_child(OpenList &open, typename OpenList::const_reference CHILD)
-	{
-		open.push(CHILD);
-	}
-
-		
 	/**
-	 * Canonical child handler.
+	 * handle_child: handle the fate of a child being added to the open list.
 	 *
 	 * @return: An OpenList element that equals
-	 * 				i) nullptr if CHILD was not added to open (because it was in closed),
+	 * 				i) nullptr if CHILD was not added to open
 	 * 				ii) CHILD if CHILD was added to open, or
 	 * 				iii) another element if CHILD replaced it on open.
 	 * */
-	template <class OpenList, class ClosedList>
-	inline typename OpenList::value_type handle_child(OpenList &open, ClosedList &closed, typename OpenList::const_reference CHILD)
+	template <class OpenList>
+	inline typename OpenList::value_type handle_child(OpenList &open, typename OpenList::const_reference CHILD)
 	{
 		typename OpenList::value_type result(nullptr); // Initialize to nullptr since it might be a bald pointer.
 
@@ -125,7 +117,7 @@ namespace jsearch
 
 
 	/**************************
-	 * 	 	 CANONICAL		  *
+	 * 	 	 Graph search	  *
 	 **************************/
 	template <template <typename T, typename Comparator> class PriorityQueue,
 			template <typename Traits> class Comparator,
@@ -181,18 +173,18 @@ namespace jsearch
 					if(closed.find(SUCCESSOR) == std::end(closed)) // If it is NOT in closed...
 					{
 						auto const CHILD(PROBLEM.child(S, ACTION, SUCCESSOR));
-						handle_child(open, closed, CHILD);
+						handle_child(open, CHILD);
 					}
 				}
 			}
 		}
-		
+
 		throw goal_not_found();
 	}
 
 
 	/**************************
-	 *		COMBINATORIAL	  *
+	 *		Tree search		  *
 	 **************************/
 	template <template <typename T, typename Comparator> class PriorityQueue,
 			template <typename Traits> class Comparator,
@@ -238,7 +230,7 @@ namespace jsearch
 				for(Action const ACTION : ACTIONS)
 				{
 					Node const CHILD(PROBLEM.child(S, ACTION));
-					handle_child(open, CHILD);
+					open.push(CHILD);
 				}
 			}
 		}
