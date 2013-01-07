@@ -128,7 +128,7 @@ namespace jsearch
 		using PathCostPolicy<Traits>::g;
 		using HeuristicPolicy<Traits>::h;
 
-	protected:
+	public: // Making this public so that it can be used flexibly.  Bad?
 		typedef typename Traits::node Node;
 		typedef typename Traits::cost Cost;
 
