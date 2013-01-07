@@ -40,7 +40,7 @@ public:
 	typedef unsigned int cost;
 	typedef cost pathcost;
 	typedef std::shared_ptr<jsearch::DefaultNode<Romania>> node;
-	typedef cost heuristic; // Often but not necessarily the same as pathcost.
+	typedef cost heuristic_cost; // Often but not necessarily the same as pathcost.
 	static bool const combinatorial = false;
 };
 
@@ -70,7 +70,7 @@ std::unordered_map<Romania::state, StateCost> const COST {
 };
 
 // Straight-line distance from city to Bucharest.
-std::unordered_map<Romania::state, Romania::heuristic> const SLD {
+std::unordered_map<Romania::state, Romania::heuristic_cost> const SLD {
 	{"Arad", 366},
 	{"Bucharest", 0},
 	{"Craiova", 160},

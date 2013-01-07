@@ -39,14 +39,14 @@ template <typename Traits>
 using CostFunction = AStar<Traits, EuclideanDistance>;
 
 template <typename Traits>
-using TieBreaking = LowH<Traits, EuclideanDistance>;
+using TieBreaker = LowH<Traits, EuclideanDistance>;
 
 // Specify the heap used for the frontier, its comparator and the map used for fast look-up.
 template <typename T, typename Comp>
 using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>, boost::heap::compare<Comp>>;
 
 template <typename Traits>
-using Comparator = TiebreakingComparator<Traits, CostFunction, TieBreaking>;
+using Comparator = TiebreakingComparator<Traits, CostFunction, TieBreaker>;
 
 template <typename Key, typename Value>
 using Map = std::unordered_map<Key, Value>;
@@ -63,7 +63,7 @@ int main(int, char **)
 
 	try
 	{
-		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, Comparator, ClosedList, Map>(BUCHAREST));
+		auto const SOLUTION(jsearch::recursive_best_first_search<CostFunction>(BUCHAREST));
 		
 		print(SOLUTION, cout);
 		cout << ": " << SOLUTION->path_cost() << "\n";

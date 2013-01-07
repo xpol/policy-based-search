@@ -31,6 +31,10 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <limits>
+#include <cassert>
+#include <functional>
+#include <forward_list>
 
 #ifndef NDEBUG
 #include <iostream>
@@ -251,6 +255,149 @@ namespace jsearch
 		}
 
 		throw goal_not_found();
+	}
+
+
+	namespace recursive
+	{
+		template <typename Node>
+		class goal_found : public std::exception
+		{
+		public:
+			goal_found(Node const &SOLUTION) : SOLUTION(SOLUTION) {}
+			Node solution() const { return SOLUTION; }
+
+		private:
+			Node SOLUTION;
+		};
+	}
+	
+
+	template <template <typename Traits> class CostFunction,
+		typename Traits,
+		template <typename Traits_> class StepCostPolicy,
+		template <typename Traits_> class ActionsPolicy,
+		template <typename Traits_> class ResultPolicy,
+		template <typename Traits_> class GoalTestPolicy,
+		template <typename Traits_> class CreatePolicy = DefaultNodeCreator,
+		template <typename Traits_,
+			template <typename Traits_> class StepCostPolicy,
+			template <typename Traits_> class ResultPolicy,
+			template <typename Traits__> class CreatePolicy>
+			class ChildPolicy = DefaultChildPolicy>
+	typename Traits::pathcost recursive_best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM, typename Traits::node const &NODE, typename Traits::pathcost const &F_N, typename Traits::pathcost const &B)
+	{
+		typedef typename Traits::node Node;
+		typedef typename Traits::state State;
+		typedef typename Traits::action Action;
+		typedef typename Traits::pathcost PathCost;
+		typedef typename Traits::cost Cost;
+		using std::placeholders::_1;
+		using std::placeholders::_2;
+		/*	A single-line comment (//) is a direct quotes from the algorithm, to show how it has been interpreted.
+		 *	Mainly so that if there is a bug, it will be easier to track down.  :)
+		 *
+		 *	It is assumed that the algorithm used 1-offset arrays.
+		 */
+		
+		constexpr auto const INF(std::numeric_limits<PathCost>::max());
+		CostFunction<Traits> const COST;
+		auto const f_N(COST.f(NODE));
+
+		// IF f(N)>B, return f(N)
+		if(f_N > B)
+			return f_N;
+		
+		// IF N is a goal, EXIT algorithm
+		if(PROBLEM.goal_test(NODE->state()))
+			throw recursive::goal_found<Node>(NODE);
+		auto const ACTIONS(PROBLEM.actions(NODE->state()));
+
+		// IF N has no children, RETURN infinity
+		if(ACTIONS.empty())
+			return INF;
+		// Use lists here because we need to insert in order.
+		std::forward_list<Cost> F;
+		std::forward_list<std::pair<Node, Cost>> N;
+
+		// FOR each child Ni of N,
+		for(auto const ACTION : ACTIONS)
+		{
+			auto const CHILD(PROBLEM.child(NODE, ACTION));
+			auto const f_CHILD(COST.f(CHILD));
+			// IF f(N)<F(N) THEN F[i] := MAX(F(N),f(Ni))
+			// ELSE F[i] := f(Ni)
+			auto const f_RESULT(f_N < F_N ? std::max(F_N, f_CHILD) : f_CHILD);
+			F.push_front(f_RESULT);
+			N.push_front(std::make_pair(CHILD, f_RESULT));
+		}
+
+		// sort Ni and F[i] in increasing order of F[i]
+		/*	Define a comparator function for the N vector.	*/
+		auto const NCOMP(bind([](std::pair<Node, Cost> const &A, std::pair<Node, Cost> const &B){ return A.second < B.second; }, _1, _2));
+		
+		N.sort(NCOMP);
+		F.sort();
+
+		// IF only one child, F[2] := infinity
+		if(++std::begin(F) == std::end(F))
+			F.insert_after(std::begin(F), INF);
+
+		// WHILE (F[1] <= B and F[1] < infinity)
+		while(F.front() <= B && F.front() < INF)
+		{
+			auto N0(N.front());
+			N.pop_front();
+			F.pop_front();
+			// F[1] := RBFS(N1, F[1], MIN(B, F[2]))
+			N0.second = recursive_best_first_search<CostFunction>(PROBLEM, N0.first, N0.second, std::min(B, F.front()));
+			// insert N1 and F[1] in sorted order
+			N.insert_after(std::lower_bound(std::begin(N), std::end(N), N0, NCOMP), N0);
+			F.insert_after(std::lower_bound(std::begin(F), std::end(F), N0.second), N0.second);
+		}
+
+		// return F[1]
+		return F.front();
+	}
+
+	
+	/*******************************
+	 * Recursive best-first search *
+	 *******************************/
+	template <template <typename Traits> class CostFunction,
+		typename Traits,
+		template <typename Traits_> class StepCostPolicy,
+		template <typename Traits_> class ActionsPolicy,
+		template <typename Traits_> class ResultPolicy,
+		template <typename Traits_> class GoalTestPolicy,
+		template <typename Traits_> class CreatePolicy = DefaultNodeCreator,
+		template <typename Traits_,
+			template <typename Traits_> class StepCostPolicy,
+			template <typename Traits_> class ResultPolicy,
+			template <typename Traits__> class CreatePolicy>
+			class ChildPolicy = DefaultChildPolicy>
+	typename Traits::node recursive_best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM, CostFunction<Traits> const &F)
+	{
+		typedef typename Traits::node Node;
+		typedef typename Traits::state State;
+		typedef typename Traits::action Action;
+		typedef typename Traits::pathcost PathCost;
+		
+		constexpr auto const INF(std::numeric_limits<PathCost>::max());
+		auto initial(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
+		Node result; // Unnecessary but polite to the compiler.
+
+		try
+		{
+			recursive_best_first_search<CostFunction>(PROBLEM, initial, F(initial), INF);
+			assert(result); // Should not actually ever reach this code.
+		}
+		catch(recursive::goal_found<Node> const &EX)
+		{
+			result = EX.solution();
+		}
+		// Don't catch goal_not_found, let it propagate.
+		return result;
 	}
 }
 
