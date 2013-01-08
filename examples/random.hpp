@@ -40,7 +40,6 @@ struct Random
 	typedef cost_t cost;
 	typedef cost_t pathcost;
 	typedef std::shared_ptr<jsearch::DefaultNode<Random>> node;
-	// typedef size_t heuristic; // Often but not necessarily the same as pathcost.
 	static bool const combinatorial = false;
 };
 
