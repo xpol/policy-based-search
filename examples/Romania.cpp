@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <boost/heap/d_ary_heap.hpp>
 #include <unordered_set>
+#include <functional>
 
 using namespace jsearch;
 using namespace std;
@@ -60,6 +61,7 @@ int main(int, char **)
 {
 	State const INITIAL("Arad");
 	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const BUCHAREST(INITIAL); // The problem is to get to Bucharest.
+	RBFS::Evaluation<Romania, EuclideanDistance> const EVALUATOR;
 
 	try
 	{
