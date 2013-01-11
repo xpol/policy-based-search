@@ -30,7 +30,6 @@
 
 #include <algorithm>
 #include <stdexcept>
-#include "loki/TypeManip.h"
 
 #ifndef NDEBUG
 #include <iostream>
