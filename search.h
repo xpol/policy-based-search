@@ -37,6 +37,19 @@
 
 namespace jsearch
 {
+#ifdef STATISTICS
+	struct statistics
+	{
+		statistics() : popped(0), pushed(0), decreased(0), discarded(0) {}
+		size_t popped;
+		size_t pushed;
+		size_t decreased;
+		size_t discarded;
+	};
+	
+	statistics stats;
+#endif
+	
 	/**
 	 * @brief goal_not_found is thrown... when... < drum roll > THE GOAL IS NOT FOUND!
 	 *
@@ -94,12 +107,18 @@ namespace jsearch
 #ifndef NDEBUG
 				std::cout << jwm::to_string(CHILD->state()) << ": replace " << (*IT)->path_cost() << " with " << CHILD->path_cost() << ".\n";
 #endif
+#ifdef STATISTICS
+				++stats.decreased;
+#endif
 				result = *IT;
 				decrease_key(open, IT, CHILD);
 			}
 #ifndef NDEBUG
 			else
 				std::cout << jwm::to_string(CHILD->state()) << ": keep " << (*IT)->path_cost() << " and throw away " << CHILD->path_cost() << ".\n";
+#endif
+#ifdef STATISTICS
+				++stats.discarded;
 #endif
 		}
 		else
@@ -108,6 +127,9 @@ namespace jsearch
 			result = CHILD;
 #ifndef NDEBUG
 			std::cout << "open <= " << jwm::to_string(CHILD->state()) << "\n";
+#endif
+#ifdef STATISTICS
+			++stats.pushed;
 #endif
 		}
 
@@ -152,7 +174,9 @@ namespace jsearch
 #ifndef NDEBUG
 			std::cout << S->state() << " <= open\n";
 #endif
-
+#ifdef STATISTICS
+			++stats.popped;
+#endif
 			if(PROBLEM.goal_test(S->state()))
 			{
 #ifndef NDEBUG

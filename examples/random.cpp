@@ -109,6 +109,14 @@ int main(int argc, char **argv)
 		cout.imbue(locale(""));
 		cout << "Done: " << std::chrono::duration_cast<std::chrono::microseconds>(ELAPSED).count() << " µs\n";
 		cout << backtrace(SOLUTION) << ": " << SOLUTION->path_cost() << "\n";
+
+#ifdef STATISTICS
+		cerr << "**** STATISTICS ****\n";
+		cerr << "pushed: " << stats.pushed << "\n";
+		cerr << "popped: " << stats.popped << "\n";
+		cerr << "decreased: " << stats.decreased << "\n";
+		cerr << "discarded: " << stats.discarded << "\n";
+#endif
 	}
 	catch (goal_not_found const &ex)
 	{
