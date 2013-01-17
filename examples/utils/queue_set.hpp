@@ -20,6 +20,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/* INTERFACE
+ * 
+ * This structure is extremely similar to a Boost.Heap.  The interfaces
+ * have been largely duplicated intact, with the major difference being
+ * the replacement of iterable by the one from the supporting Map.
+ *
+ * Currently, detection of duplicates and acting appropriately are left
+ * up to the client.  I could not see a strong argument to support push
+ * and erase methods that are more intelligent/fail silently.
+ */ 
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
@@ -70,20 +80,14 @@ namespace jsearch
 		typedef Map<key_type, mapped_type> StateHandleMap;
 		
 	public:
-		// ... and some convenience typedefs derived from it
+		// The iterable interface for this structure, from the map.
 		typedef typename StateHandleMap::iterator       iterator;
 		typedef typename StateHandleMap::const_iterator const_iterator;
 		typedef typename StateHandleMap::reference		 map_reference;
 		typedef typename StateHandleMap::value_type     map_value_type;
 
-		// NOTE: The iterable interface from Boost.Heap is intentionally not declared, because we provide a map interface instead.
-
-		/** Create a new queue_set. */
-		queue_set() : map(), priority_queue() {}
-
-		/** Destroy this queue_set. */
-		~queue_set() {}
-
+		// Use the default constructors and destructors.
+		
 		/**
 		 * Push @a node on to the priority queue.
 		 *
@@ -95,7 +99,7 @@ namespace jsearch
 		void push(value_type const &NODE); // Customization point, defined out-of-class.
 		
 		/**
-		 * See the documentation of Boost.heap for these priority queue functions.
+		 * See the documentation of Boost.Heap for these functions.
 		 */
 		const_reference top() const { return priority_queue.top(); }
 		void pop(); // Customization point, defined out-of-class.
