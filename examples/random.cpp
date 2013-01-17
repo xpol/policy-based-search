@@ -29,6 +29,7 @@
 #include <string>
 #include <iterator>
 #include <locale>
+#include <type_traits>
 
 #include <boost/heap/binomial_heap.hpp>
 #include <boost/heap/d_ary_heap.hpp>
@@ -128,7 +129,7 @@ int main(int argc, char **argv)
 Graph procedural(size_t const &N, size_t const &B, mt19937::result_type const &SEED)
 {
 	Graph g(N);
-	uniform_int_distribution<Random::pathcost> weight_dist(1, 500);
+	conditional<is_integral<Random::pathcost>::value, uniform_int_distribution<Random::pathcost>, uniform_real_distribution<Random::pathcost>>::type weight_dist(1, 500);
 	cout << "seed: " << SEED << endl;
 	mt19937 const engine(SEED);
 	auto weight_generator(bind(weight_dist, engine));
