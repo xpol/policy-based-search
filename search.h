@@ -170,7 +170,7 @@ namespace jsearch
 
 		while(!open.empty())
 		{
-			Node const S(pop(open));
+			auto const S(pop(open));
 #ifndef NDEBUG
 			std::cout << S->state() << " <= open\n";
 #endif
@@ -190,7 +190,7 @@ namespace jsearch
 				closed.insert(S->state());
 				auto const ACTIONS(PROBLEM.actions(S->state()));
 				// TODO: Change to std::for_each once gcc bug #53624 is fixed.
-				for(Action const ACTION : ACTIONS)
+				for(auto const ACTION : ACTIONS)
 				{
 					auto const SUCCESSOR(PROBLEM.result(S->state(), ACTION));
 					if(closed.find(SUCCESSOR) == std::end(closed)) // If it is NOT in closed...
@@ -236,7 +236,7 @@ namespace jsearch
 
 		while(!open.empty())
 		{
-			Node const S(pop(open));
+			auto const S(pop(open));
 
 			if(PROBLEM.goal_test(S->state()))
 			{
@@ -250,9 +250,9 @@ namespace jsearch
 				std::vector<Action> const ACTIONS(PROBLEM.actions(S->state()));
 				// TODO: Lazy child generation.
 				// TODO: Change to std::for_each once gcc bug #53624 is fixed.
-				for(Action const ACTION : ACTIONS)
+				for(auto const ACTION : ACTIONS)
 				{
-					Node const CHILD(PROBLEM.child(S, ACTION));
+					auto const CHILD(PROBLEM.child(S, ACTION));
 					open.push(CHILD);
 				}
 			}

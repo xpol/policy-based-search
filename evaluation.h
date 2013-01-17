@@ -133,6 +133,8 @@ namespace jsearch
 		using TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>::split;
 		
 	public:
+		AStar() {}
+		
 		bool operator()(Node const &A, Node const &B) const
 		{
 			auto const Af(g(A) + h(A->state())), Bf(g(B) + h(B->state()));

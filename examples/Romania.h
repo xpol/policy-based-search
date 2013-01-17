@@ -32,8 +32,6 @@
 #include <algorithm>
 #include <vector>
 
-class Romania;
-
 class Romania
 {
 public:
