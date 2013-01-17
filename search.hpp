@@ -140,7 +140,7 @@ namespace jsearch
 	 **************************/
 	template <template <typename T, typename Comparator> class PriorityQueue,
 			template <typename Traits> class Comparator,
-			template <typename T> class MembershipBag,
+			template <typename T> class Set,
 			template <typename Key, typename Value> class Map,
 			typename Traits,
 			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
@@ -161,8 +161,7 @@ namespace jsearch
 		typedef typename Traits::pathcost PathCost;
 
 		typedef jsearch::queue_set<PriorityQueue<Node, Comparator<Traits>>, Map> OpenList;
-		// typedef PriorityQueue<Node, Comparator<Traits>> OpenList;
-		typedef MembershipBag<State> ClosedList;
+		typedef Set<State> ClosedList;
 
 		OpenList open;
 		ClosedList closed;
