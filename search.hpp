@@ -61,8 +61,8 @@ namespace jsearch
 	};
 
 
-	template <template <typename T, typename... Options> class PriorityQueue, typename T, typename... Options>
-	inline T pop(PriorityQueue<T, Options...> &pq)
+	template <typename PriorityQueue>
+	inline typename PriorityQueue::value_type pop(PriorityQueue &pq)
 	{
 		auto const E(pq.top());
 		pq.pop();
@@ -70,10 +70,14 @@ namespace jsearch
 	}
 
 
+	/*
 	template <template <typename T, typename... Options> class PriorityQueue, typename T, typename... Options>
-	inline void decrease_key(PriorityQueue<T, Options...> &pq, typename PriorityQueue<T, Options...>::iterator const &IT, typename PriorityQueue<T, Options...>::const_reference E)
+	inline void decrease_key(jsearch::queue_set<PriorityQueue<T, Options...>> &pq, typename jsearch::queue_set<PriorityQueue<T, Options...>>::handle_type const &H, typename jsearch::queue_set<PriorityQueue<T, Options...>>::const_reference const &E)
+	*/
+	template <typename PriorityQueue>
+	inline void decrease_key(PriorityQueue &pq, typename PriorityQueue::handle_type const &H, typename PriorityQueue::const_reference const &E)
 	{
-		auto const H(PriorityQueue<T, Options...>::s_handle_from_iterator(IT));
+		// auto const H(PriorityQueue<T, Options...>::s_handle_from_iterator(IT));
 		pq.increase(H, E);
 	}
 
@@ -91,31 +95,25 @@ namespace jsearch
 	{
 		typename OpenList::value_type result(nullptr); // Initialize to nullptr since it might be a bald pointer.
 
+		auto const IT(open.find(CHILD->state()));		
 
-		/* 	TODO: Sadly linear: can it be improved?  I am personally not very invested in the
-			*	performance of this section of code.	*/
-		auto const 	END(std::end(open)),
-					IT(std::find_if(std::begin(open), END, [&](typename OpenList::const_reference E)
-					{
-						return E->state() == CHILD->state();
-					}));
-
-		if(IT != END)
+		if(IT != std::end(open))
 		{
-			if(CHILD->path_cost() < (*IT)->path_cost())
+			auto const &DUPLICATE(((*IT).second)); // The duplicate on the open list.
+			if(CHILD->path_cost() < (*DUPLICATE)->path_cost())
 			{
 #ifndef NDEBUG
-				std::cout << jwm::to_string(CHILD->state()) << ": replace " << (*IT)->path_cost() << " with " << CHILD->path_cost() << ".\n";
+				std::cout << jwm::to_string(CHILD->state()) << ": replace " << (*DUPLICATE)->path_cost() << " with " << CHILD->path_cost() << ".\n";
 #endif
 #ifdef STATISTICS
 				++stats.decreased;
 #endif
-				result = *IT;
-				decrease_key(open, IT, CHILD);
+				result = (*DUPLICATE);
+				decrease_key(open, DUPLICATE, CHILD);
 			}
 #ifndef NDEBUG
 			else
-				std::cout << jwm::to_string(CHILD->state()) << ": keep " << (*IT)->path_cost() << " and throw away " << CHILD->path_cost() << ".\n";
+				std::cout << jwm::to_string(CHILD->state()) << ": keep " << (*DUPLICATE)->path_cost() << " and throw away " << CHILD->path_cost() << ".\n";
 #endif
 #ifdef STATISTICS
 				++stats.discarded;
@@ -143,6 +141,7 @@ namespace jsearch
 	template <template <typename T, typename Comparator> class PriorityQueue,
 			template <typename Traits> class Comparator,
 			template <typename T> class MembershipBag,
+			template <typename Key, typename Value> class Map,
 			typename Traits,
 			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
 			template <typename State, typename Action> class ActionsPolicy,
@@ -161,7 +160,8 @@ namespace jsearch
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 
-		typedef PriorityQueue<Node, Comparator<Traits>> OpenList;
+		typedef jsearch::queue_set<PriorityQueue<Node, Comparator<Traits>>, Map> OpenList;
+		// typedef PriorityQueue<Node, Comparator<Traits>> OpenList;
 		typedef MembershipBag<State> ClosedList;
 
 		OpenList open;

@@ -1,49 +1,35 @@
 #ifndef JSEARCH_QUEUE_SET_HPP
 #define JSEARCH_QUEUE_SET_HPP 1
 
-/**
- * @file queue_set.hpp
- *
- * Container suitable for A* searchs.
- *
- * Efficient implementation of A* requires access both by identity and
- * by (lowest) cost.  No single simple data structure provides both.
- *
- * @author Anthony Foiani <anthony.foiani@gmail.com>
- *
- * @butcher Jeremy W. Murphy <jeremy.william.murphy@gmail.com>
- * 
- * License: Boost License v1.0 -- http://www.boost.org/users/license.html
- */
+/*
+    queue_set.hpp: Generic priority queue supported by hashed value lookup.
+    Copyright (C) 2013  Jeremy W. Murphy <jeremy.william.murphy@gmail.com>
+    Special thanks to Anthony Foiani for laying the groundwork from which it sprang.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
-#include <map>
+#include <utility>
 
-#ifndef NDEBUG
-#  include <iostream>
-#  define DEBUG( x ) std::clog << "queue_set: " << x << std::endl
-#else
-#  define DEBUG( x ) do {} while ( 0 )
-#endif
 
 namespace jsearch
 {
-	namespace detail
-	{
-		template <typename T>
-		struct ptr_less_type
-		{
-			bool operator()(const T * const lhs_ptr, const T * const rhs_ptr) const
-			{
-				return *lhs_ptr < *rhs_ptr;
-			}
-		};
-	} // end namespace jsearch::detail
-
 	/**
-	 * Provide access to nodes by name or by lowest cost.
+	 * Provide access to Nodes on the queue by State or by lowest cost.
 	 *
 	 * We store and access the nodes via pointer, typically a shared_ptr.
 	 *
@@ -58,45 +44,42 @@ namespace jsearch
 	 * And it must provide access to those values via:
 	 *
 	 *   const Node::State    & state()     const;
-	 *   const Node::PathCost & path_cost() const;
 	 */
 
-	template <template <typename T> class PriorityQueue, typename Node>
+	template <class PriorityQueue, template <typename Key, typename Value> class Map>
 	class queue_set
 	{
-		/** Type used to identify particular nodes. */
-		typedef typename Node::element_type::State State;
-		/** Type used to hold path cost (lower is better ). */
-		typedef typename Node::element_type::PathCost Cost;
-		
-		typedef PriorityQueue<Node> PQ;
-		// A handle to elements in the priority queue.
-		typedef typename PQ::handle_type handle_t;
-
-		typedef State const * key_type;
-		typedef handle_t mapped_type;
-		
-		// A mapping from State -> PriorityQueue::handle_type (an element on the queue).
-		typedef std::map<key_type, mapped_type, detail::ptr_less_type<State>> Map;
-		
-		// ... and some convenience typedefs derived from it
-		typedef typename Map::iterator       s_iter_t;
-		typedef typename Map::const_iterator s_const_iter_t;
-		typedef typename Map::reference		 s_ref_t;
-		typedef typename Map::value_type     s_item_t;
-
 	public:
 		// This data structure should appear as identical to a Boost priority queue as possible.
 		// The only real difference in interface should be that we have a custom member find().
-		typedef typename PQ::size_type size_type;
-		typedef typename PQ::value_type value_type;
-		typedef typename PQ::difference_type difference_type;
+		typedef typename PriorityQueue::size_type size_type;
+		typedef typename PriorityQueue::value_type value_type;
+		typedef typename PriorityQueue::difference_type difference_type;
 		
-		typedef typename PQ::reference reference;
-		typedef typename PQ::const_reference const_reference;
+		typedef typename PriorityQueue::reference reference;
+		typedef typename PriorityQueue::const_reference const_reference;
+		typedef typename PriorityQueue::pointer pointer;
+		typedef typename PriorityQueue::const_pointer const_pointer;
+
+		typedef typename PriorityQueue::handle_type handle_type;
+		typedef typename value_type::element_type::State key_type;
+		typedef handle_type mapped_type;
+
+	private:
+		// A mapping from State -> PriorityQueue::handle_type (a handle on an element).
+		typedef Map<key_type, mapped_type> StateHandleMap;
+		
+	public:
+		// ... and some convenience typedefs derived from it
+		typedef typename StateHandleMap::iterator       iterator;
+		typedef typename StateHandleMap::const_iterator const_iterator;
+		typedef typename StateHandleMap::reference		 map_reference;
+		typedef typename StateHandleMap::value_type     map_value_type;
+
+		// NOTE: The iterable interface from Boost.Heap is intentionally not declared, because we provide a map interface instead.
 
 		/** Create a new queue_set. */
-		queue_set() : ss(), priority_queue() {}
+		queue_set() : map(), priority_queue() {}
 
 		/** Destroy this queue_set. */
 		~queue_set() {}
@@ -109,7 +92,7 @@ namespace jsearch
 		 * @param[in] NODE constant reference to a Node.
 		 *
 		 */
-		void push(Node const &NODE); // Customization point, defined out-of-class.
+		void push(value_type const &NODE); // Customization point, defined out-of-class.
 		
 		/**
 		 * See the documentation of Boost.heap for these priority queue functions.
@@ -120,75 +103,72 @@ namespace jsearch
 		size_type size() const { return priority_queue.size(); }
 
 
-		// Mutable interface, all customization points, so defined out-of-class.
-		void update(handle_t const &HANDLE, value_type const &NODE) { priority_queue.update(HANDLE, NODE); }
-		void increase(handle_t const &HANDLE, value_type const &NODE) { priority_queue.increase(HANDLE, NODE); }
-		void decrease(handle_t const &HANDLE, value_type const &NODE) { priority_queue.decrease(HANDLE, NODE); }
+		/** Mutable interface.
+		 */
+		void update(handle_type const &HANDLE, value_type const &NODE) { priority_queue.update(HANDLE, NODE); }
+		void increase(handle_type const &HANDLE, value_type const &NODE) { priority_queue.increase(HANDLE, NODE); }
+		void decrease(handle_type const &HANDLE, value_type const &NODE) { priority_queue.decrease(HANDLE, NODE); }
 
 
-		/*******************
-		 *	Map interface
-		 *******************/
-		/*
-		s_iter_t begin() { return ss.begin(); }
-		s_const_iter_t begin() const { return ss.cbegin(); }
-		s_const_iter_t cbegin() const { return ss.cbegin(); }
-		s_iter_t end() { return ss.end(); }
-		s_const_iter_t end() const { return ss.end(); }
-		s_const_iter_t cend() const { return ss.cend(); }
-		*/
-		s_iter_t find(key_type const &KEY);
-		s_const_iter_t find(key_type const &KEY) const;
+		/*****************************
+		 *	Map (iterable) interface
+		 *****************************/
+		iterator begin() { return map.begin(); }
+		const_iterator begin() const { return map.cbegin(); }
+		const_iterator cbegin() const { return map.cbegin(); }
+		iterator end() { return map.end(); }
+		const_iterator end() const { return map.end(); }
+		const_iterator cend() const { return map.cend(); }
+		iterator find(key_type const &KEY) { return map.find(KEY); }
+		const_iterator find(key_type const &KEY) const { return map.find(KEY); }
 
 	private:
-		// set of indexes into nodes, locatable by s
-		Map ss;
-
-		PQ priority_queue;
+		StateHandleMap map; // State ↦ handle_type.
+		PriorityQueue priority_queue;
 	};
 
 // ---------------------------------------------------------------------
 
-	template <template <typename T> class PriorityQueue, typename Node>
-	inline void queue_set<PriorityQueue, Node>::push(Node const &NODE)
+	template <class PriorityQueue, template <typename Key, typename Value> class Map>
+	inline void queue_set<PriorityQueue, Map>::push(const value_type& NODE)
 	{
 		// Client assumes that NODE is not on the queue and wants to push it on.
 		// It is thus a precondition that NODE is not on the queue and we throw an exception if it is.
 
 		auto const &STATE(NODE->state());
 
-		if(ss.find(STATE) == std::end(ss))
+		if(map.find(STATE) == std::end(map))
 		{
 			auto const HANDLE(priority_queue.push(NODE));
-			typename Map::value_type const P(&STATE, HANDLE); // Is this legitimate use of the Map typedef in a function template?
-			auto const INSERT_RESULT(ss.insert(P));
+			auto const P(std::make_pair(STATE, HANDLE));
+			auto const INSERT_RESULT(map.insert(P));
 			if(!INSERT_RESULT.second)
 			{
 				std::ostringstream tmp;
 				tmp << "Priority queue failed to insert a state with this value: " << STATE;
-				throw std::logic_error(tmp.str());
+				throw std::runtime_error(tmp.str());  // Mysterious internal error.
 			}
 		}
 		else
 		{
 			std::ostringstream tmp;
 			tmp << "Priority queue alreadys contains a state with this value: " << STATE;
-			throw std::logic_error(tmp.str());
+			throw std::logic_error(tmp.str()); // Client error.
 		}
 	}
 
 
-	template <template <typename T> class PriorityQueue, typename Node>
-	inline void queue_set<PriorityQueue, Node>::pop()
+	template <class PriorityQueue, template <typename Key, typename Value> class Map>
+	inline void queue_set<PriorityQueue, Map>::pop()
 	{
 		auto const &NODE(priority_queue.top());
 		auto const &STATE(NODE->state());
-		auto const REMOVED(ss.erase(&STATE));
+		auto const REMOVED(map.erase(STATE));
 		std::ostringstream tmp;
 		switch(REMOVED)
 		{
 			case 0:
-				tmp << "Failed to remove " << STATE << " from PQ::element lookup table.";
+				tmp << STATE << " was not in the lookup table.";
 				throw std::logic_error(tmp.str());
 				break;
 
@@ -197,19 +177,11 @@ namespace jsearch
 				break;
 				
 			default: // REMOVED > 1
-				tmp << "Removed multiple " << STATE << "entries from PQ::element lookup table.";
+				tmp << "Removed multiple " << STATE << "entries from lookup table.";
 				throw std::logic_error(tmp.str());
 				break;
 		}
 	}
 } // end namespace jsearch
 
-#undef DEBUG
-
 #endif // JSEARCH_QUEUE_SET_HPP
-
-// Local Variables:
-// mode: c++
-// tab-width: 4
-// indent-tabs-mode: t
-// End:

@@ -61,9 +61,11 @@ using ClosedList = std::unordered_set<T>;
 template <typename T>
 using QueueSet = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>>;
 
+template <typename Key, typename Value>
+using Map = std::unordered_map<Key, Value>;
+
 int main(int argc, char **argv)
 {
-	queue_set<QueueSet, Node> foo;
 	size_t n(0);
 	mt19937::result_type seed(chrono::high_resolution_clock::to_time_t(chrono::high_resolution_clock::now()));
 	string const ARGV0(argv[0]);
@@ -112,7 +114,7 @@ int main(int argc, char **argv)
 	try
 	{
 		auto const T0(chrono::high_resolution_clock::now());
-		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, Dijkstra, ClosedList>(PROBLEM));
+		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, Dijkstra, ClosedList, Map>(PROBLEM));
 		auto const ELAPSED(chrono::high_resolution_clock::now() - T0);
 		cout.imbue(locale(""));
 		cout << "Done: " << std::chrono::duration_cast<std::chrono::microseconds>(ELAPSED).count() << " µs\n";

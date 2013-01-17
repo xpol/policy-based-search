@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <boost/heap/pairing_heap.hpp>
 #include <boost/heap/binomial_heap.hpp>
+#include <boost/heap/d_ary_heap.hpp>
 #include <unordered_set>
 
 using namespace jsearch;
@@ -45,6 +46,9 @@ using PriorityQueue = boost::heap::binomial_heap<T, boost::heap::compare<Compara
 template <typename T>
 using ClosedList = std::unordered_set<T>;
 
+template <typename Key, typename Value>
+using Map = std::unordered_map<Key, Value>;
+
 int main(int, char **)
 {
 	State const INITIAL("Arad");
@@ -52,7 +56,7 @@ int main(int, char **)
 
 	try
 	{
-		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, AStarRomania, ClosedList>(BUCHAREST));
+		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, AStarRomania, ClosedList, Map>(BUCHAREST));
 		
 		print(SOLUTION, cout);
 		cout << ": " << SOLUTION->path_cost() << "\n";
