@@ -26,7 +26,9 @@ using boost::undirectedS;
 using boost::no_property;
 using boost::edge_weight_t;
 
-typedef boost::adjacency_matrix<undirectedS, no_property, property<edge_weight_t, size_t>> Graph;
+typedef double cost_t;
+
+typedef boost::adjacency_matrix<undirectedS, no_property, property<edge_weight_t, cost_t>> Graph;
 typedef boost::property_map<Graph, edge_weight_t>::type WeightMap;
 typedef typename boost::graph_traits<Graph>::edge_descriptor edge_desc;
 typedef typename boost::graph_traits<Graph>::vertex_descriptor vertex_desc;
@@ -35,7 +37,7 @@ struct Random
 {
 	typedef vertex_desc state;
 	typedef edge_desc action;
-	typedef double pathcost;
+	typedef cost_t pathcost;
 	typedef std::shared_ptr<jsearch::DefaultNode<Random>> node;
 	// typedef size_t heuristic; // Often but not necessarily the same as pathcost.
 	static bool const combinatorial = false;
