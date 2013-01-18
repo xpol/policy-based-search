@@ -20,20 +20,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* INTERFACE
- * 
- * This structure is extremely similar to a Boost.Heap.  The interfaces
- * have been largely duplicated intact, with the major difference being
- * the replacement of iterable by the one from the supporting Map.
- *
- * Currently, detection of duplicates and acting appropriately are left
- * up to the client.  I could not see a strong argument to support push
- * and erase methods that are more intelligent/fail silently.
- */ 
+
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
 #include <utility>
+#include <cassert>
 
 
 namespace jsearch
@@ -53,14 +45,23 @@ namespace jsearch
 	 * And it must provide access to those values via:
 	 *
 	 *   const Node::State    & state()     const;
+	 *
+	 *  INTERFACE
+	 *
+	 * This structure is extremely similar to a Boost.Heap.  The interfaces
+	 * have been largely duplicated intact, with the major difference being
+	 * the replacement of iterable by the one from the supporting Map.
+	 *
+	 * Currently, detection of duplicates and acting appropriately are left
+	 * up to the client.  I could not see a strong argument to support push
+	 * and pop methods that try to predict what the client really meant.
 	 */
 
 	template <class PriorityQueue, template <typename Key, typename Value> class Map>
 	class queue_set
 	{
 	public:
-		// This data structure should appear as identical to a Boost priority queue as possible.
-		// The only real difference in interface should be that we have a custom member find().
+		// Main interface types.
 		typedef typename PriorityQueue::size_type size_type;
 		typedef typename PriorityQueue::value_type value_type;
 		typedef typename PriorityQueue::difference_type difference_type;
@@ -93,21 +94,24 @@ namespace jsearch
 		 * If a node with the same state is already on the queue, an exception is thrown.
 		 *
 		 * @param[in] NODE constant reference to a Node.
-		 *
 		 */
 		void push(value_type const &NODE); // Customization point, defined out-of-class.
-		
+
 		/**
-		 * See the documentation of Boost.Heap for these functions.
+		 * Erase the lowest-cost element from the priority queue.
+		 * Worst-case time complexity: O(lg n).
+		 *
+		 * If the node from the queue does not appear in the lookup map exactly once, an
+		 * exception is thrown and the
 		 */
+		void pop();
+		
+		/** See the documentation of Boost.Heap for these functions. */
 		const_reference top() const { return priority_queue.top(); }
-		void pop(); // Customization point, defined out-of-class.
 		bool empty() const { return priority_queue.empty(); }
 		size_type size() const { return priority_queue.size(); }
 
-
-		/** Mutable interface.
-		 */
+		/** Mutable interface. */
 		void update(handle_type const &HANDLE, value_type const &NODE) { priority_queue.update(HANDLE, NODE); }
 		void increase(handle_type const &HANDLE, value_type const &NODE) { priority_queue.increase(HANDLE, NODE); }
 		void decrease(handle_type const &HANDLE, value_type const &NODE) { priority_queue.decrease(HANDLE, NODE); }
@@ -133,11 +137,10 @@ namespace jsearch
 // ---------------------------------------------------------------------
 
 	template <class PriorityQueue, template <typename Key, typename Value> class Map>
-	inline void queue_set<PriorityQueue, Map>::push(const value_type& NODE)
+	inline void queue_set<PriorityQueue, Map>::push(value_type const &NODE)
 	{
 		// Client assumes that NODE is not on the queue and wants to push it on.
 		// It is thus a precondition that NODE is not on the queue and we throw an exception if it is.
-
 		auto const &STATE(NODE->state());
 
 		if(map.find(STATE) == std::end(map))
@@ -164,25 +167,22 @@ namespace jsearch
 	template <class PriorityQueue, template <typename Key, typename Value> class Map>
 	inline void queue_set<PriorityQueue, Map>::pop()
 	{
-		auto const &NODE(priority_queue.top());
+		auto const &NODE(priority_queue.top()); // Get the node (but don't remove it).
 		auto const &STATE(NODE->state());
-		auto const REMOVED(map.erase(STATE));
-		std::ostringstream tmp;
-		switch(REMOVED)
-		{
-			case 0:
-				tmp << STATE << " was not in the lookup table.";
-				throw std::logic_error(tmp.str());
-				break;
+		assert(map.count(STATE) == 1);
+		auto const ELEMENT(map.find(STATE));
 
-			case 1:
-				priority_queue.pop();
-				break;
-				
-			default: // REMOVED > 1
-				tmp << "Removed multiple " << STATE << "entries from lookup table.";
-				throw std::logic_error(tmp.str());
-				break;
+		// Check for the most likely condition first.
+		if(ELEMENT != std::end(map))
+		{
+			map.erase(ELEMENT); // The result does not appear to be useful?
+			priority_queue.pop();
+		}
+		else
+		{
+			std::ostringstream tmp;
+			tmp << STATE << " was not in the lookup table.";
+			throw std::runtime_error(tmp.str()); // Mysterious -- not theoretically possible.
 		}
 	}
 } // end namespace jsearch
