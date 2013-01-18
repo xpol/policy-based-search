@@ -49,7 +49,6 @@ namespace jsearch
 	 * type (the actual "Node") must contain the following inner types:
 	 *
 	 *   Node::State
-	 *   Node::PathCost
 	 *
 	 * And it must provide access to those values via:
 	 *
