@@ -129,6 +129,13 @@ namespace jsearch
 		iterator find(key_type const &KEY) { return map.find(KEY); }
 		const_iterator find(key_type const &KEY) const { return map.find(KEY); }
 
+		/**
+		 * Functions from both that can be combined.
+		 */
+		void clear() { map.clear(); priority_queue.clear(); }
+		size_t max_size() const { return std::min(map.max_size(), priority_queue.max_size()); }
+		void reserve(size_type count) { map.reserve(count); priority_queue.reserve(count); }
+		
 	private:
 		StateHandleMap map; // State ↦ handle_type.
 		PriorityQueue priority_queue;
