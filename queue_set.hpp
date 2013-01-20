@@ -4,7 +4,8 @@
 /*
     queue_set.hpp: Generic priority queue supported by hashed value lookup.
     Copyright (C) 2013  Jeremy W. Murphy <jeremy.william.murphy@gmail.com>
-    Special thanks to Anthony Foiani for laying the groundwork from which it sprang.
+    Special thanks to Anthony Foiani <anthony.foiani@gmail.com> for laying
+    the groundwork from which it sprang.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -91,7 +92,9 @@ namespace jsearch
 		/**
 		 * Push @a node on to the priority queue.
 		 *
-		 * If a node with the same state is already on the queue, an exception is thrown.
+		 * If a node with the same state is already on the queue, a logic_error exception is thrown.
+		 * 
+		 * Will throw a runtime_error exception if the map is out of sync.
 		 *
 		 * @param[in] NODE constant reference to a Node.
 		 */
@@ -101,10 +104,9 @@ namespace jsearch
 		 * Erase the lowest-cost element from the priority queue.
 		 * Worst-case time complexity: O(lg n).
 		 *
-		 * If the node from the queue does not appear in the lookup map exactly once, an
-		 * exception is thrown and the
+		 * Will throw a runtime_error exception if the map is out of sync.
 		 */
-		void pop();
+		void pop(); // Customization point, defined out-of-class.
 		
 		/** See the documentation of Boost.Heap for these functions. */
 		const_reference top() const { return priority_queue.top(); }
@@ -117,18 +119,25 @@ namespace jsearch
 		void decrease(handle_type const &HANDLE, value_type const &NODE) { priority_queue.decrease(HANDLE, NODE); }
 
 
-		/*****************************
-		 *	Map (iterable) interface
-		 *****************************/
-		iterator begin() { return map.begin(); }
+		/**
+		 *	Map iterable interface
+		 */
+		// TODO: Or should this be from the priority queue?
+		// NOTE: Only const functions are provided.
 		const_iterator begin() const { return map.cbegin(); }
 		const_iterator cbegin() const { return map.cbegin(); }
-		iterator end() { return map.end(); }
 		const_iterator end() const { return map.end(); }
 		const_iterator cend() const { return map.cend(); }
-		iterator find(key_type const &KEY) { return map.find(KEY); }
-		const_iterator find(key_type const &KEY) const { return map.find(KEY); }
 
+		/**
+		 * Map lookup interface.
+		 */
+		// NOTE: Only const functions are provided.
+		mapped_type const &at(key_type const &KEY) const { return map.at(KEY); }
+		size_type count(key_type const &KEY) const { return map.count(KEY); }
+		const_iterator find(key_type const &KEY) const { return map.find(KEY); }
+		std::pair<const_iterator, const_iterator> equal_range(key_type const &KEY) const { return map.equal_range(KEY); }
+		
 		/**
 		 * Functions from both that can be combined.
 		 */
