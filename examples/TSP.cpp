@@ -16,9 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "TSP.h"
-#include "problem.h"
-#include "search.h"
+#include "TSP.hpp"
+#include "problem.hpp"
+#include "search.hpp"
 
 #include <iostream>
 #include <algorithm>

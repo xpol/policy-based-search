@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Romania.h"
-#include "search.h"
+#include "Romania.hpp"
+#include "search.hpp"
 
 #include <iostream>
 #include <algorithm>

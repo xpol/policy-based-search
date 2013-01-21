@@ -16,9 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "random.h"
-#include "problem.h"
-#include "search.h"
+#include "random.hpp"
+#include "problem.hpp"
+#include "search.hpp"
 
 #include <random>
 #include <sstream>
