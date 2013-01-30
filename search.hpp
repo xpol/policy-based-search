@@ -71,10 +71,6 @@ namespace jsearch
 	}
 
 
-	/*
-	template <template <typename T, typename... Options> class PriorityQueue, typename T, typename... Options>
-	inline void decrease_key(jsearch::queue_set<PriorityQueue<T, Options...>> &pq, typename jsearch::queue_set<PriorityQueue<T, Options...>>::handle_type const &H, typename jsearch::queue_set<PriorityQueue<T, Options...>>::const_reference const &E)
-	*/
 	template <typename PriorityQueue>
 	inline void decrease_key(PriorityQueue &pq, typename PriorityQueue::handle_type const &H, typename PriorityQueue::const_reference const &E)
 	{
