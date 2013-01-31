@@ -3,7 +3,7 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 
-include_directories("..", "utils")
+include_directories("..")
 add_executable(Romania Romania.cpp)
 add_executable(TSP TSP.cpp)
 add_executable(random random.cpp)

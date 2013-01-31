@@ -183,7 +183,7 @@ namespace jsearch
 			template <typename PathCost, typename State> class HeuristicPolicy,
 			template <typename State, typename PathCost> class PathCostPolicy>
 			class TiePolicy = LowH,
-		size_t Weight = 10, size_t Divisor = 10> // Templates do not accept floats, so we pass a ratio.
+		std::size_t Weight = 10, std::size_t Divisor = 10> // Templates do not accept floats, so we pass a ratio.
 	class WeightedAStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
 							protected virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
 							protected virtual PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
@@ -221,14 +221,14 @@ namespace jsearch
 	template <typename Traits,
 		template <typename PathCost, typename State> class HeuristicPolicy,
 		template <typename State, typename PathCost> class PathCostPolicy,
-		size_t Weight>
+		std::size_t Weight>
 	using WAStarLowH = WeightedAStar<Traits, HeuristicPolicy, PathCostPolicy, LowH, Weight>;
 	
 	
 	// Err... can't think of a better name.
 	template <typename Traits,
 		template <typename PathCost, typename State> class HeuristicPolicy,
-		size_t Weight>
+		std::size_t Weight>
 	using DefaultWAStar = WAStarLowH<Traits, HeuristicPolicy, DefaultPathCost, Weight>;
 	
 }

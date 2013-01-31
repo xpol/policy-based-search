@@ -21,6 +21,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+ * NOTE: This header was not designed to be included manually.  It will be
+ * included automatically by the main search header.
+ */
 
 #include <sstream>
 #include <stdexcept>

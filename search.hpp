@@ -53,7 +53,6 @@ namespace jsearch
 	
 	/**
 	 * @brief goal_not_found is thrown... when... < drum roll > THE GOAL IS NOT FOUND!
-	 *
 	 */
 	class goal_not_found : public std::exception
 	{
@@ -62,6 +61,9 @@ namespace jsearch
 	};
 
 
+	/**
+	 * @brief Encapsulate the top()+pop() calls into a single pop().
+	 */
 	template <typename PriorityQueue>
 	inline typename PriorityQueue::value_type pop(PriorityQueue &pq)
 	{
@@ -71,16 +73,8 @@ namespace jsearch
 	}
 
 
-	template <typename PriorityQueue>
-	inline void decrease_key(PriorityQueue &pq, typename PriorityQueue::handle_type const &H, typename PriorityQueue::const_reference const &E)
-	{
-		// auto const H(PriorityQueue<T, Options...>::s_handle_from_iterator(IT));
-		pq.increase(H, E);
-	}
-
-
 	/**
-	 * handle_child: handle the fate of a child being added to the open list.
+	 * @brief Handle the fate of a child being added to the open list.
 	 *
 	 * @return: An OpenList element that equals
 	 * 				i) nullptr if CHILD was not added to open
@@ -96,7 +90,7 @@ namespace jsearch
 
 		if(IT != std::end(open))
 		{
-			auto const &DUPLICATE(((*IT).second)); // The duplicate on the open list.
+			auto const &DUPLICATE((IT->second)); // The duplicate on the open list.
 			if(CHILD->path_cost() < (*DUPLICATE)->path_cost())
 			{
 #ifndef NDEBUG
@@ -105,16 +99,18 @@ namespace jsearch
 #ifdef STATISTICS
 				++stats.decreased;
 #endif
-				result = (*DUPLICATE);
-				decrease_key(open, DUPLICATE, CHILD);
+				result = (*DUPLICATE); // Store a copy of the node that we are about to replace.
+				open.increase(DUPLICATE, CHILD); // The DECREASE-KEY operation is an increase because it is a max-heap.
 			}
-#ifndef NDEBUG
 			else
+			{
+#ifndef NDEBUG
 				std::cout << jwm::to_string(CHILD->state()) << ": keep " << (*DUPLICATE)->path_cost() << " and throw away " << CHILD->path_cost() << ".\n";
 #endif
 #ifdef STATISTICS
 				++stats.discarded;
 #endif
+			}
 		}
 		else
 		{
