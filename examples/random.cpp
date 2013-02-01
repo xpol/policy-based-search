@@ -18,7 +18,7 @@
 
 #include "random.hpp"
 #include "problem.hpp"
-#include "search.hpp"
+#include "bestfirstsearch.hpp"
 
 #include <random>
 #include <sstream>

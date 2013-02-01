@@ -17,7 +17,7 @@
 */
 
 #include "Romania.hpp"
-#include "search.hpp"
+#include "bestfirstsearch.hpp"
 
 #include <iostream>
 #include <algorithm>

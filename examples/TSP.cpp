@@ -18,7 +18,7 @@
 
 #include "TSP.hpp"
 #include "problem.hpp"
-#include "search.hpp"
+#include "bestfirstsearch.hpp"
 
 #include <iostream>
 #include <algorithm>
