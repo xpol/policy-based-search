@@ -21,8 +21,6 @@
 
 #include <iostream>
 #include <algorithm>
-#include <boost/heap/pairing_heap.hpp>
-#include <boost/heap/binomial_heap.hpp>
 #include <boost/heap/d_ary_heap.hpp>
 #include <unordered_set>
 
@@ -41,7 +39,7 @@ template <typename Traits>
 using AStarRomania = DefaultAStar<Traits, EuclideanDistance>;
 
 template <typename T, typename Comparator>
-using PriorityQueue = boost::heap::binomial_heap<T, boost::heap::compare<Comparator>>;
+using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>, boost::heap::compare<Comparator>>;
 
 template <typename T>
 using ClosedList = std::unordered_set<T>;
