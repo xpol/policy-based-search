@@ -82,7 +82,7 @@ namespace jsearch
 	 * 				iii) another element if CHILD replaced it on open.
 	 * */
 	template <class OpenList>
-	inline typename OpenList::value_type handle_child(OpenList &open, typename OpenList::const_reference CHILD)
+	inline typename OpenList::value_type handle_child(OpenList &open, typename OpenList::const_reference const &CHILD)
 	{
 		typename OpenList::value_type result(nullptr); // Initialize to nullptr since it might be a bald pointer.
 
