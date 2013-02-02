@@ -35,6 +35,7 @@
 #include <boost/heap/priority_queue.hpp>
 #include <boost/heap/fibonacci_heap.hpp>
 */
+#include <boost/heap/d_ary_heap.hpp>
 
 #ifndef NDEBUG
 #include <boost/graph/graphviz.hpp>
@@ -59,16 +60,18 @@ public:
 };
 
 
+// Create template aliases that specify node evaluation.
 template <typename Traits>
-using AStarTSP = jsearch::DefaultAStar<Traits, MinimalImaginableTour>;
+using CostFunction = AStar<Traits, MinimalImaginableTour>;
 
-// Remember that weights are specified as 10 times larger.
 template <typename Traits>
-using WAStarTSP = jsearch::DefaultWAStar<Traits, MinimalImaginableTour, 100>;
+using TieBreaking = LowH<Traits, MinimalImaginableTour>;
 
-template <typename T, typename Comparator>
-// using PriorityQueue = boost::heap::priority_queue<T, boost::heap::compare<AStarTSP<TSP>>>;
-using PriorityQueue = std::priority_queue<T, std::vector<T>, Comparator>;
+template <typename T, typename Comp>
+using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>, boost::heap::compare<Comp>>;
+
+template <typename Traits>
+using Comparator = TiebreakingComparator<Traits, CostFunction, TieBreaking>;
 
 
 int main(int argc, char **argv)
@@ -102,7 +105,7 @@ int main(int argc, char **argv)
 			break;
 	}
 
-	cout << "PriorityQueue: " << typeid(PriorityQueue<char, AStarTSP<TSP>>).name() << "\n";
+	cout << "PriorityQueue: " << typeid(PriorityQueue<char, CostFunction<TSP>>).name() << "\n";
 	problem.reset(new Graph(procedural(n, seed)));
 	N = problem->m_num_edges;
 	EDGES.reserve(N);
@@ -121,7 +124,7 @@ int main(int argc, char **argv)
 	try
 	{
 		// Change this to WAStarTSP to use weighted A* (and adjust the weight above if desired).
-		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, AStarTSP>(MINIMAL));
+		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, Comparator>(MINIMAL));
 
 		cout << "solution: { ";
 		for_each(begin(SOLUTION->state()), end(SOLUTION->state()), [&](typename TSP::state::const_reference I)

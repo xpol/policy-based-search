@@ -96,6 +96,7 @@ struct TSP
 {
 	typedef typename std::vector<edge_desc>::const_iterator action;
 	typedef std::vector<action> state; // Why vector again?  Remind me?  Why not set?  Do I really need back()?
+	typedef unsigned int cost;
 	typedef unsigned int pathcost;
 	typedef std::shared_ptr<jsearch::ComboNode<TSP>> node;
 	static constexpr bool const combinatorial = true; // TODO: Hmmm... is this actually usable at compile time?

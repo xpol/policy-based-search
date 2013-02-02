@@ -50,15 +50,19 @@ Graph procedural(size_t const &N, size_t const &B, mt19937::result_type const &S
 string backtrace(Node const &NODE);
 Graph square();
 
-template <typename T, typename Comparator>
-using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>, boost::heap::compare<Comparator>>;
+
+// Create template aliases that specify node evaluation.
+template <typename Traits>
+using CostFunction = Dijkstra<Traits>;
+
+template <typename T, typename Comp>
+using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>, boost::heap::compare<Comp>>;
 
 template <typename T>
 using ClosedList = std::unordered_set<T>;
 
-
-template <typename T>
-using QueueSet = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>>;
+template <typename Traits>
+using Comparator = SimpleComparator<Traits, CostFunction>;
 
 template <typename Key, typename Value>
 using Map = std::unordered_map<Key, Value>;
@@ -113,7 +117,7 @@ int main(int argc, char **argv)
 	try
 	{
 		auto const T0(chrono::high_resolution_clock::now());
-		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, Dijkstra, ClosedList, Map>(PROBLEM));
+		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, Comparator, ClosedList, Map>(PROBLEM));
 		auto const ELAPSED(chrono::high_resolution_clock::now() - T0);
 		cout.imbue(locale(""));
 		cout << "Done: " << std::chrono::duration_cast<std::chrono::microseconds>(ELAPSED).count() << " µs\n";

@@ -37,9 +37,10 @@ class Romania
 public:
 	typedef std::string state;
 	typedef std::string action;
-	typedef unsigned int pathcost;
+	typedef unsigned int cost;
+	typedef cost pathcost;
 	typedef std::shared_ptr<jsearch::DefaultNode<Romania>> node;
-	typedef unsigned int heuristic; // Often but not necessarily the same as pathcost.
+	typedef cost heuristic; // Often but not necessarily the same as pathcost.
 	static bool const combinatorial = false;
 };
 

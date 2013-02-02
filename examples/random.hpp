@@ -37,6 +37,7 @@ struct Random
 {
 	typedef vertex_desc state;
 	typedef edge_desc action;
+	typedef cost_t cost;
 	typedef cost_t pathcost;
 	typedef std::shared_ptr<jsearch::DefaultNode<Random>> node;
 	// typedef size_t heuristic; // Often but not necessarily the same as pathcost.

@@ -30,22 +30,31 @@ using namespace std;
 typedef Romania::state State;
 typedef Romania::node Node;
 
-
 template <class charT, class traits>
 basic_ostream<charT, traits>& print(Node const &NODE, basic_ostream<charT, traits>& os);
 
 
+// Create template aliases that specify node evaluation.
 template <typename Traits>
-using AStarRomania = DefaultAStar<Traits, EuclideanDistance>;
+using CostFunction = AStar<Traits, EuclideanDistance>;
 
-template <typename T, typename Comparator>
-using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>, boost::heap::compare<Comparator>>;
+template <typename Traits>
+using TieBreaking = LowH<Traits, EuclideanDistance>;
 
-template <typename T>
-using ClosedList = std::unordered_set<T>;
+// Specify the heap used for the frontier, its comparator and the map used for fast look-up.
+template <typename T, typename Comp>
+using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>, boost::heap::compare<Comp>>;
+
+template <typename Traits>
+using Comparator = TiebreakingComparator<Traits, CostFunction, TieBreaking>;
 
 template <typename Key, typename Value>
 using Map = std::unordered_map<Key, Value>;
+
+// Specify the kind of set used for the closed set.
+template <typename T>
+using ClosedList = std::unordered_set<T>;
+
 
 int main(int, char **)
 {
@@ -54,7 +63,7 @@ int main(int, char **)
 
 	try
 	{
-		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, AStarRomania, ClosedList, Map>(BUCHAREST));
+		auto const SOLUTION(jsearch::best_first_search<PriorityQueue, Comparator, ClosedList, Map>(BUCHAREST));
 		
 		print(SOLUTION, cout);
 		cout << ": " << SOLUTION->path_cost() << "\n";
