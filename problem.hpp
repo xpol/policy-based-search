@@ -38,12 +38,12 @@ namespace jsearch
 	template <typename Traits>
 	class DefaultNodeCreator
 	{
+	protected:
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 		
-	protected:
 		DefaultNodeCreator() {}
 		~DefaultNodeCreator() {}
 
@@ -57,12 +57,12 @@ namespace jsearch
 	template <typename Traits>
 	class ComboNodeCreator
 	{
+	protected:
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 		
-	protected:
 		ComboNodeCreator() {}
 		~ComboNodeCreator() {}
 
@@ -115,11 +115,11 @@ namespace jsearch
 	template <typename Traits>
 	class ComboNode
 	{
+	public:
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
-		
-	public:
+
 		ComboNode(State const &STATE, Action const &ACTION, PathCost const &PATH_COST) : state_(STATE), action_(ACTION), path_cost_(PATH_COST) {}
 		
 		ComboNode(ComboNode<Traits> const &OTHER) = delete;
@@ -148,24 +148,23 @@ namespace jsearch
 	
 
 	template <typename Traits,
-		template <typename PathCost, typename State, typename Action> class StepCostPolicy,
-		template <typename State, typename Action> class ResultPolicy,
+		template <typename Traits_> class StepCostPolicy,
+		template <typename Traits_> class ResultPolicy,
 		template <typename Traits_> class CreatePolicy = DefaultNodeCreator>
-	class DefaultChildPolicy :
-		protected virtual StepCostPolicy<typename Traits::pathcost, typename Traits::state, typename Traits::action>,
-		protected virtual ResultPolicy<typename Traits::state, typename Traits::action>,
-		protected virtual CreatePolicy<Traits>
+	class DefaultChildPolicy :	protected virtual StepCostPolicy<Traits>,
+								protected virtual ResultPolicy<Traits>,
+								protected virtual CreatePolicy<Traits>
 	{
+		using StepCostPolicy<Traits>::step_cost;
+		using ResultPolicy<Traits>::result;
+		using CreatePolicy<Traits>::create;
+
+	protected:
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
-
-		using StepCostPolicy<PathCost, State, Action>::step_cost;
-		using ResultPolicy<State, Action>::result;
-		using CreatePolicy<Traits>::create;
 		
-	protected:
 		DefaultChildPolicy() {}
 		~DefaultChildPolicy() {}
 
@@ -182,29 +181,30 @@ namespace jsearch
 
 
 	template <typename Traits,
-			 template <typename PathCost, typename State, typename Action> class StepCostPolicy,
-			 template <typename State, typename Action> class ActionsPolicy,
-			 template <typename State, typename Action> class ResultPolicy,
-			 template <typename State> class GoalTestPolicy,
+			 template <typename Traits_> class StepCostPolicy,
+			 template <typename Traits_> class ActionsPolicy,
+			 template <typename Traits_> class ResultPolicy,
+			 template <typename Traits_> class GoalTestPolicy,
 			 template <typename Traits_> class CreatePolicy = DefaultNodeCreator,
 			 template <typename Traits_,
-				template <typename PathCost, typename State, typename Action> class StepCostPolicy_,
-				template <typename State, typename Action> class ResultPolicy_,
+				template <typename Traits__> class StepCostPolicy_,
+				template <typename Traits__> class ResultPolicy_,
 				template <typename Traits__> class CreatePolicy>
 				class ChildPolicy = DefaultChildPolicy>
 	class Problem :
-		protected virtual StepCostPolicy<typename Traits::pathcost, typename Traits::state, typename Traits::action>,
-		protected virtual ActionsPolicy<typename Traits::state, typename Traits::action>,
-		protected virtual ResultPolicy<typename Traits::state, typename Traits::action>,
-		protected virtual GoalTestPolicy<typename Traits::state>,
+		protected virtual StepCostPolicy<Traits>,
+		protected virtual ActionsPolicy<Traits>,
+		protected virtual ResultPolicy<Traits>,
+		protected virtual GoalTestPolicy<Traits>,
 		protected virtual ChildPolicy<Traits, StepCostPolicy, ResultPolicy, CreatePolicy>,
 		protected virtual CreatePolicy<Traits>
 	{
+	public:
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
-	public:
+
 		Problem(State const &INITIAL) : INITIAL(INITIAL) {}
 
 		State initial() const
@@ -213,12 +213,12 @@ namespace jsearch
 		}
 
 		using ChildPolicy<Traits, StepCostPolicy, ResultPolicy, CreatePolicy>::child;
-		using StepCostPolicy<PathCost, State, Action>::step_cost;
-		using ActionsPolicy<State, Action>::actions;
-		using ResultPolicy<State, Action>::result;
-		using GoalTestPolicy<State>::goal_test;
+		using StepCostPolicy<Traits>::step_cost;
+		using ActionsPolicy<Traits>::actions;
+		using ResultPolicy<Traits>::result;
+		using GoalTestPolicy<Traits>::goal_test;
 		using CreatePolicy<Traits>::create;
-		
+
 	private:
 		State const INITIAL;
 	};

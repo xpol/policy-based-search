@@ -50,9 +50,14 @@ size_t 	b = 0, // Branching factor.
 		e = 0; // Expanded nodes.
 
 
-template <typename PathCost, typename State, typename Action>
+template <typename Traits>
 class Distance
 {
+public:
+	typedef typename Traits::state State;
+	typedef typename Traits::action Action;
+	typedef typename Traits::pathcost PathCost;
+	
 protected:
 	PathCost step_cost(State const &, Action const &ACTION) const
 	{
@@ -62,9 +67,13 @@ protected:
 
 
 // ActionsPolicy returns neighbouring cities to STATE.
-template <typename State, typename Action>
+template <typename Traits>
 class Neighbours
 {
+public:
+	typedef typename Traits::state State;
+	typedef typename Traits::action Action;
+	
 protected:
 	std::vector<Action> actions(State const &STATE) const
 	{
@@ -74,9 +83,13 @@ protected:
 };
 
 
-template <typename State, typename Action>
+template <typename Traits>
 class Visit
 {
+public:
+	typedef typename Traits::state State;
+	typedef typename Traits::action Action;
+	
 protected:
 	State result(State const &STATE, Action const &ACTION) const
 	{
@@ -87,9 +100,12 @@ protected:
 };
 
 
-template <typename State>
+template <typename Traits>
 class GoalTest
 {
+public:
+	typedef typename Traits::state State;
+	
 protected:
 	bool goal_test(State const &) const
 	{

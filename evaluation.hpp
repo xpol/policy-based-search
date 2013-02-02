@@ -32,13 +32,16 @@
 
 namespace jsearch
 {
-	template <typename PathCost, class State>
+	template <typename Traits>
 	class ZeroHeuristic
 	{
 	protected:
+		typedef typename Traits::state State;
+		typedef typename Traits::pathcost PathCost;
+
 		ZeroHeuristic() {}
 		~ZeroHeuristic() {}
-		
+
 		PathCost h(State const &) const
 		{
 			return 0;
@@ -46,10 +49,13 @@ namespace jsearch
 	};
 
 
-	template <typename Node, typename PathCost>
+	template <typename Traits>
 	class DefaultPathCost
 	{
 	protected:
+		typedef typename Traits::node Node;
+		typedef typename Traits::pathcost PathCost;
+
 		DefaultPathCost() {}
 		~DefaultPathCost() {}
 
@@ -62,17 +68,17 @@ namespace jsearch
 
 	// Low-h tie policy, non-total.
 	template <typename Traits,
-			template <typename PathCost, typename State> class HeuristicPolicy,
-			template <typename State, typename PathCost> class PathCostPolicy>
-	class LowH : protected virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>
+			template <typename Traits_> class HeuristicPolicy,
+			template <typename Traits_> class PathCostPolicy>
+	class LowH : protected virtual HeuristicPolicy<Traits>
 	{
+		using HeuristicPolicy<Traits>::h;
+		
+	protected:
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
 		typedef typename Traits::state State;
-		
-		using HeuristicPolicy<PathCost, State>::h;
-		
-	protected:
+
 		LowH() {}
 		~LowH() {}
 		
@@ -86,18 +92,16 @@ namespace jsearch
 
 
 	// Low-h tie policy, total ordering.
-	template <typename Traits,
-			template <typename PathCost, typename State> class HeuristicPolicy,
-			template <typename State, typename PathCost> class PathCostPolicy>
-	class LowHTotal : protected virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>
+	template <typename Traits, template <typename Traits_> class HeuristicPolicy>
+	class LowHTotal : protected virtual HeuristicPolicy<Traits>
 	{
+		using HeuristicPolicy<Traits>::h;
+		
+	protected:
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
 		typedef typename Traits::state State;
 
-		using HeuristicPolicy<PathCost, State>::h;
-		
-	protected:
 		LowHTotal() {}
 		~LowHTotal() {}
 		
@@ -110,29 +114,28 @@ namespace jsearch
 		}
 	};
 
-	
+
 	// Comparator classes, passed to the priority_queue.  NOT a policy class, actually a host!
 	template <typename Traits,
-			template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
-			template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
+			template <typename Traits_> class HeuristicPolicy = ZeroHeuristic,
+			template <typename Traits_> class PathCostPolicy = DefaultPathCost,
 			template <typename Traits_,
-				template <typename PathCost, typename State> class HeuristicPolicy,
-				template <typename State, typename PathCost> class PathCostPolicy>
+				template <typename Traits__> class HeuristicPolicy,
+				template <typename Traits__> class PathCostPolicy>
 					class TiePolicy = LowH>
-	class AStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
-					protected virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-					protected virtual PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
+	class AStar : 	protected virtual HeuristicPolicy<Traits>,
+					protected virtual PathCostPolicy<Traits>,
 						protected virtual TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>
 	{
+		using PathCostPolicy<Traits>::g;
+		using HeuristicPolicy<Traits>::h;
+		using TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>::split;
+		
+	public:
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
 		typedef typename Traits::state State;
 		
-		using PathCostPolicy<Node, PathCost>::g;
-		using HeuristicPolicy<PathCost, State>::h;
-		using TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>::split;
-		
-	public:
 		AStar() {}
 		
 		bool operator()(Node const &A, Node const &B) const
@@ -145,14 +148,14 @@ namespace jsearch
 
 
 	template <typename Traits,
-			template <typename PathCost, typename State> class HeuristicPolicy,
-			template <typename State, typename PathCost> class PathCostPolicy>
+			template <typename Traits_> class HeuristicPolicy,
+			template <typename Traits_> class PathCostPolicy>
 	using AStarLowH = AStar<Traits, HeuristicPolicy, PathCostPolicy, LowH>;
 
 
 	// Err... can't think of a better name.
 	template <typename Traits,
-			template <typename PathCost, typename State> class HeuristicPolicy>
+		template <typename Traits_> class HeuristicPolicy>
 	using DefaultAStar = AStarLowH<Traits, HeuristicPolicy, DefaultPathCost>;
 
 
@@ -168,8 +171,8 @@ namespace jsearch
 
 		template <typename Traits,
 			template <typename PathCost, typename State> class HeuristicPolicy,
-			template <typename State, typename PathCost> class PathCostPolicy,
-				template <typename Traits_, template <typename State, typename PathCost> class PathCostPolicy,
+			template <typename Traits> class PathCostPolicy,
+				template <typename Traits_, template <typename Traits> class PathCostPolicy,
 				template <typename PathCost, typename State> class HeuristicPolicy> class TiePolicy>
 			using W10AStar = WeightedAStar<Traits, HeuristicPolicy, PathCostPolicy, TiePolicy, 100>;
 
@@ -177,34 +180,30 @@ namespace jsearch
 	 */
 	// TODO: I got a feeling that the weight needs to be a run-time parameter.
 	template <typename Traits,
-		template <typename PathCost, typename State> class HeuristicPolicy = ZeroHeuristic,
-		template <typename State, typename PathCost> class PathCostPolicy = DefaultPathCost,
-		template <typename Traits_,
-			template <typename PathCost, typename State> class HeuristicPolicy,
-			template <typename State, typename PathCost> class PathCostPolicy>
-			class TiePolicy = LowH,
+		template <typename Traits_> class HeuristicPolicy = ZeroHeuristic,
+		template <typename Traits_> class PathCostPolicy = DefaultPathCost,
+		template <typename Traits_, template <typename Traits__> class HeuristicPolicy, template <typename Traits__> class PathCostPolicy> class TiePolicy = LowH,
 		std::size_t Weight = 10, std::size_t Divisor = 10> // Templates do not accept floats, so we pass a ratio.
 	class WeightedAStar : public std::binary_function<typename Traits::node, typename Traits::node, bool>,
-							protected virtual HeuristicPolicy<typename Traits::pathcost, typename Traits::state>,
-							protected virtual PathCostPolicy<typename Traits::node, typename Traits::pathcost>,
+							protected virtual HeuristicPolicy<Traits>,
+							protected virtual PathCostPolicy<Traits>,
 							protected virtual TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>
 	{
-		typedef typename Traits::node Node;
-		typedef typename Traits::pathcost PathCost;
-		typedef typename Traits::state State;
-
-		using PathCostPolicy<Node, PathCost>::g;
-		using HeuristicPolicy<PathCost, State>::h;
+		using PathCostPolicy<Traits>::g;
+		using HeuristicPolicy<Traits>::h;
 		using TiePolicy<Traits, HeuristicPolicy, PathCostPolicy>::split;
 		
 	public:
+		typedef typename Traits::node Node;
+		typedef typename Traits::pathcost PathCost;
+		typedef typename Traits::state State;
+		
 		WeightedAStar() : weight(static_cast<float>(Weight) / Divisor)
 		{
 #ifndef NDEBUG
 			std::cout << __FUNCTION__ << "(): " << weight << "\n";
 #endif
 		}
-		
 		
 		bool operator()(Node const &A, Node const &B) const
 		{
@@ -217,17 +216,17 @@ namespace jsearch
 		float const weight;  // TODO: This still feels a bit "runny": how to make it totally compile-time constant?  So that it does not even require memory access?
 	};
 
-	
+
 	template <typename Traits,
-		template <typename PathCost, typename State> class HeuristicPolicy,
-		template <typename State, typename PathCost> class PathCostPolicy,
+		template <typename Traits_> class HeuristicPolicy,
+		template <typename Traits_> class PathCostPolicy,
 		std::size_t Weight>
 	using WAStarLowH = WeightedAStar<Traits, HeuristicPolicy, PathCostPolicy, LowH, Weight>;
 	
 	
 	// Err... can't think of a better name.
 	template <typename Traits,
-		template <typename PathCost, typename State> class HeuristicPolicy,
+		template <typename Traits_> class HeuristicPolicy,
 		std::size_t Weight>
 	using DefaultWAStar = WAStarLowH<Traits, HeuristicPolicy, DefaultPathCost, Weight>;
 	

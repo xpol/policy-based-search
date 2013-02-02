@@ -103,9 +103,13 @@ struct TSP
 
 
 // TSP heuristic: shortest imaginable tour including these edges.
-template <typename PathCost, class State>
+template <typename Traits>
 class MinimalImaginableTour
 {
+public:
+	typedef typename Traits::state State;
+	typedef typename Traits::pathcost PathCost;
+	
 protected:
 	MinimalImaginableTour() {}
 	~MinimalImaginableTour() {}
@@ -128,9 +132,14 @@ protected:
 };
 
 
-template <typename PathCost, typename State, typename Action>
+template <typename Traits>
 class EdgeCost
 {
+public:
+	typedef typename Traits::state State;
+	typedef typename Traits::action Action;
+	typedef typename Traits::pathcost PathCost;
+	
 protected:
 	EdgeCost() {}
 	~EdgeCost() {}
@@ -144,11 +153,17 @@ protected:
 
 
 // This actually has to do the bulk of the work in the algorithm.
-template <typename State, typename Action>
+template <typename Traits>
 class HigherCostValidEdges
 {
+public:
+	typedef typename Traits::state State;
+	typedef typename Traits::action Action;
+
+private:
 	// subgraph is used for testing whether a given combination of edges form a valid subsection of a tour.
 	typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> subgraph;
+	
 protected:
 	HigherCostValidEdges(){}
 	~HigherCostValidEdges(){}
@@ -304,9 +319,13 @@ private:
 
 
 // Trivial function that adds action to the set of edges.
-template <typename State, typename Action>
+template <typename Traits>
 class AppendEdge	// ho ho ho
 {
+public:
+	typedef typename Traits::state State;
+	typedef typename Traits::action Action;
+	
 protected:
 	AppendEdge() {}
 	~AppendEdge() {}
@@ -322,9 +341,12 @@ protected:
 
 // GoalTestPolicy: Is it a Hamiltonian cycle?
 // I think it is enough to have n edges that do not break any contraints.
-template <typename State>
+template <typename Traits>
 class ValidTour
 {
+public:
+	typedef typename Traits::state State;
+	
 protected:
 	ValidTour() {}
 	~ValidTour() {}

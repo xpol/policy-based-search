@@ -136,14 +136,14 @@ namespace jsearch
 			template <typename T> class Set,
 			template <typename Key, typename Value> class Map,
 			typename Traits,
-			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
-			template <typename State, typename Action> class ActionsPolicy,
-			template <typename State, typename Action> class ResultPolicy,
-			template <typename State> class GoalTestPolicy,
+			template <typename Traits_> class StepCostPolicy,
+			template <typename Traits_> class ActionsPolicy,
+			template <typename Traits_> class ResultPolicy,
+			template <typename Traits_> class GoalTestPolicy,
 			template <typename Traits_> class CreatePolicy = DefaultNodeCreator,
 			template <typename Traits_,
-				template <typename PathCost, typename State, typename Action> class StepCostPolicy,
-				template <typename State, typename Action> class ResultPolicy,
+				template <typename Traits__> class StepCostPolicy,
+				template <typename Traits__> class ResultPolicy,
 				template <typename Traits__> class CreatePolicy>
 				class ChildPolicy = DefaultChildPolicy>
 	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM)
@@ -204,14 +204,14 @@ namespace jsearch
 	template <template <typename T, typename Comparator> class PriorityQueue,
 			template <typename Traits> class Comparator,
 			typename Traits,
-			template <typename PathCost, typename State, typename Action> class StepCostPolicy,
-			template <typename State, typename Action> class ActionsPolicy,
-			template <typename State, typename Action> class ResultPolicy,
-			template <typename State> class GoalTestPolicy,
+			template <typename Traits_> class StepCostPolicy,
+			template <typename Traits_> class ActionsPolicy,
+			template <typename Traits_> class ResultPolicy,
+			template <typename Traits_> class GoalTestPolicy,
 			template <typename Traits_> class CreatePolicy = DefaultNodeCreator,
 			template <typename Traits_,
-				template <typename PathCost, typename State, typename Action> class StepCostPolicy,
-				template <typename State, typename Action> class ResultPolicy,
+				template <typename Traits__> class StepCostPolicy,
+				template <typename Traits__> class ResultPolicy,
 				template <typename Traits__> class CreatePolicy>
 				class ChildPolicy = DefaultChildPolicy>
 	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM)
