@@ -125,15 +125,13 @@ namespace jsearch
 			protected virtual HeuristicPolicy<Traits>,
 			protected virtual PathCostPolicy<Traits>
 	{
-		typedef typename Traits::node Node;
-		typedef typename Traits::cost Cost;
-		// typedef typename Traits::heuristic_cost HeuristicCost;
-		// typedef typename Traits::pathcost PathCost;
-
 		using PathCostPolicy<Traits>::g;
 		using HeuristicPolicy<Traits>::h;
 
 	protected:
+		typedef typename Traits::node Node;
+		typedef typename Traits::cost Cost;
+
 		AStar() {}
 		~AStar() {}
 
@@ -149,13 +147,13 @@ namespace jsearch
 	template <typename Traits, template <typename Traits_> class HeuristicPolicy = ZeroHeuristic>
 	class Greedy : protected virtual HeuristicPolicy<Traits>
 	{
+		using HeuristicPolicy<Traits>::h;
+
+	protected:
 		typedef typename Traits::node Node;
 		typedef typename Traits::cost Cost;
 		typedef typename Traits::heuristic_cost HeuristicCost;
 
-		using HeuristicPolicy<Traits>::h;
-
-	protected:
 		Greedy() {}
 		~Greedy() {}
 
@@ -172,13 +170,13 @@ namespace jsearch
 	template <typename Traits, template <typename Traits_> class PathCostPolicy = DefaultPathCost>
 	class Dijkstra : protected virtual PathCostPolicy<Traits>
 	{
+		using PathCostPolicy<Traits>::g;
+
+	protected:
 		typedef typename Traits::node Node;
 		typedef typename Traits::cost Cost;
 		typedef typename Traits::pathcost PathCost;
 
-		using PathCostPolicy<Traits>::g;
-
-	protected:
 		Dijkstra() {}
 		~Dijkstra() {}
 
@@ -206,15 +204,14 @@ namespace jsearch
 	class TiebreakingComparator : protected virtual CostPolicy<Traits>,
 									protected virtual TiePolicy<Traits>
 	{
+		using TiePolicy<Traits>::split;
+		using CostPolicy<Traits>::f;
+
+	public:
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
 		typedef typename Traits::state State;
 		typedef typename Traits::cost Cost;
-
-		using TiePolicy<Traits>::split;
-
-	public:
-		using CostPolicy<Traits>::f;
 
 		TiebreakingComparator() {}
 
@@ -232,13 +229,13 @@ namespace jsearch
 	template <typename Traits, template <typename Traits_> class CostPolicy = Dijkstra>
 	class SimpleComparator : protected virtual CostPolicy<Traits>
 	{
+		using CostPolicy<Traits>::f;
+
+	public:
 		typedef typename Traits::node Node;
 		typedef typename Traits::pathcost PathCost;
 		typedef typename Traits::state State;
 		typedef typename Traits::cost Cost;
-
-	public:
-		using CostPolicy<Traits>::f;
 
 		SimpleComparator() {}
 
@@ -249,7 +246,6 @@ namespace jsearch
 			return RESULT;
 		}
 	};
-	
 }
 
 #endif
