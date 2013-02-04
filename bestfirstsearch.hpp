@@ -74,23 +74,23 @@ namespace jsearch
 
 
 	/**
-	 * @brief Handle the fate of a child being added to the open list.
+	 * @brief Handle the fate of a child being added to the frontier.
 	 *
 	 * @return: An OpenList element that equals
-	 * 				i) nullptr if CHILD was not added to open
-	 * 				ii) CHILD if CHILD was added to open, or
-	 * 				iii) another element if CHILD replaced it on open.
+	 * 				i) nullptr if CHILD was not added to the frontier
+	 * 				ii) CHILD if CHILD was added to the frontier, or
+	 * 				iii) another element if CHILD replaced it on the frontier.
 	 * */
 	template <class OpenList>
-	inline typename OpenList::value_type handle_child(OpenList &open, typename OpenList::const_reference const &CHILD)
+	inline typename OpenList::value_type handle_child(OpenList &frontier, typename OpenList::const_reference const &CHILD)
 	{
 		typename OpenList::value_type result(nullptr); // Initialize to nullptr since it might be a bald pointer.
 
-		auto const IT(open.find(CHILD->state()));		
+		auto const IT(frontier.find(CHILD->state()));
 
-		if(IT != std::end(open))
+		if(IT != std::end(frontier))
 		{
-			auto const &DUPLICATE((IT->second)); // The duplicate on the open list.
+			auto const &DUPLICATE((IT->second)); // The duplicate on the frontier.
 			if(CHILD->path_cost() < (*DUPLICATE)->path_cost())
 			{
 #ifndef NDEBUG
@@ -100,7 +100,7 @@ namespace jsearch
 				++stats.decreased;
 #endif
 				result = (*DUPLICATE); // Store a copy of the node that we are about to replace.
-				open.increase(DUPLICATE, CHILD); // The DECREASE-KEY operation is an increase because it is a max-heap.
+				frontier.increase(DUPLICATE, CHILD); // The DECREASE-KEY operation is an increase because it is a max-heap.
 			}
 			else
 			{
@@ -114,10 +114,10 @@ namespace jsearch
 		}
 		else
 		{
-			open.push(CHILD);
+			frontier.push(CHILD);
 			result = CHILD;
 #ifndef NDEBUG
-			std::cout << "open <= " << jwm::to_string(CHILD->state()) << "\n";
+			std::cout << "frontier <= " << jwm::to_string(CHILD->state()) << "\n";
 #endif
 #ifdef STATISTICS
 			++stats.pushed;
@@ -153,18 +153,18 @@ namespace jsearch
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 
-		typedef jsearch::queue_set<PriorityQueue<Node, Comparator<Traits>>, Map> OpenList;
-		typedef Set<State> ClosedList;
+		typedef jsearch::queue_set<PriorityQueue<Node, Comparator<Traits>>, Map> Frontier;
+		typedef Set<State> ClosedSet;
 
-		OpenList open;
-		ClosedList closed;
-		open.push(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
+		Frontier frontier;
+		ClosedSet closed;
+		frontier.push(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
 
-		while(!open.empty())
+		while(!frontier.empty())
 		{
-			auto const S(pop(open));
+			auto const S(pop(frontier));
 #ifndef NDEBUG
-			std::cout << S->state() << " <= open\n";
+			std::cout << S->state() << " <= frontier\n";
 #endif
 #ifdef STATISTICS
 			++stats.popped;
@@ -172,7 +172,7 @@ namespace jsearch
 			if(PROBLEM.goal_test(S->state()))
 			{
 #ifndef NDEBUG
-				std::cout << "open: " << open.size() << "\n";
+				std::cout << "frontier: " << frontier.size() << "\n";
 				std::cout << "closed: " << closed.size() << "\n";
 #endif
 				return S;
@@ -188,7 +188,7 @@ namespace jsearch
 					if(closed.find(SUCCESSOR) == std::end(closed)) // If it is NOT in closed...
 					{
 						auto const CHILD(PROBLEM.child(S, ACTION, SUCCESSOR));
-						handle_child(open, CHILD);
+						handle_child(frontier, CHILD);
 					}
 				}
 			}
@@ -221,19 +221,19 @@ namespace jsearch
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 
-		typedef PriorityQueue<Node, Comparator<Traits>> OpenList;
+		typedef PriorityQueue<Node, Comparator<Traits>> Frontier;
 
-		OpenList open;
-		open.push(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
+		Frontier frontier;
+		frontier.push(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
 
-		while(!open.empty())
+		while(!frontier.empty())
 		{
-			auto const S(pop(open));
+			auto const S(pop(frontier));
 
 			if(PROBLEM.goal_test(S->state()))
 			{
 #ifndef NDEBUG
-				std::cout << "open: " << open.size() << "\n";
+				std::cout << "frontier: " << frontier.size() << "\n";
 #endif
 				return S;
 			}
@@ -245,7 +245,7 @@ namespace jsearch
 				for(auto const ACTION : ACTIONS)
 				{
 					auto const CHILD(PROBLEM.child(S, ACTION));
-					open.push(CHILD);
+					frontier.push(CHILD);
 				}
 			}
 		}
