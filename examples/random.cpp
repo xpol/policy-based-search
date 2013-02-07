@@ -20,7 +20,6 @@
 #include "problem.hpp"
 #include "bestfirstsearch.hpp"
 
-#include <random>
 #include <sstream>
 #include <unordered_set>
 #include <chrono>
@@ -30,15 +29,12 @@
 #include <iterator>
 #include <locale>
 #include <type_traits>
-
-#include <boost/heap/d_ary_heap.hpp>
-
-#include <unordered_map>
-
-#ifndef NDEBUG
+#include <cassert>
+#include <cmath>
 #include <boost/graph/graphviz.hpp>
+#include <boost/heap/d_ary_heap.hpp>
+#include <unordered_map>
 #include <fstream>
-#endif
 
 using namespace std;
 using namespace jsearch;
@@ -46,9 +42,8 @@ using namespace jsearch;
 typedef Random::state State;
 typedef Random::node Node;
 
-Graph procedural(size_t const &N, size_t const &B, mt19937::result_type const &SEED);
 string backtrace(Node const &NODE);
-Graph square();
+void init(int argc, char **argv);
 
 
 // Create template aliases that specify node evaluation.
@@ -69,49 +64,8 @@ using Map = std::unordered_map<Key, Value>;
 
 int main(int argc, char **argv)
 {
-	size_t n(0);
-	mt19937::result_type seed(chrono::high_resolution_clock::to_time_t(chrono::high_resolution_clock::now()));
-	string const ARGV0(argv[0]);
-	
-	// TODO: Use Program Options from Boost?
-	switch(argc)
-	{
-		case 5:
-			istringstream(argv[4]) >> seed;
-		case 4:
-			istringstream(argv[3]) >> n;
-			istringstream(argv[2]) >> e;
-			istringstream(argv[1]) >> b;
-			break;
-
-		case 3:
-		case 2:
-		case 1:
-		case 0:
-			cerr << "Invocation: " << ARGV0.substr(ARGV0.find_last_of('/') + 1) << " b e n\nSuch that: n ≥ e\n";
-			exit(EXIT_FAILURE);
-			break;
-			
-		default:
-			cerr << "Unexpected extra arguments.\n";
-			exit(EXIT_FAILURE);
-			break;
-	}
-
-	if(e > n)
-	{
-		cerr << "e(" << e << ") > n(" << n << ")\n";
-		exit(EXIT_FAILURE);
-	}
-	
-	cout << "branching factor: " << b << "\n";
-	cout << "expanded nodes: " << e << "\n";
-	cout << "graph size: " << n << "\n";
-	
-	G = new Graph(procedural(n, b, seed));
-	// G = new Graph(square());
-	weight = new WeightMap(get(boost::edge_weight, *G));
-	State const INITIAL(*boost::vertices(*G).first);
+	init(argc, argv);
+	State const INITIAL(*boost::vertices(G).first);
 	Problem<Random, Distance, Neighbours, Visit, GoalTest> const PROBLEM(INITIAL);
 	
 	try
@@ -138,74 +92,50 @@ int main(int argc, char **argv)
 }
 
 
-Graph procedural(size_t const &N, size_t const &B, mt19937::result_type const &SEED)
+void init(int argc, char **argv)
 {
-	Graph g(N);
-	conditional<is_integral<Random::pathcost>::value, uniform_int_distribution<Random::pathcost>, uniform_real_distribution<Random::pathcost>>::type weight_dist(1, 500);
-	cout << "seed: " << SEED << endl;
-	mt19937 const engine(SEED);
-	auto weight_generator(bind(weight_dist, engine));
-
-	for(vertex_desc i(0); i < N - B; ++i)
+	string const ARGV0(argv[0]);
+	ifstream input_file;
+	
+	// TODO: Use Program Options from Boost?
+	switch(argc)
 	{
-		uniform_int_distribution<vertex_desc> vertex_dist(i + 1, N - 1);
-		auto vertex_generator(bind(vertex_dist, engine));
-		unsigned char failures(0);
-		while(boost::out_degree(i, g) < B && failures < 3)
-		{
-			auto const V(vertex_generator());
-			if(V != i && boost::in_degree(V, g) < B)
-			{	
-				auto const W(weight_generator());
-				auto const E(boost::add_edge(i, V, W, g));
-				if(!E.second)
-				{
-					// ostringstream tmp;
-					// cerr << "Failed to add edge " << E.first << " to vertex " << i << ".\n";
-					if(++failures == B)
-						cerr << "Bailing out on vertex " << i << "\n";
-					// throw logic_error(tmp.str());
-				}
-			}
-		}
-		failures = 0;
-		cout << '.';
-		cout.flush();
+		case 3:
+			input_file.open(argv[2]);
+		case 2:
+			istringstream(argv[1]) >> e;
+			break;
+
+		case 1:
+		case 0:
+			cerr << "Invocation: " << ARGV0.substr(ARGV0.find_last_of('/') + 1) << " <(e)panded nodes>\nSuch that: e < n\n";
+			exit(EXIT_FAILURE);
+			break;
+			
+		default:
+			cerr << ARGV0 + ": Unexpected extra arguments.\n";
+			exit(EXIT_FAILURE);
+			break;
 	}
 
-	cout << "Graph created.\n";
-
-#ifndef NDEBUG
-	ofstream dot("Random.dot");
-	boost::write_graphviz(dot, g, boost::default_writer(), boost::make_label_writer(boost::get(boost::edge_weight, g)));
-#endif
-
-	return g;
+	istream &input( input_file.is_open() ? input_file : cin);
+	boost::dynamic_properties dp;
+	dp.property("weight", weight);
+	boost::read_graphviz(input, G, dp);
+	size_t const n(boost::num_vertices(G));
+	
+	if(e > n)
+	{
+		cerr << "e(" << e << ") > n(" << n << ")\n";
+		exit(EXIT_FAILURE);
+	}
+	
+	// weight = new WeightMap(get(boost::edge_weight, G));
+	
 }
 
 
 string backtrace(Node const &NODE)
 {
 	return (NODE->parent() ? backtrace(NODE->parent()) + " => " : "") + to_string(NODE->state());
-}
-
-
-Graph square()
-{
-	Graph g(4);
-
-	// source, target, weight, graph
-	boost::add_edge(0, 1, 1, g);
-	boost::add_edge(0, 2, 5, g);
-	boost::add_edge(0, 3, 10, g);
-	boost::add_edge(1, 2, 1, g);
-	boost::add_edge(1, 3, 3, g);
-	boost::add_edge(2, 3, 1, g);
-
-#ifndef NDEBUG
-	ofstream dot("Random.dot");
-	boost::write_graphviz(dot, g, boost::default_writer(), boost::make_label_writer(boost::get(boost::edge_weight, g)));
-#endif
-
-	return g;
 }

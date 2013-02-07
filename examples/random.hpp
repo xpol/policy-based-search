@@ -26,9 +26,9 @@ using boost::undirectedS;
 using boost::no_property;
 using boost::edge_weight_t;
 
-typedef double cost_t;
-
-typedef boost::adjacency_matrix<undirectedS, no_property, property<edge_weight_t, cost_t>> Graph;
+typedef unsigned cost_t;
+typedef property<edge_weight_t, cost_t> edge_prop;
+typedef boost::adjacency_matrix<undirectedS, no_property, edge_prop> Graph;
 typedef boost::property_map<Graph, edge_weight_t>::type WeightMap;
 typedef typename boost::graph_traits<Graph>::edge_descriptor edge_desc;
 typedef typename boost::graph_traits<Graph>::vertex_descriptor vertex_desc;
@@ -45,8 +45,8 @@ struct Random
 };
 
 
-Graph *G = nullptr;
-WeightMap const *weight = nullptr;
+Graph G(0);
+WeightMap const weight = boost::get(boost::edge_weight, G);
 size_t 	b = 0, // Branching factor.
 		e = 0; // Expanded nodes.
 
@@ -62,7 +62,7 @@ public:
 protected:
 	PathCost step_cost(State const &, Action const &ACTION) const
 	{
-		return (*weight)[ACTION];
+		return weight[ACTION];
 	}
 };
 
@@ -78,7 +78,7 @@ public:
 protected:
 	std::vector<Action> actions(State const &STATE) const
 	{
-		auto const IT(boost::out_edges(STATE, *G));
+		auto const IT(boost::out_edges(STATE, G));
 		return std::vector<Action>(IT.first, IT.second);
 	}
 };
@@ -94,8 +94,8 @@ public:
 protected:
 	State result(State const &STATE, Action const &ACTION) const
 	{
-		auto const 	SOURCE(boost::source(ACTION, *G)),
-					TARGET(boost::target(ACTION, *G));
+		auto const 	SOURCE(boost::source(ACTION, G)),
+					TARGET(boost::target(ACTION, G));
 		return SOURCE == STATE ? TARGET : SOURCE;
 	}
 };
