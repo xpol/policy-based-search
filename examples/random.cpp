@@ -19,6 +19,7 @@
 #include "random.hpp"
 #include "problem.hpp"
 #include "bestfirstsearch.hpp"
+#include "gg.hpp"
 
 #include <sstream>
 #include <unordered_set>
@@ -95,20 +96,22 @@ int main(int argc, char **argv)
 void init(int argc, char **argv)
 {
 	string const ARGV0(argv[0]);
-	ifstream input_file;
+	unsigned b, n, s(chrono::high_resolution_clock::to_time_t(chrono::high_resolution_clock::now()));
 	
 	// TODO: Use Program Options from Boost?
 	switch(argc)
 	{
-		case 3:
-			input_file.open(argv[2]);
-		case 2:
-			istringstream(argv[1]) >> e;
+		case 5:
+			istringstream(argv[4]) >> s;
+		case 4:
+			istringstream(argv[3]) >> b;
+			istringstream(argv[2]) >> n;
+			istringstream(argv[1]) >> expanded;
 			break;
 
 		case 1:
 		case 0:
-			cerr << "Invocation: " << ARGV0.substr(ARGV0.find_last_of('/') + 1) << " <(e)panded nodes>\nSuch that: e < n\n";
+			cerr << "Invocation: " << ARGV0.substr(ARGV0.find_last_of('/') + 1) << " <(e)panded nodes> <(n)odes> <(b)ranching factor> [seed]\nSuch that: e < n and b < n and n > 2\n";
 			exit(EXIT_FAILURE);
 			break;
 			
@@ -117,21 +120,16 @@ void init(int argc, char **argv)
 			exit(EXIT_FAILURE);
 			break;
 	}
-
-	istream &input( input_file.is_open() ? input_file : cin);
-	boost::dynamic_properties dp;
-	dp.property("weight", weight);
-	boost::read_graphviz(input, G, dp);
-	size_t const n(boost::num_vertices(G));
 	
-	if(e > n)
+	if(expanded > n)
 	{
-		cerr << "e(" << e << ") > n(" << n << ")\n";
+		cerr << "e(" << expanded << ") > n(" << n << ")\n";
 		exit(EXIT_FAILURE);
 	}
-	
-	// weight = new WeightMap(get(boost::edge_weight, G));
-	
+
+	G = Graph(n);
+	generate_graph(G, b, mt19937(s));
+	// weight = new WeightMap(get(boost::edge_weight, G));	
 }
 
 

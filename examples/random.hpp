@@ -47,8 +47,7 @@ struct Random
 
 Graph G(0);
 WeightMap const weight = boost::get(boost::edge_weight, G);
-size_t 	b = 0, // Branching factor.
-		e = 0; // Expanded nodes.
+unsigned expanded = 0; // Expanded nodes.
 
 
 template <typename Traits>
@@ -111,6 +110,6 @@ protected:
 	bool goal_test(State const &) const
 	{
 		static size_t e_(0);
-		return e_++ == e;
+		return e_++ == expanded;
 	}
 };
