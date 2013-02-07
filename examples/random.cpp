@@ -97,7 +97,7 @@ void init(int argc, char **argv)
 {
 	string const ARGV0(argv[0]);
 	unsigned b, n, s(chrono::high_resolution_clock::to_time_t(chrono::high_resolution_clock::now()));
-	
+
 	// TODO: Use Program Options from Boost?
 	switch(argc)
 	{

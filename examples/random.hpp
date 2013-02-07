@@ -26,7 +26,7 @@ using boost::undirectedS;
 using boost::no_property;
 using boost::edge_weight_t;
 
-typedef unsigned cost_t;
+typedef double cost_t;
 typedef property<edge_weight_t, cost_t> edge_prop;
 typedef boost::adjacency_matrix<undirectedS, no_property, edge_prop> Graph;
 typedef boost::property_map<Graph, edge_weight_t>::type WeightMap;
