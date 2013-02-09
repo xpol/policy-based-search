@@ -84,9 +84,8 @@ namespace jsearch
 		typedef typename Traits::pathcost PathCost;
 		
 		DefaultNode(State const &STATE, Node const &PARENT, Action const &ACTION, PathCost const &PATH_COST) : state_(STATE), parent_(PARENT),  action_(ACTION), path_cost_(PATH_COST) {}
-
+		DefaultNode(DefaultNode<Traits> &&OTHER) = default;
 		DefaultNode(DefaultNode<Traits> const &OTHER) = delete;
-
 		DefaultNode<Traits> &operator=(DefaultNode<Traits> const &OTHER) = delete;
 
 		State const &state() const { return state_; }
@@ -121,9 +120,8 @@ namespace jsearch
 		typedef typename Traits::pathcost PathCost;
 
 		ComboNode(State const &STATE, Action const &ACTION, PathCost const &PATH_COST) : state_(STATE), action_(ACTION), path_cost_(PATH_COST) {}
-		
+		ComboNode(ComboNode<Traits> &&OTHER) = default;
 		ComboNode(ComboNode<Traits> const &OTHER) = delete;
-		
 		ComboNode<Traits> &operator=(ComboNode<Traits> const &OTHER) = delete;
 		
 		State const &state() const { return state_; }
