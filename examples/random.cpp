@@ -128,7 +128,7 @@ void init(int argc, char **argv)
 	}
 
 	G = Graph(n);
-	generate_graph(G, b, mt19937(s));
+	gg::generate_graph(G, boost::num_vertices(G), b, mt19937(s));
 	// weight = new WeightMap(get(boost::edge_weight, G));	
 }
 
