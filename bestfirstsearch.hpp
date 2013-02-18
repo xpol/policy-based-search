@@ -270,9 +270,17 @@ namespace jsearch
 		private:
 			Node SOLUTION;
 		};
-	
 
+
+		/*******************************
+		* Recursive best-first search *
+		*******************************/
+		/**
+		 * This is the recursive implementation of the search, not to be called by clients.
+		 */
 		template <template <typename Traits> class CostFunction,
+			template <typename Traits, template <typename Traits> class CostFunction> class Comparator,
+			template <typename T, typename Comparator> class PriorityQueue,
 			typename Traits,
 			template <typename Traits_> class StepCostPolicy,
 			template <typename Traits_> class ActionsPolicy,
@@ -284,23 +292,29 @@ namespace jsearch
 				template <typename Traits_> class ResultPolicy,
 				template <typename Traits__> class CreatePolicy>
 				class ChildPolicy = DefaultChildPolicy>
-		typename Traits::pathcost recursive_best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM, typename Traits::node const &NODE, typename Traits::pathcost const &F_N, typename Traits::pathcost const &B)
+		typename Traits::pathcost recursive_best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM, CostFunction<Traits> const &COST, typename Traits::node const &NODE, typename Traits::pathcost const &F_N, typename Traits::pathcost const &B)
 		{
 			typedef typename Traits::node Node;
 			typedef typename Traits::state State;
 			typedef typename Traits::action Action;
 			typedef typename Traits::pathcost PathCost;
 			typedef typename Traits::cost Cost;
+			typedef std::pair<Node, Cost> NodeCost; // uhh...
+
 			using std::placeholders::_1;
 			using std::placeholders::_2;
+
 			/*	A single-line comment (//) is a direct quotes from the algorithm, to show how it has been interpreted.
 			*	Mainly so that if there is a bug, it will be easier to track down.  :)
 			*
 			*	It is assumed that the algorithm used 1-offset arrays.
 			*/
+#ifndef NDEBUG
+			std::cerr << ">>> " << __FUNCTION__ << "(PROBLEM, COST, " << *NODE << ", " << F_N << ", " << B << ")\n";
+#endif
 
 			constexpr auto const INF(std::numeric_limits<PathCost>::max());
-			CostFunction<Traits> const COST;
+			// CostFunction<Traits> const COST;
 			auto const f_N(COST.f(NODE));
 
 			// IF f(N)>B, return f(N)
@@ -333,8 +347,7 @@ namespace jsearch
 
 			// sort Ni and F[i] in increasing order of F[i]
 			/*	Define a comparator function for the N vector.	*/
-			auto const NCOMP(bind([](std::pair<Node, Cost> const &A, std::pair<Node, Cost> const &B){ return A.second < B.second; }, _1, _2));
-
+			auto const NCOMP(bind([](NodeCost const &A, NodeCost const &B){ return A.second < B.second; }, _1, _2));
 			N.sort(NCOMP);
 			F.sort();
 
@@ -349,7 +362,7 @@ namespace jsearch
 				N.pop_front();
 				F.pop_front();
 				// F[1] := RBFS(N1, F[1], MIN(B, F[2]))
-				N0.second = recursive_best_first_search<CostFunction>(PROBLEM, N0.first, N0.second, std::min(B, F.front()));
+				N0.second = recursive_best_first_search<CostFunction, Comparator, PriorityQueue>(PROBLEM, COST, N0.first, N0.second, std::min(B, F.front()));
 				// insert N1 and F[1] in sorted order
 				N.insert(std::upper_bound(std::begin(N), std::end(N), N0, NCOMP), N0);
 				F.insert(std::upper_bound(std::begin(F), std::end(F), N0.second), N0.second);
@@ -361,10 +374,12 @@ namespace jsearch
 	}
 
 
-	/*******************************
-	 * Recursive best-first search *
-	 *******************************/
+	/**
+	 * The interface to RBFS.
+	 */
 	template <template <typename Traits> class CostFunction,
+		template <typename Traits, template <typename Traits> class CostFunction> class Comparator,
+		template <typename T, typename Comparator> class PriorityQueue,
 		typename Traits,
 		template <typename Traits_> class StepCostPolicy,
 		template <typename Traits_> class ActionsPolicy,
@@ -382,15 +397,17 @@ namespace jsearch
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
-		
+
+
 		constexpr auto const INF(std::numeric_limits<PathCost>::max());
 		auto initial(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
 		Node result; // Unnecessary but polite to the compiler.
-		CostFunction<Traits> const COST;
-
+		CostFunction<Traits> const COST; // TODO: Design flaw?
+		
+		
 		try
 		{
-			recursive::recursive_best_first_search<CostFunction>(PROBLEM, initial, COST.f(initial), INF);
+			recursive::recursive_best_first_search<CostFunction, Comparator, PriorityQueue>(PROBLEM, COST, initial, COST.f(initial), INF);
 			assert(result); // Should not actually ever reach this code.
 		}
 		catch(recursive::goal_found<Node> const &EX)

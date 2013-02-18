@@ -43,29 +43,21 @@ template <typename Traits>
 using TieBreaker = LowH<Traits, EuclideanDistance>;
 
 // Specify the heap used for the frontier, its comparator and the map used for fast look-up.
-template <typename T, typename Comp>
-using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>, boost::heap::compare<Comp>>;
+template <typename T, typename Comparator>
+using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>, boost::heap::compare<Comparator>>;
 
-template <typename Traits>
+template <typename Traits, template <typename Traits> class CostFunction>
 using Comparator = TiebreakingComparator<Traits, CostFunction, TieBreaker>;
-
-template <typename Key, typename Value>
-using Map = std::unordered_map<Key, Value>;
-
-// Specify the kind of set used for the closed set.
-template <typename T>
-using ClosedList = std::unordered_set<T>;
 
 
 int main(int, char **)
 {
 	State const INITIAL("Arad");
 	Problem<Romania, Distance, Neighbours, Visit, GoalTest> const BUCHAREST(INITIAL); // The problem is to get to Bucharest.
-	RBFS::Evaluation<Romania, EuclideanDistance> const EVALUATOR;
 
 	try
 	{
-		auto const SOLUTION(jsearch::recursive_best_first_search<CostFunction>(BUCHAREST));
+		auto const SOLUTION(jsearch::recursive_best_first_search<CostFunction, Comparator, PriorityQueue>(BUCHAREST));
 		
 		print(SOLUTION, cout);
 		cout << ": " << SOLUTION->path_cost() << "\n";
