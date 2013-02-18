@@ -113,6 +113,22 @@ namespace jsearch
 	};
 
 
+	template <typename Traits>
+	class FalseTiePolicy
+	{
+	protected:
+		typedef typename Traits::node Node;
+
+		FalseTiePolicy() {}
+		~FalseTiePolicy() {}
+
+		bool split(Node const &, Node const &) const
+		{
+			return false;
+		}
+	};
+	
+
 	/******************
 	 * Cost functions *
 	 ******************/
@@ -172,7 +188,7 @@ namespace jsearch
 	{
 		using PathCostPolicy<Traits>::g;
 
-	protected:
+	public:
 		typedef typename Traits::node Node;
 		typedef typename Traits::cost Cost;
 		typedef typename Traits::pathcost PathCost;
