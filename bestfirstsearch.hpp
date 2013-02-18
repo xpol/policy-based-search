@@ -272,6 +272,37 @@ namespace jsearch
 		};
 
 
+		template <typename Traits, template <typename Traits_> class TiePolicy>
+		class NodeCost : protected TiePolicy<Traits>
+		{
+			typedef typename Traits::node Node;
+			typedef typename Traits::cost Cost;
+			using TiePolicy<Traits>::split;
+			
+		public:
+			NodeCost(Node const &NODE, Cost const &COST) : node_(NODE), cost_(COST) {}
+
+			const Node &node() const { return node_; }
+			const Cost &cost() const { return cost_; }
+			
+			/**
+			 * First compare on the stored cost, if they are equal use the TiePolicy.
+			 */
+			bool operator<(NodeCost<Traits, TiePolicy> const &OTHER) const
+			{
+				// Greater-than for max-heap.
+				return cost_ > OTHER.cost_ ? true : split(node_, OTHER.node_);
+			}
+
+			void update_cost(Cost const &COST) { 
+				cost_ = COST; }
+			
+		private:
+			Node node_;
+			Cost cost_;
+		};
+
+		
 		/*******************************
 		* Recursive best-first search *
 		*******************************/
@@ -279,8 +310,8 @@ namespace jsearch
 		 * This is the recursive implementation of the search, not to be called by clients.
 		 */
 		template <template <typename Traits> class CostFunction,
-			template <typename Traits, template <typename Traits> class CostFunction> class Comparator,
-			template <typename T, typename Comparator> class PriorityQueue,
+			template <typename Traits> class TiePolicy,
+			template <typename T> class PriorityQueue,
 			typename Traits,
 			template <typename Traits_> class StepCostPolicy,
 			template <typename Traits_> class ActionsPolicy,
@@ -299,7 +330,7 @@ namespace jsearch
 			typedef typename Traits::action Action;
 			typedef typename Traits::pathcost PathCost;
 			typedef typename Traits::cost Cost;
-			typedef std::pair<Node, Cost> NodeCost; // uhh...
+			typedef NodeCost<Traits, TiePolicy> RBFSNodeCost; // uhh...
 
 			using std::placeholders::_1;
 			using std::placeholders::_2;
@@ -329,9 +360,9 @@ namespace jsearch
 			// IF N has no children, RETURN infinity
 			if(ACTIONS.empty())
 				return INF;
-			// Use lists here because we need to insert in order.
-			std::list<Cost> F;
-			std::list<std::pair<Node, Cost>> N;
+
+			PriorityQueue<Cost> F;
+			PriorityQueue<RBFSNodeCost> N;
 
 			// FOR each child Ni of N,
 			for(auto const ACTION : ACTIONS)
@@ -341,35 +372,34 @@ namespace jsearch
 				// IF f(N)<F(N) THEN F[i] := MAX(F(N),f(Ni))
 				// ELSE F[i] := f(Ni)
 				auto const f_RESULT(f_N < F_N ? std::max(F_N, f_CHILD) : f_CHILD);
-				F.push_front(f_RESULT);
-				N.push_front(std::make_pair(CHILD, f_RESULT));
+				F.push(f_RESULT);
+				N.push(RBFSNodeCost(CHILD, f_RESULT));
 			}
 
 			// sort Ni and F[i] in increasing order of F[i]
-			/*	Define a comparator function for the N vector.	*/
-			auto const NCOMP(bind([](NodeCost const &A, NodeCost const &B){ return A.second < B.second; }, _1, _2));
-			N.sort(NCOMP);
-			F.sort();
+			/*	They sort automatically.	*/
 
 			// IF only one child, F[2] := infinity
 			if(F.size() == 1)
-				F.push_front(INF);
+				F.push(INF);
 
 			// WHILE (F[1] <= B and F[1] < infinity)
-			while(F.front() <= B && F.front() < INF)
+			while(F.top() <= B && F.top() < INF)
 			{
-				auto N0(N.front());
-				N.pop_front();
-				F.pop_front();
+				auto N0(N.top());
+				N.pop();
+				F.pop();
 				// F[1] := RBFS(N1, F[1], MIN(B, F[2]))
-				N0.second = recursive_best_first_search<CostFunction, Comparator, PriorityQueue>(PROBLEM, COST, N0.first, N0.second, std::min(B, F.front()));
+				N0.update_cost(recursive_best_first_search<CostFunction, TiePolicy, PriorityQueue>(PROBLEM, COST, N0.node(), N0.cost(), std::min(B, F.top())));
 				// insert N1 and F[1] in sorted order
-				N.insert(std::upper_bound(std::begin(N), std::end(N), N0, NCOMP), N0);
-				F.insert(std::upper_bound(std::begin(F), std::end(F), N0.second), N0.second);
+				N.push(N0);
+				F.push(N0.cost());
+				// N.insert(std::upper_bound(std::begin(N), std::end(N), N0, NCOMP), N0);
+				// F.insert(std::upper_bound(std::begin(F), std::end(F), N0.second), N0.second);
 			}
 
 			// return F[1]
-			return F.front();
+			return F.top();
 		}
 	}
 
@@ -378,8 +408,8 @@ namespace jsearch
 	 * The interface to RBFS.
 	 */
 	template <template <typename Traits> class CostFunction,
-		template <typename Traits, template <typename Traits> class CostFunction> class Comparator,
-		template <typename T, typename Comparator> class PriorityQueue,
+		template <typename Traits> class TiePolicy,
+		template <typename T> class PriorityQueue,
 		typename Traits,
 		template <typename Traits_> class StepCostPolicy,
 		template <typename Traits_> class ActionsPolicy,
@@ -407,7 +437,7 @@ namespace jsearch
 		
 		try
 		{
-			recursive::recursive_best_first_search<CostFunction, Comparator, PriorityQueue>(PROBLEM, COST, initial, COST.f(initial), INF);
+			recursive::recursive_best_first_search<CostFunction, TiePolicy, PriorityQueue>(PROBLEM, COST, initial, COST.f(initial), INF);
 			assert(result); // Should not actually ever reach this code.
 		}
 		catch(recursive::goal_found<Node> const &EX)
