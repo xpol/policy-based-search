@@ -321,7 +321,7 @@ namespace jsearch
 		 */
 		template <template <typename Traits> class CostFunction,
 			template <typename Traits> class TiePolicy,
-			template <typename T> class PriorityQueue,
+			template <typename T, template <typename T> class Comparator> class PriorityQueue,
 			typename Traits,
 			template <typename Traits_> class StepCostPolicy,
 			template <typename Traits_> class ActionsPolicy,
@@ -371,8 +371,8 @@ namespace jsearch
 			if(ACTIONS.empty())
 				return INF;
 
-			PriorityQueue<Cost> F;
-			PriorityQueue<RBFSNodeCost> N;
+			PriorityQueue<Cost, std::greater> F;
+			PriorityQueue<RBFSNodeCost, std::less> N;
 
 			// FOR each child Ni of N,
 			for(auto const ACTION : ACTIONS)
@@ -395,8 +395,8 @@ namespace jsearch
 
 			// WHILE (F[1] <= B and F[1] < infinity)
 #ifndef NDEBUG
-			std::cerr << "F.top(): " << F.top() << "\n";
-			std::cerr << "N.top(): " << N.top() << "\n";
+			// std::cerr << "F.top(): " << F.top() << "\n";
+			// std::cerr << "N.top(): " << N.top() << "\n";
 #endif
 			while(F.top() <= B && F.top() < INF)
 			{
@@ -423,7 +423,7 @@ namespace jsearch
 	 */
 	template <template <typename Traits> class CostFunction,
 		template <typename Traits> class TiePolicy,
-		template <typename T> class PriorityQueue,
+		template <typename T, template <typename T> class Comparator> class PriorityQueue,
 		typename Traits,
 		template <typename Traits_> class StepCostPolicy,
 		template <typename Traits_> class ActionsPolicy,

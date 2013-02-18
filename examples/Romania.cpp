@@ -43,11 +43,8 @@ template <typename Traits>
 using TieBreaker = LowH<Traits, EuclideanDistance>;
 
 // Specify the heap used for the frontier, its comparator and the map used for fast look-up.
-template <typename T>
-using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>>;
-
-template <typename Traits, template <typename Traits> class CostFunction>
-using Comparator = TiebreakingComparator<Traits, CostFunction, TieBreaker>;
+template <typename T, template <typename T> class Comparator>
+using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>, boost::heap::compare<Comparator<T>>>;
 
 
 int main(int, char **)
