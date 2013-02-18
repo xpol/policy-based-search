@@ -105,7 +105,7 @@ namespace jsearch
 	template <typename Traits>
 	std::ostream& operator<<(std::ostream& stream, DefaultNode<Traits> const &NODE)
 	{
-		stream << "{" << jwm::to_string(NODE.state()) << ", " << NODE.parent() << ", " << NODE.action() << ", " << NODE.path_cost() << "}";
+		stream << "{" << jwm::to_string(NODE.state()) << ", " << (NODE.parent() ? jwm::to_string(NODE.parent()->state()) : "nullptr") << ", " << NODE.action() << ", " << NODE.path_cost() << "}";
 		return stream;
 	}
 #endif

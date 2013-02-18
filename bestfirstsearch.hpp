@@ -302,6 +302,16 @@ namespace jsearch
 			Cost cost_;
 		};
 
+
+#ifndef NDEBUG
+		template <typename Traits, template <typename Traits_> class TiePolicy>
+		std::ostream& operator<<(std::ostream& stream, NodeCost<Traits, TiePolicy> const &O)
+		{
+			stream << "{" << *O.node() << ", " << O.cost() << "}";
+			return stream;
+		}
+#endif
+
 		
 		/*******************************
 		* Recursive best-first search *
@@ -384,6 +394,10 @@ namespace jsearch
 				F.push(INF);
 
 			// WHILE (F[1] <= B and F[1] < infinity)
+#ifndef NDEBUG
+			std::cerr << "F.top(): " << F.top() << "\n";
+			std::cerr << "N.top(): " << N.top() << "\n";
+#endif
 			while(F.top() <= B && F.top() < INF)
 			{
 				auto N0(N.top());
