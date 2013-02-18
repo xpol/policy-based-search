@@ -291,7 +291,8 @@ namespace jsearch
 			bool operator<(NodeCost<Traits, TiePolicy> const &OTHER) const
 			{
 				// Greater-than for max-heap.
-				return cost_ > OTHER.cost_ ? true : split(node_, OTHER.node_);
+				auto const RESULT(cost_ == OTHER.cost_ ? split(node_, OTHER.node_) : (cost_ > OTHER.cost_ ? true : false));
+				return RESULT;
 			}
 
 			void update_cost(Cost const &COST) { 
@@ -394,10 +395,6 @@ namespace jsearch
 				F.push(INF);
 
 			// WHILE (F[1] <= B and F[1] < infinity)
-#ifndef NDEBUG
-			// std::cerr << "F.top(): " << F.top() << "\n";
-			// std::cerr << "N.top(): " << N.top() << "\n";
-#endif
 			while(F.top() <= B && F.top() < INF)
 			{
 				auto N0(N.top());
