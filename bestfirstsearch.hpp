@@ -26,8 +26,8 @@
 
 #include "evaluation.hpp"
 #include "problem.hpp"
-#include "to_string.hpp"
-#include "queue_set.hpp"
+#include "utils/to_string.hpp"
+#include "utils/queue_set.hpp"
 
 #include <algorithm>
 #include <stdexcept>
