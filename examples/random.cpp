@@ -55,8 +55,8 @@ Graph square();
 template <typename Traits>
 using CostFunction = Dijkstra<Traits>;
 
-template <typename T, template <typename T> class Comparator>
-using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>, boost::heap::compare<Comparator<T>>>;
+template <typename T>
+using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>>;
 
 template <typename T>
 using ClosedList = std::unordered_set<T>;
