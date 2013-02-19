@@ -333,8 +333,8 @@ namespace jsearch
 			template <typename Traits_> class GoalTestPolicy,
 			template <typename Traits_> class CreatePolicy = DefaultNodeCreator,
 			template <typename Traits_,
-				template <typename Traits_> class StepCostPolicy,
-				template <typename Traits_> class ResultPolicy,
+				template <typename Traits__> class StepCostPolicy,
+				template <typename Traits__> class ResultPolicy,
 				template <typename Traits__> class CreatePolicy>
 				class ChildPolicy = DefaultChildPolicy>
 		typename Traits::pathcost recursive_best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM, CostFunction<Traits> const &COST, typename Traits::node const &NODE, typename Traits::pathcost const &F_N, typename Traits::pathcost const &B)
@@ -360,7 +360,6 @@ namespace jsearch
 #endif
 
 			constexpr auto const INF(std::numeric_limits<PathCost>::max());
-			// CostFunction<Traits> const COST;
 			auto const f_N(COST.f(NODE));
 
 			// IF f(N)>B, return f(N)
@@ -376,7 +375,6 @@ namespace jsearch
 			if(ACTIONS.empty())
 				return INF;
 
-			// PriorityQueue<Cost, std::greater> F;
 			PriorityQueue<RBFSNodeCost> children;
 
 			// FOR each child Ni of N,
@@ -387,38 +385,28 @@ namespace jsearch
 				// IF f(N)<F(N) THEN F[i] := MAX(F(N),f(Ni))
 				// ELSE F[i] := f(Ni)
 				auto const f_RESULT(f_N < F_N ? std::max(F_N, f_CHILD) : f_CHILD);
-				// F.push(f_RESULT);
-				children.push(RBFSNodeCost(CHILD, f_RESULT));
+				auto const HANDLE(children.push(RBFSNodeCost(CHILD, f_RESULT)));
+				(*HANDLE).handle = HANDLE; // Looks weird, makes sense.
 			}
 
 			// sort Ni and F[i] in increasing order of F[i]
 			/*	They sort automatically.	*/
 
 			// IF only one child, F[2] := infinity
-			/*	I assume adding infinity to the end of F is to act as a sentinel value.	*/
-			// if(F.size() == 1)
-				// F.push(INF);
+			/*	Handle this sentinel value later.	*/
 
 			// WHILE (F[1] <= B and F[1] < infinity)
-			/*	I fail to see the point of testing for less than infinity???	*/
-			while(children.top().cost() <= B)
+			/*	TODO: I fail to see the point of testing for less than infinity???	*/
+			while(children.top().cost() <= B && children.top().cost() < INF)
 			{
 				auto it(children.ordered_begin());
 				auto const &BEST(*it++);
-				// auto const OLD_COST(BEST.cost());
-				Cost const SECOND_BEST_COST(it == children.ordered_end() ? INF : it->cost());
-				auto const HANDLE(ChildrenPQ::s_handle_from_iterator(children.begin())); // Requires ordinary iterator.
-				// children.pop();
-				// F.pop();
+				auto const SECOND_BEST_COST(it == children.ordered_end() ? INF : it->cost());
 				// F[1] := RBFS(N1, F[1], MIN(B, F[2]))
-				(*HANDLE).update_cost(recursive_best_first_search<CostFunction, TiePolicy, PriorityQueue>(PROBLEM, COST, BEST.node(), BEST.cost(), std::min(B, SECOND_BEST_COST)));
-				children.update(HANDLE);
-				
+				(*BEST.handle).update_cost(recursive_best_first_search<CostFunction, TiePolicy, PriorityQueue>(PROBLEM, COST, BEST.node(), BEST.cost(), std::min(B, SECOND_BEST_COST)));
 				// insert N1 and F[1] in sorted order
-				// children.push(N0);
-				// F.push(N0.cost());
-				// N.insert(std::upper_bound(std::begin(N), std::end(N), N0, NCOMP), N0);
-				// F.insert(std::upper_bound(std::begin(F), std::end(F), N0.second), N0.second);
+				/*	N1 is updated in-place.	*/
+				children.update(BEST.handle);
 			}
 
 			// return F[1]
@@ -440,8 +428,8 @@ namespace jsearch
 		template <typename Traits_> class GoalTestPolicy,
 		template <typename Traits_> class CreatePolicy = DefaultNodeCreator,
 		template <typename Traits_,
-			template <typename Traits_> class StepCostPolicy,
-			template <typename Traits_> class ResultPolicy,
+			template <typename Traits__> class StepCostPolicy,
+			template <typename Traits__> class ResultPolicy,
 			template <typename Traits__> class CreatePolicy>
 			class ChildPolicy = DefaultChildPolicy>
 	typename Traits::node recursive_best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM)
