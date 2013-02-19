@@ -128,7 +128,7 @@ namespace jsearch
 		using PathCostPolicy<Traits>::g;
 		using HeuristicPolicy<Traits>::h;
 
-	protected:
+	public:
 		typedef typename Traits::node Node;
 		typedef typename Traits::cost Cost;
 
@@ -149,7 +149,7 @@ namespace jsearch
 	{
 		using HeuristicPolicy<Traits>::h;
 
-	protected:
+	public:
 		typedef typename Traits::node Node;
 		typedef typename Traits::cost Cost;
 		typedef typename Traits::heuristic_cost HeuristicCost;
@@ -172,7 +172,7 @@ namespace jsearch
 	{
 		using PathCostPolicy<Traits>::g;
 
-	protected:
+	public:
 		typedef typename Traits::node Node;
 		typedef typename Traits::cost Cost;
 		typedef typename Traits::pathcost PathCost;
