@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <limits>
 
 #ifndef NDEBUG
 #include <iostream>
@@ -292,8 +293,7 @@ namespace jsearch
 				return RESULT;
 			}
 
-			void update_cost(Cost const &COST) {
-				cost_ = COST; }
+			void update_cost(Cost const &COST) { cost_ = COST; }
 
 			handle_type handle;
 
@@ -445,7 +445,6 @@ namespace jsearch
 		try
 		{
 			recursive::recursive_best_first_search<CostFunction, TiePolicy, PriorityQueue>(PROBLEM, COST, initial, COST.f(initial), INF);
-			assert(result); // Should not actually ever reach this code.
 		}
 		catch(recursive::goal_found<Node> const &EX)
 		{

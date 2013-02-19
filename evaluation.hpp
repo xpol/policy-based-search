@@ -26,6 +26,7 @@
 #define EVALUATION_H
 
 #include <functional>
+
 #ifndef NDEBUG
 #include <iostream>
 #endif
@@ -113,6 +114,22 @@ namespace jsearch
 	};
 
 
+	template <typename Traits>
+	class FalseTiePolicy
+	{
+	protected:
+		typedef typename Traits::node Node;
+
+		FalseTiePolicy() {}
+		~FalseTiePolicy() {}
+
+		constexpr bool split(Node const &, Node const &) const
+		{
+			return false;
+		}
+	};
+	
+
 	/******************
 	 * Cost functions *
 	 ******************/
@@ -128,7 +145,7 @@ namespace jsearch
 		using PathCostPolicy<Traits>::g;
 		using HeuristicPolicy<Traits>::h;
 
-	public:
+	public: // Making this public so that it can be used flexibly.  Bad?
 		typedef typename Traits::node Node;
 		typedef typename Traits::cost Cost;
 
@@ -152,7 +169,6 @@ namespace jsearch
 	public:
 		typedef typename Traits::node Node;
 		typedef typename Traits::cost Cost;
-		typedef typename Traits::heuristic_cost HeuristicCost;
 
 		Greedy() {}
 		~Greedy() {}
@@ -175,7 +191,6 @@ namespace jsearch
 	public:
 		typedef typename Traits::node Node;
 		typedef typename Traits::cost Cost;
-		typedef typename Traits::pathcost PathCost;
 
 		Dijkstra() {}
 		~Dijkstra() {}
@@ -209,9 +224,6 @@ namespace jsearch
 
 	public:
 		typedef typename Traits::node Node;
-		typedef typename Traits::pathcost PathCost;
-		typedef typename Traits::state State;
-		typedef typename Traits::cost Cost;
 
 		TiebreakingComparator() {}
 
@@ -233,9 +245,6 @@ namespace jsearch
 
 	public:
 		typedef typename Traits::node Node;
-		typedef typename Traits::pathcost PathCost;
-		typedef typename Traits::state State;
-		typedef typename Traits::cost Cost;
 
 		SimpleComparator() {}
 
