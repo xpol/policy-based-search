@@ -76,15 +76,15 @@ namespace jsearch
 	/**
 	 * @brief Handle the fate of a child being added to the frontier.
 	 *
-	 * @return: An OpenList element that equals
+	 * @return: A Frontier element that equals
 	 * 				i) nullptr if CHILD was not added to the frontier
 	 * 				ii) CHILD if CHILD was added to the frontier, or
 	 * 				iii) another element if CHILD replaced it on the frontier.
 	 * */
-	template <class OpenList>
-	inline typename OpenList::value_type handle_child(OpenList &frontier, typename OpenList::const_reference const &CHILD)
+	template <class Frontier>
+	inline typename Frontier::value_type handle_child(Frontier &frontier, typename Frontier::const_reference const &CHILD)
 	{
-		typename OpenList::value_type result(nullptr); // Initialize to nullptr since it might be a bald pointer.
+		typename Frontier::value_type result(nullptr); // Initialize to nullptr since it might be a bald pointer.
 
 		auto const IT(frontier.find(CHILD->state()));
 
