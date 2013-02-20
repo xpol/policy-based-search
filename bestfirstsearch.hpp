@@ -272,12 +272,13 @@ namespace jsearch
 		template <typename Traits, template <typename Traits_> class TiePolicy, template <typename T> class PriorityQueue>
 		class NodeCost : protected TiePolicy<Traits>
 		{
-			typedef typename Traits::node Node;
-			typedef typename Traits::cost Cost;
 			using TiePolicy<Traits>::split;
-			typedef typename PriorityQueue<NodeCost<Traits, TiePolicy, PriorityQueue>>::handle_type handle_type;
 
 		public:
+			typedef typename Traits::node Node;
+			typedef typename Traits::cost Cost;
+			typedef typename PriorityQueue<NodeCost<Traits, TiePolicy, PriorityQueue>>::handle_type handle_type;
+
 			NodeCost(Node const &NODE, Cost const &COST) : node_(NODE), cost_(COST) {}
 
 			const Node &node() const { return node_; }
