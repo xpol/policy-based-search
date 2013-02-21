@@ -18,8 +18,8 @@
 */
 
 /**
- * @file evaluation.h
- * @brief A* comparator and associated heuristic, tie-breaker and path-cost policies.
+ * @file evaluation.hpp
+ * @brief Cost functions, tie-breakers, comparators and default heuristic and path-cost policies.
  */
 
 #ifndef EVALUATION_H

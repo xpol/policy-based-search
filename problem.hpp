@@ -17,7 +17,7 @@
 */
 
 /**
- * @file problem.h
+ * @file problem.hpp
  * @brief Problem definition class according to the state model and some associated policy classes.
  */
 

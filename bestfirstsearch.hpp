@@ -17,8 +17,8 @@
 */
 
 /**
- * @file search.h
- * @brief Domain-independent best-first search function (and hidden helper functions).
+ * @file bestfirstsearch.hpp
+ * @brief Domain-independent best-first search functions (and hidden helper functions).
  */
 
 #ifndef SEARCH_H
@@ -241,7 +241,6 @@ namespace jsearch
 			else
 			{
 				std::vector<Action> const ACTIONS(PROBLEM.actions(S->state()));
-				// TODO: Lazy child generation.
 				// TODO: Change to std::for_each once gcc bug #53624 is fixed.
 				for(auto const ACTION : ACTIONS)
 				{
@@ -257,18 +256,6 @@ namespace jsearch
 
 	namespace recursive
 	{
-		template <typename Node>
-		class goal_found : public std::exception
-		{
-		public:
-			goal_found(Node const &SOLUTION) : SOLUTION(SOLUTION) {}
-			Node solution() const { return SOLUTION; }
-
-		private:
-			Node SOLUTION;
-		};
-
-
 		template <typename Traits, template <typename Traits_> class TiePolicy, template <typename T> class PriorityQueue>
 		class NodeCost : protected TiePolicy<Traits>
 		{
@@ -296,7 +283,7 @@ namespace jsearch
 
 			void update_cost(Cost const &COST) { cost_ = COST; }
 
-			handle_type handle;
+			handle_type handle; // TODO: Encapsulate.
 
 		private:
 			Node node_;
@@ -314,6 +301,14 @@ namespace jsearch
 #endif
 
 
+		/**
+		 * If SearchResult::first == nullptr then SearchResult::pathcost contains a valid value.
+		 * If SearchResult::first != nullptr then it is the goal node and SearchResult::second is undefined.
+		 */
+		template <typename Traits>
+		using SearchResult = std::pair<typename Traits::node, typename Traits::pathcost>;
+
+		
 		/*******************************
 		* Recursive best-first search *
 		*******************************/
@@ -334,7 +329,7 @@ namespace jsearch
 				template <typename Traits__> class ResultPolicy,
 				template <typename Traits__> class CreatePolicy>
 				class ChildPolicy = DefaultChildPolicy>
-		typename Traits::pathcost recursive_best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM, CostFunction<Traits> const &COST, typename Traits::node const &NODE, typename Traits::pathcost const &F_N, typename Traits::pathcost const &B)
+		SearchResult<Traits> recursive_best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM, CostFunction<Traits> const &COST, typename Traits::node const &NODE, typename Traits::pathcost const &F_N, typename Traits::pathcost const &B)
 		{
 			typedef typename Traits::node Node;
 			typedef typename Traits::state State;
@@ -343,6 +338,7 @@ namespace jsearch
 			typedef typename Traits::cost Cost;
 			typedef NodeCost<Traits, TiePolicy, PriorityQueue> RBFSNodeCost; // uhh...
 			typedef PriorityQueue<RBFSNodeCost> ChildrenPQ;
+			typedef SearchResult<Traits> RBFSResult;
 
 			using std::placeholders::_1;
 			using std::placeholders::_2;
@@ -361,16 +357,17 @@ namespace jsearch
 
 			// IF f(N)>B, return f(N)
 			if(f_N > B)
-				return f_N;
+				return RBFSResult(nullptr, f_N);
 
 			// IF N is a goal, EXIT algorithm
 			if(PROBLEM.goal_test(NODE->state()))
-				throw recursive::goal_found<Node>(NODE);
+				return RBFSResult(NODE, 0);
+				// throw recursive::goal_found<Node>(NODE);
 			auto const ACTIONS(PROBLEM.actions(NODE->state()));
 
 			// IF N has no children, RETURN infinity
 			if(ACTIONS.empty())
-				return INF;
+				return RBFSResult(nullptr, INF);
 
 			PriorityQueue<RBFSNodeCost> children;
 
@@ -400,20 +397,26 @@ namespace jsearch
 				auto const &BEST(*it++);
 				auto const SECOND_BEST_COST(it == children.ordered_end() ? INF : it->cost());
 				// F[1] := RBFS(N1, F[1], MIN(B, F[2]))
-				(*BEST.handle).update_cost(recursive_best_first_search<CostFunction, TiePolicy, PriorityQueue>(PROBLEM, COST, BEST.node(), BEST.cost(), std::min(B, SECOND_BEST_COST)));
+				auto const RESULT(recursive_best_first_search<CostFunction, TiePolicy, PriorityQueue>(PROBLEM, COST, BEST.node(), BEST.cost(), std::min(B, SECOND_BEST_COST)));
+				if(!RESULT.first)
+					(*BEST.handle).update_cost(RESULT.second);
+				else
+					return RESULT;
 				// insert N1 and F[1] in sorted order
 				/*	N1 is updated in-place.	*/
 				children.update(BEST.handle);
 			}
 
 			// return F[1]
-			return children.top().cost();
+			return RBFSResult(nullptr, children.top().cost());
 		}
 	}
 
 
 	/**
-	 * The interface to RBFS.
+	 * \brief Recursive best-first search (RBFS) from Korf (1993).
+	 *
+	 * \return nullptr if no goal is found or a goal Node from which the path can be reconstructed.
 	 */
 	template <template <typename Traits> class CostFunction,
 		template <typename Traits> class TiePolicy,
@@ -439,20 +442,11 @@ namespace jsearch
 
 		constexpr auto const INF(std::numeric_limits<PathCost>::max());
 		auto initial(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
-		Node result; // Unnecessary but polite to the compiler.
 		CostFunction<Traits> const COST; // TODO: Design flaw?
 
+		auto const RESULT(recursive::recursive_best_first_search<CostFunction, TiePolicy, PriorityQueue>(PROBLEM, COST, initial, COST.f(initial), INF));
 
-		try
-		{
-			recursive::recursive_best_first_search<CostFunction, TiePolicy, PriorityQueue>(PROBLEM, COST, initial, COST.f(initial), INF);
-		}
-		catch(recursive::goal_found<Node> const &EX)
-		{
-			result = EX.solution();
-		}
-		// Don't catch goal_not_found, let it propagate.
-		return result;
+		return RESULT.first;
 	}
 }
 
