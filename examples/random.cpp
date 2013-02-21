@@ -52,7 +52,10 @@ template <typename Traits>
 using CostFunction = Dijkstra<Traits>;
 
 template <typename T>
-using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>>;
+using RBFSPriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>>;
+
+template <typename T, typename Comparator>
+using PriorityQueue = boost::heap::d_ary_heap<T, boost::heap::mutable_<true>, boost::heap::arity<2>, boost::heap::compare<Comparator>>;
 
 template <typename T>
 using ClosedList = std::unordered_set<T>;
@@ -72,7 +75,7 @@ int main(int argc, char **argv)
 	try
 	{
 		auto const T0(chrono::high_resolution_clock::now());
-		auto const SOLUTION(jsearch::recursive_best_first_search<CostFunction, FalseTiePolicy, PriorityQueue>(PROBLEM));
+		auto const SOLUTION(jsearch::recursive_best_first_search<CostFunction, FalseTiePolicy, RBFSPriorityQueue>(PROBLEM));
 		// auto const SOLUTION(jsearch::best_first_search<PriorityQueue, Comparator, ClosedList, Map>(PROBLEM));
 		auto const ELAPSED(chrono::high_resolution_clock::now() - T0);
 		cout.imbue(locale(""));

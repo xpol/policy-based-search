@@ -51,7 +51,78 @@ namespace jsearch
 	
 	statistics stats;
 #endif
-	
+
+
+	namespace detail
+	{
+		/**
+		* @brief Encapsulate the top()+pop() calls into a single pop().
+		*/
+		template <typename PriorityQueue>
+		inline typename PriorityQueue::value_type pop(PriorityQueue &pq)
+		{
+			auto const E(pq.top());
+			pq.pop();
+			return E;
+		}
+
+
+		/**
+		* @brief Handle the fate of a child being added to the frontier.
+		*
+		* @return: A Frontier element that equals
+		* 				i) nullptr if CHILD was not added to the frontier
+		* 				ii) CHILD if CHILD was added to the frontier, or
+		* 				iii) another element if CHILD replaced it on the frontier.
+		* */
+		template <class Frontier>
+		inline typename Frontier::value_type handle_child(Frontier &frontier, typename Frontier::const_reference const &CHILD)
+		{
+			typename Frontier::value_type result(nullptr); // Initialize to nullptr since it might be a bald pointer.
+
+			auto const IT(frontier.find(CHILD->state()));
+
+			if(IT != std::end(frontier))
+			{
+				auto const &DUPLICATE((IT->second)); // The duplicate on the frontier.
+				if(CHILD->path_cost() < (*DUPLICATE)->path_cost())
+				{
+	#ifndef NDEBUG
+					std::cout << jwm::to_string(CHILD->state()) << ": replace " << (*DUPLICATE)->path_cost() << " with " << CHILD->path_cost() << ".\n";
+	#endif
+	#ifdef STATISTICS
+					++stats.decreased;
+	#endif
+					result = (*DUPLICATE); // Store a copy of the node that we are about to replace.
+					frontier.increase(DUPLICATE, CHILD); // The DECREASE-KEY operation is an increase because it is a max-heap.
+				}
+				else
+				{
+	#ifndef NDEBUG
+					std::cout << jwm::to_string(CHILD->state()) << ": keep " << (*DUPLICATE)->path_cost() << " and throw away " << CHILD->path_cost() << ".\n";
+	#endif
+	#ifdef STATISTICS
+					++stats.discarded;
+	#endif
+				}
+			}
+			else
+			{
+				frontier.push(CHILD);
+				result = CHILD;
+	#ifndef NDEBUG
+				std::cout << "frontier <= " << jwm::to_string(CHILD->state()) << "\n";
+	#endif
+	#ifdef STATISTICS
+				++stats.pushed;
+	#endif
+			}
+
+			return result;
+		}
+	}
+
+
 	/**
 	 * @brief goal_not_found is thrown... when... < drum roll > THE GOAL IS NOT FOUND!
 	 */
@@ -60,75 +131,8 @@ namespace jsearch
 	public:
 		goal_not_found() {}
 	};
-
-
-	/**
-	 * @brief Encapsulate the top()+pop() calls into a single pop().
-	 */
-	template <typename PriorityQueue>
-	inline typename PriorityQueue::value_type pop(PriorityQueue &pq)
-	{
-		auto const E(pq.top());
-		pq.pop();
-		return E;
-	}
-
-
-	/**
-	 * @brief Handle the fate of a child being added to the frontier.
-	 *
-	 * @return: A Frontier element that equals
-	 * 				i) nullptr if CHILD was not added to the frontier
-	 * 				ii) CHILD if CHILD was added to the frontier, or
-	 * 				iii) another element if CHILD replaced it on the frontier.
-	 * */
-	template <class Frontier>
-	inline typename Frontier::value_type handle_child(Frontier &frontier, typename Frontier::const_reference const &CHILD)
-	{
-		typename Frontier::value_type result(nullptr); // Initialize to nullptr since it might be a bald pointer.
-
-		auto const IT(frontier.find(CHILD->state()));
-
-		if(IT != std::end(frontier))
-		{
-			auto const &DUPLICATE((IT->second)); // The duplicate on the frontier.
-			if(CHILD->path_cost() < (*DUPLICATE)->path_cost())
-			{
-#ifndef NDEBUG
-				std::cout << jwm::to_string(CHILD->state()) << ": replace " << (*DUPLICATE)->path_cost() << " with " << CHILD->path_cost() << ".\n";
-#endif
-#ifdef STATISTICS
-				++stats.decreased;
-#endif
-				result = (*DUPLICATE); // Store a copy of the node that we are about to replace.
-				frontier.increase(DUPLICATE, CHILD); // The DECREASE-KEY operation is an increase because it is a max-heap.
-			}
-			else
-			{
-#ifndef NDEBUG
-				std::cout << jwm::to_string(CHILD->state()) << ": keep " << (*DUPLICATE)->path_cost() << " and throw away " << CHILD->path_cost() << ".\n";
-#endif
-#ifdef STATISTICS
-				++stats.discarded;
-#endif
-			}
-		}
-		else
-		{
-			frontier.push(CHILD);
-			result = CHILD;
-#ifndef NDEBUG
-			std::cout << "frontier <= " << jwm::to_string(CHILD->state()) << "\n";
-#endif
-#ifdef STATISTICS
-			++stats.pushed;
-#endif
-		}
-
-		return result;
-	}
-
-
+	
+	
 	/**************************
 	 * 	 	 Graph search	  *
 	 **************************/
@@ -163,7 +167,7 @@ namespace jsearch
 
 		while(!frontier.empty())
 		{
-			auto const S(pop(frontier));
+			auto const S(detail::pop(frontier));
 #ifndef NDEBUG
 			std::cout << S->state() << " <= frontier\n";
 #endif
@@ -189,7 +193,7 @@ namespace jsearch
 					if(closed.find(SUCCESSOR) == std::end(closed)) // If it is NOT in closed...
 					{
 						auto const CHILD(PROBLEM.child(S, ACTION, SUCCESSOR));
-						handle_child(frontier, CHILD);
+						detail::handle_child(frontier, CHILD);
 					}
 				}
 			}
@@ -229,7 +233,7 @@ namespace jsearch
 
 		while(!frontier.empty())
 		{
-			auto const S(pop(frontier));
+			auto const S(detail::pop(frontier));
 
 			if(PROBLEM.goal_test(S->state()))
 			{
@@ -362,7 +366,6 @@ namespace jsearch
 			// IF N is a goal, EXIT algorithm
 			if(PROBLEM.goal_test(NODE->state()))
 				return RBFSResult(NODE, 0);
-				// throw recursive::goal_found<Node>(NODE);
 			auto const ACTIONS(PROBLEM.actions(NODE->state()));
 
 			// IF N has no children, RETURN infinity
@@ -416,7 +419,9 @@ namespace jsearch
 	/**
 	 * \brief Recursive best-first search (RBFS) from Korf (1993).
 	 *
-	 * \return nullptr if no goal is found or a goal Node from which the path can be reconstructed.
+	 * \return A goal Node from which the path can be reconstructed.
+	 *
+	 * \throws goal_not_found
 	 */
 	template <template <typename Traits> class CostFunction,
 		template <typename Traits> class TiePolicy,
@@ -446,6 +451,9 @@ namespace jsearch
 
 		auto const RESULT(recursive::recursive_best_first_search<CostFunction, TiePolicy, PriorityQueue>(PROBLEM, COST, initial, COST.f(initial), INF));
 
+		if(!RESULT.first)
+			throw goal_not_found();
+		
 		return RESULT.first;
 	}
 }
