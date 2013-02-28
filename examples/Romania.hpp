@@ -32,16 +32,14 @@
 #include <algorithm>
 #include <vector>
 
-class Romania
+struct Romania
 {
-public:
 	typedef std::string state;
 	typedef std::string action;
 	typedef unsigned int cost;
 	typedef cost pathcost;
 	typedef std::shared_ptr<jsearch::DefaultNode<Romania>> node;
 	typedef cost heuristic_cost; // Often but not necessarily the same as pathcost.
-	static bool const combinatorial = false;
 };
 
 /* Obviously, one would never use the following data structure in a real program, but for this toy
