@@ -1,3 +1,15 @@
 
 
-Documentation is available on the project's wiki: https://code.google.com/p/policy-based-search/
+Detailed documentation is available on the project's wiki: https://code.google.com/p/policy-based-search/
+
+The source code also contains Doxygen mark-up from which you can generate some documentation that is mostly
+descriptive.
+
+
+QUICK START
+
+bestfirstsearch.hpp		Contains the search function templates.  Include this wherever you want to search.
+problem.hpp				Include this where you define the problem.
+evaluation.hpp			Include this where you define the comparator, priority queue, etc.
+
+See the examples or wiki for details.
