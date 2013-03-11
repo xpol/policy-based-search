@@ -99,7 +99,6 @@ struct TSP
 	typedef unsigned int cost;
 	typedef unsigned int pathcost;
 	typedef std::shared_ptr<jsearch::ComboNode<TSP>> node;
-	static constexpr bool const combinatorial = true; // TODO: Hmmm... is this actually usable at compile time?
 };
 
 

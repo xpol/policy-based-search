@@ -344,9 +344,6 @@ namespace jsearch
 			typedef PriorityQueue<RBFSNodeCost> ChildrenPQ;
 			typedef SearchResult<Traits> RBFSResult;
 
-			using std::placeholders::_1;
-			using std::placeholders::_2;
-
 			/*	A single-line comment (//) is a direct quotes from the algorithm, to show how it has been interpreted.
 			*	Mainly so that if there is a bug, it will be easier to track down.  :)
 			*
@@ -356,7 +353,10 @@ namespace jsearch
 			std::cerr << ">>> " << __FUNCTION__ << "(PROBLEM, COST, " << *NODE << ", " << F_N << ", " << B << ")\n";
 #endif
 
-			constexpr auto const INF(std::numeric_limits<PathCost>::max()); // TODO: Is this correct?
+// What I hope is a legitimate use of a macro.
+#ifndef RBFS_INF
+#define RBFS_INF	std::numeric_limits<PathCost>::max()
+#endif
 			auto const f_N(COST.f(NODE));
 
 			// IF f(N)>B, return f(N)
@@ -370,7 +370,7 @@ namespace jsearch
 
 			// IF N has no children, RETURN infinity
 			if(ACTIONS.empty())
-				return RBFSResult(nullptr, INF);
+				return RBFSResult(nullptr, RBFS_INF);
 
 			PriorityQueue<RBFSNodeCost> children;
 
@@ -394,11 +394,11 @@ namespace jsearch
 
 			// WHILE (F[1] <= B and F[1] < infinity)
 			/*	TODO: I almost fail to see the point of testing for less than infinity???	*/
-			while(children.top().cost() <= B && children.top().cost() < INF)
+			while(children.top().cost() <= B && children.top().cost() < RBFS_INF)
 			{
 				auto it(children.ordered_begin());
 				auto const &BEST(*it++);
-				auto const SECOND_BEST_COST(it == children.ordered_end() ? INF : it->cost());
+				auto const SECOND_BEST_COST(it == children.ordered_end() ? RBFS_INF : it->cost());
 				// F[1] := RBFS(N1, F[1], MIN(B, F[2]))
 				auto const RESULT(recursive_best_first_search<CostFunction, TiePolicy, PriorityQueue>(PROBLEM, COST, BEST.node(), BEST.cost(), std::min(B, SECOND_BEST_COST)));
 				if(!RESULT.first)
@@ -414,6 +414,10 @@ namespace jsearch
 			return RBFSResult(nullptr, children.top().cost());
 		}
 	}
+
+#ifdef RBFS_INF
+#undef RBFS_INF
+#endif
 
 
 	/**
