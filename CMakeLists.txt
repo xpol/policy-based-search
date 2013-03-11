@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project("best-first search")
 add_subdirectory(examples)
-install(FILES *.hpp utils/*.hpp DESTINATION include)
+FILE(GLOB headers *.hpp)
+install(FILES ${headers} DESTINATION include)
+install(DIRECTORY utils DESTINATION include FILES_MATCHING PATTERN "*.hpp")
