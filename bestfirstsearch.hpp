@@ -156,7 +156,7 @@ namespace jsearch
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
-		typedef typename Traits::pathcost PathCost;
+		// typedef typename Traits::pathcost PathCost;
 
 		typedef jsearch::queue_set<PriorityQueue<Node, Comparator<Traits>>, Map> Frontier;
 		typedef Set<State> ClosedSet;
@@ -222,9 +222,9 @@ namespace jsearch
 	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM)
 	{
 		typedef typename Traits::node Node;
-		typedef typename Traits::state State;
+		// typedef typename Traits::state State;
 		typedef typename Traits::action Action;
-		typedef typename Traits::pathcost PathCost;
+		// typedef typename Traits::pathcost PathCost;
 
 		typedef PriorityQueue<Node, Comparator<Traits>> Frontier;
 
@@ -335,13 +335,13 @@ namespace jsearch
 				class ChildPolicy = DefaultChildPolicy>
 		SearchResult<Traits> recursive_best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM, CostFunction<Traits> const &COST, typename Traits::node const &NODE, typename Traits::pathcost const &F_N, typename Traits::pathcost const &B)
 		{
-			typedef typename Traits::node Node;
-			typedef typename Traits::state State;
-			typedef typename Traits::action Action;
+			// typedef typename Traits::node Node;
+			// typedef typename Traits::state State;
+			// typedef typename Traits::action Action;
 			typedef typename Traits::pathcost PathCost;
-			typedef typename Traits::cost Cost;
+			// typedef typename Traits::cost Cost;
 			typedef NodeCost<Traits, TiePolicy, PriorityQueue> RBFSNodeCost; // uhh...
-			typedef PriorityQueue<RBFSNodeCost> ChildrenPQ;
+			// typedef PriorityQueue<RBFSNodeCost> ChildrenPQ;
 			typedef SearchResult<Traits> RBFSResult;
 
 			/*	A single-line comment (//) is a direct quotes from the algorithm, to show how it has been interpreted.
@@ -444,7 +444,7 @@ namespace jsearch
 	typename Traits::node recursive_best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM)
 	{
 		typedef typename Traits::node Node;
-		typedef typename Traits::state State;
+		// typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 
