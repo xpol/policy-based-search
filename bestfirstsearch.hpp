@@ -56,18 +56,18 @@ namespace jsearch
 	namespace detail
 	{
 		/**
-		* @brief Encapsulate the top()+pop() calls into a single pop().
-		*/
-		template <typename PriorityQueue>
-		inline typename PriorityQueue::value_type pop(PriorityQueue &pq)
-		{
-			auto const E(pq.top());
-			pq.pop();
-			return E;
-		}
+        * @brief Encapsulate the top()+pop() calls into a single pop().
+        */
+        template <typename PriorityQueue>
+        inline typename PriorityQueue::value_type pop(PriorityQueue &pq)
+        {
+            auto const E(pq.top());
+            pq.pop();
+            return std::move(E);
+        }
 
 
-		/**
+        /**
 		* @brief Handle the fate of a child being added to the frontier.
 		*
 		* @return: A Frontier element that equals
@@ -76,30 +76,30 @@ namespace jsearch
 		* 				iii) another element if CHILD replaced it on the frontier.
 		* */
 		template <class Frontier>
-		inline typename Frontier::value_type handle_child(Frontier &frontier, typename Frontier::const_reference const &CHILD)
+        inline typename Frontier::value_type handle_child(Frontier &frontier, typename Frontier::const_reference const &CHILD)
 		{
-			typename Frontier::value_type result(nullptr); // Initialize to nullptr since it might be a bald pointer.
+            typename Frontier::value_type result(nullptr); // Initialize to nullptr since it might be a bald pointer.
 
-			auto const IT(frontier.find(CHILD->state()));
+            auto const IT(frontier.find(CHILD->state()));
 
 			if(IT != std::end(frontier))
 			{
-				auto const &DUPLICATE((IT->second)); // The duplicate on the frontier.
-				if(CHILD->path_cost() < (*DUPLICATE)->path_cost())
+                auto const &DUPLICATE((IT->second)); // The duplicate on the frontier.
+                if(CHILD->path_cost() < (*DUPLICATE)->path_cost())
 				{
 	#ifndef NDEBUG
-					std::cout << jwm::to_string(CHILD->state()) << ": replace " << (*DUPLICATE)->path_cost() << " with " << CHILD->path_cost() << ".\n";
+                    std::cout << jwm::to_string(CHILD->state()) << ": replace " << (*DUPLICATE)->path_cost() << " with " << CHILD->path_cost() << ".\n";
 	#endif
 	#ifdef STATISTICS
 					++stats.decreased;
 	#endif
-					result = (*DUPLICATE); // Store a copy of the node that we are about to replace.
-					frontier.increase(DUPLICATE, CHILD); // The DECREASE-KEY operation is an increase because it is a max-heap.
-				}
+                    result = (*DUPLICATE); // Store a copy of the node that we are about to replace.
+                    frontier.increase(DUPLICATE, CHILD); // The DECREASE-KEY operation is an increase because it is a max-heap.
+                }
 				else
 				{
 	#ifndef NDEBUG
-					std::cout << jwm::to_string(CHILD->state()) << ": keep " << (*DUPLICATE)->path_cost() << " and throw away " << CHILD->path_cost() << ".\n";
+                    std::cout << jwm::to_string(CHILD->state()) << ": keep " << (*DUPLICATE)->path_cost() << " and throw away " << CHILD->path_cost() << ".\n";
 	#endif
 	#ifdef STATISTICS
 					++stats.discarded;
@@ -108,17 +108,17 @@ namespace jsearch
 			}
 			else
 			{
-				frontier.push(CHILD);
-				result = CHILD;
+                frontier.push(CHILD);
+                result = CHILD;
 	#ifndef NDEBUG
-				std::cout << "frontier <= " << jwm::to_string(CHILD->state()) << "\n";
+                std::cout << "frontier <= " << jwm::to_string(CHILD->state()) << "\n";
 	#endif
 	#ifdef STATISTICS
 				++stats.pushed;
 	#endif
 			}
 
-			return result;
+            return result;
 		}
 	}
 
@@ -132,8 +132,8 @@ namespace jsearch
 		goal_not_found() {}
 	};
 	
-	
-	/**************************
+    
+    /**************************
 	 * 	 	 Graph search	  *
 	 **************************/
 	template <template <typename T, typename Comparator> class PriorityQueue,
@@ -150,52 +150,57 @@ namespace jsearch
 				template <typename Traits__> class StepCostPolicy,
 				template <typename Traits__> class ResultPolicy,
 				template <typename Traits__> class CreatePolicy>
-				class ChildPolicy = DefaultChildPolicy>
-	typename Traits::node best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM)
+				class ChildPolicy = DefaultChildPolicy,
+            typename Output>
+	typename Traits::pathcost best_first_search(Problem<Traits, StepCostPolicy, ActionsPolicy, ResultPolicy, GoalTestPolicy, CreatePolicy, ChildPolicy> const &PROBLEM, Output path)
 	{
-		typedef typename Traits::node Node;
+        typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		// typedef typename Traits::pathcost PathCost;
 
-		typedef jsearch::queue_set<PriorityQueue<Node, Comparator<Traits>>, Map> Frontier;
-		typedef Set<State> ClosedSet;
+        jsearch::queue_set<PriorityQueue<Node, Comparator<Traits>>, Map> frontier;
+        Set<State> closed;
 
-		Frontier frontier;
-		ClosedSet closed;
-		frontier.push(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
+        frontier.push(PROBLEM.create(PROBLEM.initial, Node(), Action(), 0));
 
 		while(!frontier.empty())
 		{
-			auto const S(detail::pop(frontier));
+            auto const S(detail::pop(frontier));
 #ifndef NDEBUG
-			std::cout << S->state() << " <= frontier\n";
+            std::cout << S->state() << " <= frontier\n";
 #endif
 #ifdef STATISTICS
 			++stats.popped;
 #endif
-			if(PROBLEM.goal_test(S->state()))
+            if(PROBLEM.goal_test(S->state()))
 			{
 #ifndef NDEBUG
 				std::cout << "frontier: " << frontier.size() << "\n";
 				std::cout << "closed: " << closed.size() << "\n";
 #endif
-				return S;
+                std::function<Output(Output &, Node const &)> unravel =  [&](Output &path, Node const &node)
+                                {
+                                    *path++ = node->state();
+                                    if(node->parent())
+                                        return unravel(path, node->parent());
+                                    else
+                                        return path;
+                                };
+                unravel(path, S);
+                return S->path_cost();
 			}
 			else
 			{
-				closed.insert(S->state());
-				auto const ACTIONS(PROBLEM.actions(S->state()));
-				// TODO: Change to std::for_each once gcc bug #53624 is fixed.
-				for(auto const ACTION : ACTIONS)
-				{
-					auto const SUCCESSOR(PROBLEM.result(S->state(), ACTION));
-					if(closed.find(SUCCESSOR) == std::end(closed)) // If it is NOT in closed...
-					{
-						auto const CHILD(PROBLEM.child(S, ACTION, SUCCESSOR));
-						detail::handle_child(frontier, CHILD);
-					}
-				}
+                closed.insert(S->state());
+                auto const &ACTIONS(PROBLEM.actions(S->state()));
+                // TODO: Change to auto parameter declaration once C++14 is implemented.
+                std::for_each(std::begin(ACTIONS), std::end(ACTIONS), [&](Action const &ACTION)
+                {
+                    auto const &SUCCESSOR(PROBLEM.result(S->state(), ACTION));
+                    if(closed.find(SUCCESSOR) == std::end(closed))
+                        detail::handle_child(frontier, PROBLEM.child(S, ACTION, SUCCESSOR));
+                });
 			}
 		}
 
@@ -233,7 +238,7 @@ namespace jsearch
 
 		while(!frontier.empty())
 		{
-			auto const S(detail::pop(frontier));
+            auto const S(detail::pop(frontier));
 
 			if(PROBLEM.goal_test(S->state()))
 			{
@@ -244,13 +249,12 @@ namespace jsearch
 			}
 			else
 			{
-				std::vector<Action> const ACTIONS(PROBLEM.actions(S->state()));
-				// TODO: Change to std::for_each once gcc bug #53624 is fixed.
-				for(auto const ACTION : ACTIONS)
+				auto const &ACTIONS(PROBLEM.actions(S->state()));
+                
+				std::for_each(std::begin(ACTIONS), std::end(ACTIONS), [&](Action const &action)
 				{
-					auto const CHILD(PROBLEM.child(S, ACTION));
-					frontier.push(CHILD);
-				}
+                    frontier.emplace(PROBLEM.child(S, action));
+				});
 			}
 		}
 
@@ -463,3 +467,5 @@ namespace jsearch
 }
 
 #endif // SEARCH_H
+
+

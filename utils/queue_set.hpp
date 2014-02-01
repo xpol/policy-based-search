@@ -77,7 +77,7 @@ namespace jsearch
 		typedef typename PriorityQueue::const_pointer const_pointer;
 
 		typedef typename PriorityQueue::handle_type handle_type;
-		typedef typename value_type::element_type::State key_type;
+        typedef typename value_type::element_type::State key_type;
 		typedef handle_type mapped_type;
 
 	private:
@@ -118,9 +118,9 @@ namespace jsearch
 		size_type size() const { return priority_queue.size(); }
 
 		/** Mutable interface. */
-		void update(handle_type const &HANDLE, value_type const &NODE) { priority_queue.update(HANDLE, NODE); }
-		void increase(handle_type const &HANDLE, value_type const &NODE) { priority_queue.increase(HANDLE, NODE); }
-		void decrease(handle_type const &HANDLE, value_type const &NODE) { priority_queue.decrease(HANDLE, NODE); }
+        void update(handle_type const &HANDLE, value_type const &NODE) { priority_queue.update(HANDLE, NODE); }
+        void increase(handle_type const &HANDLE, value_type const &NODE) { priority_queue.increase(HANDLE, NODE); }
+        void decrease(handle_type const &HANDLE, value_type const &NODE) { priority_queue.decrease(HANDLE, NODE); }
 
 
 		/**
@@ -161,49 +161,34 @@ namespace jsearch
 	{
 		// Client assumes that NODE is not on the queue and wants to push it on.
 		// It is thus a precondition that NODE is not on the queue and we throw an exception if it is.
-		auto const &STATE(NODE->state());
+        auto const &STATE(NODE->state());
 
-		if(map.find(STATE) == std::end(map))
-		{
-			auto const HANDLE(priority_queue.push(NODE));
-			auto const P(std::make_pair(STATE, HANDLE));
-			auto const INSERT_RESULT(map.insert(P));
-			if(!INSERT_RESULT.second)
-			{
-				std::ostringstream tmp;
-				tmp << "Priority queue failed to insert a state with this value: " << STATE;
-				throw std::runtime_error(tmp.str());  // Mysterious internal error.
-			}
-		}
-		else
-		{
-			std::ostringstream tmp;
-			tmp << "Priority queue alreadys contains a state with this value: " << STATE;
-			throw std::logic_error(tmp.str()); // Client error.
-		}
+        if(map.find(STATE) == std::end(map))
+        {
+            auto const &HANDLE(priority_queue.push(NODE));
+            auto const &P(std::make_pair(STATE, HANDLE));
+            auto const &INSERT_RESULT(map.insert(P));
+            assert(INSERT_RESULT.second);
+        }
+        else
+        {
+            std::ostringstream tmp;
+            tmp << "Priority queue alreadys contains a state with this value: " << STATE;
+            throw std::logic_error(tmp.str()); // Client error.
+        }
 	}
 
 
 	template <class PriorityQueue, template <typename Key, typename Value> class Map>
 	inline void queue_set<PriorityQueue, Map>::pop()
 	{
-		auto const &NODE(priority_queue.top()); // Get the node (but don't remove it).
-		auto const &STATE(NODE->state());
+		auto const &NODE(priority_queue.top());
+        auto const &STATE(NODE->state());
 		assert(map.count(STATE) == 1);
-		auto const ELEMENT(map.find(STATE));
-
-		// Check for the most likely condition first.
-		if(ELEMENT != std::end(map))
-		{
-			map.erase(ELEMENT); // The result does not appear to be useful?
-			priority_queue.pop();
-		}
-		else
-		{
-			std::ostringstream tmp;
-			tmp << STATE << " was not in the lookup table.";
-			throw std::runtime_error(tmp.str()); // Mysterious -- not theoretically possible.
-		}
+		auto const &ELEMENT(map.find(STATE));
+		assert(ELEMENT != std::end(map));
+        map.erase(ELEMENT); // The result does not appear to be useful?
+        priority_queue.pop();
 	}
 } // end namespace jsearch
 

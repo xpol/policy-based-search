@@ -62,7 +62,7 @@ namespace jsearch
 
 		PathCost g(Node const &NODE) const
 		{
-			return NODE->path_cost();
+            return NODE->path_cost();
 		}
 	};
 
@@ -84,7 +84,7 @@ namespace jsearch
 		// This function would ideally be called "break" but obviously that is taken.
 		bool split(Node const &A, Node const &B) const
 		{
-			auto const Ah(h(A->state())), Bh(h(B->state()));
+            auto const Ah(h(A->state())), Bh(h(B->state()));
 			return Ah > Bh;
 		}
 	};
@@ -107,8 +107,8 @@ namespace jsearch
 		// This function would ideally be called "break" but obviously that is taken.
 		bool split(Node const &A, Node const &B) const
 		{
-			auto const Ah(h(A->state())), Bh(h(B->state()));
-			auto const RESULT(Ah == Bh ? A->state() > B->state() : Ah > Bh);
+            auto const Ah(h(A->state())), Bh(h(B->state()));
+            auto const RESULT(Ah == Bh ? A->state() > B->state() : Ah > Bh);
 			return RESULT;
 		}
 	};
@@ -154,7 +154,7 @@ namespace jsearch
 
 		Cost f(Node const &N) const
 		{
-			return g(N) + h(N->state());
+            return g(N) + h(N->state());
 		}
 	};
 
@@ -176,7 +176,7 @@ namespace jsearch
 		Cost f(Node const &N) const
 		{
 			// TODO: Need a conversion function from HeuristicCost to Cost?
-			return h(N->state());
+            return h(N->state());
 		}
 	};
 

@@ -32,6 +32,10 @@
 #include <algorithm>
 #include <vector>
 
+#define BOOST_RESULT_OF_USE_DECLTYPE
+
+#include <boost/iterator/transform_iterator.hpp>
+
 struct Romania
 {
 	typedef std::string state;
@@ -113,17 +117,14 @@ public:
 protected:
 	std::vector<Action> actions(State const &STATE) const
 	{
-		std::vector<Action> result;
-		auto const NBRS = COST.at(STATE);
-		// Iterating over the inner cost map: slower for unordered_map?
-		// Probably not, because a pathfinding problem like this is not a complete graph, so the number of neighbours does
-		// not increase with n.
-		std::transform(std::begin(NBRS), std::end(NBRS), std::back_inserter(result), [&](typename StateCost::const_reference P)
-		{
-			return P.first;
-		});
+        using namespace std;
+        using namespace std::placeholders;
+        
+		auto const &NGHBRS(COST.at(STATE));
+        auto const f(bind(&StateCost::value_type::first, _1));
+        auto x_begin(boost::make_transform_iterator(begin(NGHBRS), f)), x_end(boost::make_transform_iterator(end(NGHBRS), f));
 		
-		return result;
+		return vector<Action>(x_begin, x_end);
 	}
 };
 

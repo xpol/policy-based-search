@@ -25,9 +25,10 @@
 #define PROBLEM_H
 
 #ifndef NDEBUG
-#include "to_string.hpp"
 #include <iostream>
 #include <typeinfo>
+
+#include "to_string.hpp"
 #endif
 
 #include <memory>
@@ -39,7 +40,7 @@ namespace jsearch
 	class DefaultNodeCreator
 	{
 	protected:
-		typedef typename Traits::node Node;
+        typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
@@ -47,9 +48,9 @@ namespace jsearch
 		DefaultNodeCreator() {}
 		~DefaultNodeCreator() {}
 
-		Node create(State const &STATE, Node const &NODE, Action const &ACTION, PathCost const &PATHCOST) const
+        Node create(State const &STATE, Node const &PARENT, Action const &ACTION, PathCost const &PATHCOST) const
 		{
-			return std::make_shared<typename Node::element_type>(STATE, NODE, ACTION, PATHCOST);
+            return std::make_shared<typename Node::element_type>(STATE, PARENT, ACTION, PATHCOST);
 		}
 	};
 
@@ -168,12 +169,12 @@ namespace jsearch
 
 		Node child(Node const &PARENT, Action const &ACTION) const
 		{
-			return create(result(PARENT->state(), ACTION), PARENT, ACTION, PARENT->path_cost() + step_cost(PARENT->state(), ACTION));
+            return create(result(PARENT->state(), ACTION), PARENT, ACTION, PARENT->path_cost() + step_cost(PARENT->state(), ACTION));
 		}
 
-		Node child(Node const &PARENT, Action const &ACTION, State const &STATE) const
+        Node child(Node const &PARENT, Action const &ACTION, State const &STATE) const
 		{
-			return create(STATE, PARENT, ACTION, PARENT->path_cost() + step_cost(PARENT->state(), ACTION));
+            return create(STATE, PARENT, ACTION, PARENT->path_cost() + step_cost(PARENT->state(), ACTION));
 		}
 	};
 
@@ -189,7 +190,7 @@ namespace jsearch
 				template <typename Traits__> class ResultPolicy_,
 				template <typename Traits__> class CreatePolicy>
 				class ChildPolicy = DefaultChildPolicy>
-	class Problem :
+	struct Problem :
 		protected virtual StepCostPolicy<Traits>,
 		protected virtual ActionsPolicy<Traits>,
 		protected virtual ResultPolicy<Traits>,
@@ -197,18 +198,12 @@ namespace jsearch
 		protected virtual ChildPolicy<Traits, StepCostPolicy, ResultPolicy, CreatePolicy>,
 		protected virtual CreatePolicy<Traits>
 	{
-	public:
 		typedef typename Traits::node Node;
 		typedef typename Traits::state State;
 		typedef typename Traits::action Action;
 		typedef typename Traits::pathcost PathCost;
 
-		Problem(State const &INITIAL) : INITIAL(INITIAL) {}
-
-		State initial() const
-		{
-			return INITIAL;
-		}
+		Problem(State const &initial) : initial(initial) {}
 
 		using ChildPolicy<Traits, StepCostPolicy, ResultPolicy, CreatePolicy>::child;
 		using StepCostPolicy<Traits>::step_cost;
@@ -217,9 +212,9 @@ namespace jsearch
 		using GoalTestPolicy<Traits>::goal_test;
 		using CreatePolicy<Traits>::create;
 
-	private:
-		State const INITIAL;
+        State const initial;
 	};
 }
 
 #endif
+
