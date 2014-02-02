@@ -63,7 +63,7 @@ namespace jsearch
         {
             auto const E(pq.top());
             pq.pop();
-            return std::move(E);
+            return E;
         }
 
 
