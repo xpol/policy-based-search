@@ -234,7 +234,7 @@ namespace jsearch
 		typedef PriorityQueue<Node, Comparator<Traits>> Frontier;
 
 		Frontier frontier;
-		frontier.push(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
+		frontier.emplace(PROBLEM.create(PROBLEM.initial, Node(), Action(), 0));
 
 		while(!frontier.empty())
 		{
@@ -454,7 +454,7 @@ namespace jsearch
 
 
 		constexpr auto const INF(std::numeric_limits<PathCost>::max());
-		auto initial(PROBLEM.create(PROBLEM.initial(), Node(), Action(), 0));
+		auto initial(PROBLEM.create(PROBLEM.initial, Node(), Action(), 0));
 		CostFunction<Traits> const COST; // TODO: Design flaw?
 
 		auto const RESULT(recursive::recursive_best_first_search<CostFunction, TiePolicy, PriorityQueue>(PROBLEM, COST, initial, COST.f(initial), INF));
